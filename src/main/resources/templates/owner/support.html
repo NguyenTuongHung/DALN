@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hỗ trợ từ Sàn Admin — SportHub Partner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f8fafc; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
+
+        .owner-sidebar { width: 250px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-brand { padding: 22px 20px; font-size: 19px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; color: #38bdf8; }
+        .sidebar-menu { list-style: none; padding: 14px 0; flex: 1; }
+        .menu-item a { display: flex; align-items: center; gap: 12px; padding: 13px 22px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .menu-item a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .menu-item a.active { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-left: 4px solid #38bdf8; }
+
+        .owner-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .owner-nav { height: 62px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
+        .owner-content { padding: 28px 32px; max-width: 900px; }
+
+        .chat-box { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; height: 520px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .chat-header { padding: 16px 20px; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: space-between; }
+        .chat-messages { flex: 1; padding: 20px; background: #f8fafc; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .chat-msg { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; }
+        .msg-admin { background: #e2e8f0; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg-owner { background: #0284c7; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .chat-footer { padding: 14px 20px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; }
+        .chat-input { flex: 1; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none; }
+        .chat-input:focus { border-color: #0284c7; }
+        .btn-send { background: #0284c7; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <aside class="owner-sidebar">
+        <div class="sidebar-brand"><i class="fa-solid fa-store"></i> SportHub Partner</div>
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a th:href="@{/owner/dashboard}"><i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách</a></li>
+            <li class="menu-item"><a th:href="@{/owner/pricing}"><i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng</a></li>
+            <li class="menu-item"><a th:href="@{/owner/payout}"><i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền</a></li>
+            <li class="menu-item"><a th:href="@{/owner/support}" class="active"><i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin</a></li>
+        </ul>
+        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.08);">
+            <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <div class="owner-main">
+        <header class="owner-nav">
+            <div>
+                <strong style="color: #0f172a;" th:text="${owner != null and owner.businessName != null ? owner.businessName : 'Cụm Sân Thể Thao Hưng Phát'}">Cụm Sân Hưng Phát</strong>
+                <small style="color: #64748b; margin-left: 8px;"><i class="fa-solid fa-circle-check" style="color: #059669;"></i> Đối tác đã xác thực</small>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <span style="font-size: 13.5px; font-weight: 600; color: #475569;">
+                    <i class="fa-solid fa-user-tie"></i> Chủ sân: <span th:text="${owner != null ? owner.fullName : 'Hưng'}">Hưng</span>
+                </span>
+                <a th:href="@{/}" target="_blank" style="font-size: 13px; color: #0284c7; text-decoration: none; font-weight: 600;">Xem Trang Đặt Sân &rarr;</a>
+            </div>
+        </header>
+
+        <main class="owner-content">
+            <div class="chat-box">
+                <div class="chat-header">
+                    <div>
+                        <strong style="font-size: 15px;"><i class="fa-solid fa-comments"></i> Kênh Trao Đổi Trực Tiếp Với Ban Quản Trị Sàn</strong><br>
+                        <small style="color: #94a3b8; font-size: 12px;">Hỗ trợ kỹ thuật, tranh chấp lịch đặt và đối soát thanh toán</small>
+                    </div>
+                    <span style="background: #10b981; color: #fff; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600;">Admin Online</span>
+                </div>
+
+                <div id="messagesArea" class="chat-messages">
+                    <div class="chat-msg msg-admin">SportHub chào bạn! Ban quản trị sàn luôn sẵn sàng hỗ trợ cụm sân của bạn vận hành tốt nhất.</div>
+                    <div class="chat-msg msg-owner">Cho mình hỏi về kỳ đối soát tuần này đã được duyệt lệnh chuyển chưa ạ?</div>
+                    <div class="chat-msg msg-admin">Chào bạn Hưng, kế toán sàn đã duyệt lệnh chuyển 41.400.000đ sang tài khoản VCB của bạn rồi nhé, dự kiến nhận trong chiều nay.</div>
+                </div>
+
+                <div class="chat-footer">
+                    <input type="text" id="ownerInput" class="chat-input" placeholder="Nhập tin nhắn gửi tới Ban quản trị sàn..." onkeypress="if(event.key === 'Enter') sendSupportMessage()">
+                    <button type="button" class="btn-send" onclick="sendSupportMessage()"><i class="fa-solid fa-paper-plane"></i> Gửi</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function sendSupportMessage() {
+            const input = document.getElementById('ownerInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const area = document.getElementById('messagesArea');
+            const newMsg = document.createElement('div');
+            newMsg.className = 'chat-msg msg-owner';
+            newMsg.innerText = text;
+            area.appendChild(newMsg);
+
+            input.value = '';
+            area.scrollTop = area.scrollHeight;
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng ký tài khoản</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #064e3b; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .auth-card { background: #ffffff; width: 100%; max-width: 440px; border-radius: 16px; padding: 36px 30px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        .auth-header { text-align: center; margin-bottom: 24px; }
+        .auth-header h2 { font-size: 24px; color: #064e3b; margin-top: 8px; font-weight: 800; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .input-wrap { position: relative; }
+        .input-wrap i { position: absolute; left: 14px; top: 12px; color: #9ca3af; }
+        .input-wrap input { width: 100%; padding: 10px 14px 10px 38px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none; }
+        .input-wrap input:focus { border-color: #059669; }
+        .btn-auth { width: 100%; background: #059669; color: #fff; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .btn-auth:hover { background: #047857; }
+        .alert-error { background: #fee2e2; color: #b91c1c; padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
+        .auth-footer { text-align: center; margin-top: 20px; font-size: 13px; color: #6b7280; }
+        .auth-footer a { color: #059669; text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="auth-card">
+        <div class="auth-header">
+            <i class="fa-solid fa-futbol" style="font-size: 36px; color: #059669;"></i>
+            <h2>Tạo Tài Khoản</h2>
+            <p style="font-size: 13px; color: #6b7280;">Trải nghiệm đặt sân thể thao nhanh chóng</p>
+        </div>
+
+        <div th:if="${error}" class="alert-error" th:text="${error}"></div>
+
+        <form th:action="@{/register}" th:object="${user}" method="post">
+            <div class="form-group">
+                <label>Họ và tên</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-id-card"></i>
+                    <input type="text" th:field="*{fullName}" placeholder="Nguyễn Văn A" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Tên đăng nhập / Email</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" th:field="*{username}" placeholder="Nhập username" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Số điện thoại</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-phone"></i>
+                    <input type="tel" th:field="*{phone}" placeholder="09xxxxxxxx" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" th:field="*{password}" placeholder="Tối thiểu 6 ký tự" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-auth">Đăng Ký Tài Khoản</button>
+        </form>
+
+        <div class="auth-footer">
+            Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Khách hàng & Chủ sân — SportHub Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f8fafc; display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar Admin */
+        .admin-sidebar { width: 250px; background: #064e3b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-brand { padding: 22px 20px; font-size: 20px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; color: #34d399; }
+        .sidebar-menu { list-style: none; padding: 12px 0; flex: 1; overflow-y: auto; }
+        .menu-item { margin-bottom: 2px; }
+        .menu-link { display: flex; align-items: center; gap: 12px; padding: 12px 22px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .menu-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .menu-link.active { background: rgba(255,255,255,0.14); color: #fff; border-left: 4px solid #34d399; }
+
+        .admin-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .admin-nav { height: 62px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
+        .admin-content { padding: 28px 32px; }
+
+        /* Tabs chuyển đổi Chủ sân / Khách hàng */
+        .tab-buttons { display: flex; gap: 12px; margin-bottom: 24px; }
+        .tab-btn { padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 700; color: #475569; background: #fff; border: 1px solid #cbd5e1; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .tab-btn.active { background: #059669; color: #fff; border-color: #059669; }
+
+        .table-card { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        th { padding: 12px 14px; background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; text-align: left; }
+        td { padding: 14px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+        
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-ACTIVE { background: #dcfce7; color: #15803d; }
+        .status-LOCKED { background: #fee2e2; color: #b91c1c; }
+        
+        /* Action buttons */
+        .action-group { display: flex; align-items: center; gap: 8px; }
+        .btn-msg { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: background 0.15s; }
+        .btn-msg:hover { background: #bae6fd; }
+        
+        .btn-toggle { border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+        /* Modal Chat Box */
+        .chat-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-modal-box {
+            background: #ffffff;
+            width: 480px;
+            max-width: 90%;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .chat-modal-header {
+            background: #064e3b;
+            color: #fff;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chat-modal-body {
+            padding: 20px;
+            background: #f8fafc;
+            max-height: 280px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13.5px;
+            line-height: 1.4;
+        }
+        .msg-received { background: #e2e8f0; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg-sent { background: #059669; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .chat-modal-footer {
+            padding: 14px 20px;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13.5px;
+            outline: none;
+        }
+        .chat-input:focus { border-color: #059669; }
+        .btn-send {
+            background: #059669;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar đầy đủ 6 chức năng -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-shield-halved"></i> SportHub Admin
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a th:href="@{/admin/dashboard}" class="menu-link"><i class="fa-solid fa-chart-pie"></i> Tổng quan</a></li>
+            <li class="menu-item"><a th:href="@{/admin/courts}" class="menu-link"><i class="fa-solid fa-store"></i> Quản lý sân bãi</a></li>
+            <li class="menu-item"><a th:href="@{/admin/bookings}" class="menu-link"><i class="fa-solid fa-calendar-check"></i> Đơn đặt sân</a></li>
+            <li class="menu-item"><a th:href="@{/admin/users}" class="menu-link active"><i class="fa-solid fa-users"></i> Khách hàng &amp; Chủ sân</a></li>
+            <li class="menu-item"><a th:href="@{/admin/reports}" class="menu-link"><i class="fa-solid fa-money-bill-trend-up"></i> Báo cáo doanh thu</a></li>
+            <li class="menu-item"><a th:href="@{/admin/settings}" class="menu-link"><i class="fa-solid fa-gear"></i> Cài đặt hệ thống</a></li>
+        </ul>
+        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <div class="admin-main">
+        <header class="admin-nav">
+            <div style="font-weight: 700; color: #1e293b; font-size: 15px;">Quản Lý Đối Tác &amp; Khách Hàng</div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span style="font-size: 13.5px; font-weight: 700; color: #064e3b;"><i class="fa-solid fa-shield"></i> Quyền Quản Trị Sàn</span>
+                <a th:href="@{/}" target="_blank" style="font-size: 13px; color: #059669; text-decoration: none; font-weight: 600;">Xem Web Khách &rarr;</a>
+            </div>
+        </header>
+
+        <main class="admin-content">
+            <!-- Bộ lọc Tab Đối tác / Khách hàng -->
+            <div class="tab-buttons">
+                <a th:href="@{/admin/users(tab='owners')}" class="tab-btn" th:classappend="${activeTab == 'owners'} ? 'active' : ''">
+                    <i class="fa-solid fa-handshake"></i> Đối Tác Chủ Sân ( <span th:text="${owners != null ? owners.size() : 0}">0</span> )
+                </a>
+                <a th:href="@{/admin/users(tab='customers')}" class="tab-btn" th:classappend="${activeTab == 'customers'} ? 'active' : ''">
+                    <i class="fa-solid fa-user-group"></i> Người Chơi / Khách Hàng ( <span th:text="${customers != null ? customers.size() : 0}">0</span> )
+                </a>
+            </div>
+
+            <!-- TAB 1: CHỦ SÂN -->
+            <div class="table-card" th:if="${activeTab == 'owners'}">
+                <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 18px; color: #0f172a;">Danh Sách Đối Tác Cung Cấp Sân Bãi</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cơ Sở / Doanh Nghiệp</th>
+                            <th>Đại Diện &amp; SĐT</th>
+                            <th>Thông Tin Quyết Toán</th>
+                            <th>Hoa Hồng Sàn</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="o : ${owners}">
+                            <td th:text="${o.id}">1</td>
+                            <td>
+                                <strong th:text="${o.businessName != null ? o.businessName : 'Chưa cập nhật'}">Tên cơ sở</strong><br>
+                                <small style="color: #64748b;">User: <span th:text="${o.username}">chusanhung</span></small>
+                            </td>
+                            <td>
+                                <span th:text="${o.fullName}">Nguyễn Văn A</span><br>
+                                <small style="color: #64748b;"><i class="fa-solid fa-phone"></i> <span th:text="${o.phone}">09123...</span></small>
+                            </td>
+                            <td>
+                                <small>Ngân hàng: <b th:text="${o.bankName}">VCB</b></small><br>
+                                <small>STK: <b th:text="${o.bankAccountNumber}">1029...</b></small><br>
+                                <small>Tên: <span th:text="${o.bankAccountName}">NGUYEN TUONG HUNG</span></small>
+                            </td>
+                            <td>
+                                <form th:action="@{/admin/owners/{id}/update-commission(id=${o.id})}" method="post" style="display:flex; align-items:center; gap:6px;">
+                                    <input type="number" step="0.5" name="commissionRate" th:value="${o.commissionRate}" style="width: 55px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                                    <span>%</span>
+                                    <button type="submit" style="background:#059669; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;"><i class="fa-solid fa-check"></i></button>
+                                </form>
+                            </td>
+                            <td>
+                                <span class="status-badge" th:classappend="'status-' + ${o.status}" th:text="${o.status == 'ACTIVE' ? 'Đang hợp tác' : 'Bị khóa'}">Đang hợp tác</span>
+                            </td>
+                            <td>
+                                <div class="action-group">
+                                    <!-- Nút nhắn tin trao đổi -->
+                                    <button type="button" class="btn-msg" 
+                                            th:data-name="${o.fullName != null ? o.fullName : o.businessName}"
+                                            th:data-role="'Chủ Sân'"
+                                            th:data-phone="${o.phone}"
+                                            onclick="openChatModal(this.getAttribute('data-name'), this.getAttribute('data-role'), this.getAttribute('data-phone'))">
+                                        <i class="fa-regular fa-comment-dots"></i> Nhắn tin
+                                    </button>
+
+                                    <!-- Nút khóa / mở khóa -->
+                                    <form th:action="@{/admin/users/{id}/toggle-status(id=${o.id})}" method="post">
+                                        <input type="hidden" name="tab" value="owners">
+                                        <button type="submit" class="btn-toggle" 
+                                                th:style="${o.status == 'ACTIVE' ? 'background: #fee2e2; color: #b91c1c;' : 'background: #dcfce7; color: #15803d;'}">
+                                            <span th:text="${o.status == 'ACTIVE' ? 'Khóa sân' : 'Mở khóa'}">Khóa</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TAB 2: KHÁCH HÀNG -->
+            <div class="table-card" th:if="${activeTab == 'customers'}">
+                <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 18px; color: #0f172a;">Danh Sách Người Chơi / Khách Hàng</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã KH</th>
+                            <th>Tên Khách Hàng</th>
+                            <th>Tên Đăng Nhập / Email</th>
+                            <th>Số Điện Thoại</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="c : ${customers}">
+                            <td th:text="'#KH-' + ${c.id}">#KH-1</td>
+                            <td style="font-weight: 700;" th:text="${c.fullName != null ? c.fullName : 'Chưa cập nhật'}">Trần Minh Tuấn</td>
+                            <td th:text="${c.username}">khachhang01</td>
+                            <td th:text="${c.phone != null ? c.phone : 'Chưa có'}">0988111222</td>
+                            <td>
+                                <span class="status-badge" th:classappend="'status-' + ${c.status}" th:text="${c.status == 'ACTIVE' ? 'Bình thường' : 'Bị cấm đặt'}">Bình thường</span>
+                            </td>
+                            <td>
+                                <div class="action-group">
+                                    <!-- Nút nhắn tin trao đổi -->
+                                    <button type="button" class="btn-msg" 
+                                            th:data-name="${c.fullName != null ? c.fullName : c.username}"
+                                            th:data-role="'Khách Hàng'"
+                                            th:data-phone="${c.phone}"
+                                            onclick="openChatModal(this.getAttribute('data-name'), this.getAttribute('data-role'), this.getAttribute('data-phone'))">
+                                        <i class="fa-regular fa-comment-dots"></i> Nhắn tin
+                                    </button>
+
+                                    <!-- Nút khóa / mở khóa -->
+                                    <form th:action="@{/admin/users/{id}/toggle-status(id=${c.id})}" method="post">
+                                        <input type="hidden" name="tab" value="customers">
+                                        <button type="submit" class="btn-toggle" 
+                                                th:style="${c.status == 'ACTIVE' ? 'background: #fee2e2; color: #b91c1c;' : 'background: #dcfce7; color: #15803d;'}">
+                                            <span th:text="${c.status == 'ACTIVE' ? 'Khóa' : 'Mở chặn'}">Khóa</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- HỘP THOẠI CHAT TRAO ĐỔI (CHAT MODAL) -->
+    <div id="chatModal" class="chat-modal-overlay">
+        <div class="chat-modal-box">
+            <div class="chat-modal-header">
+                <div>
+                    <h4 id="chatTargetName" style="font-size: 15px; font-weight: 700;">Trao đổi với đối tác</h4>
+                    <small id="chatTargetRole" style="color: #a7f3d0; font-size: 12px;">Chủ Sân</small>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <a id="zaloLink" href="#" target="_blank" style="color: #6ee7b7; text-decoration: none; font-size: 13px; font-weight: 600;" title="Mở Zalo trực tiếp">
+                        <i class="fa-solid fa-phone"></i> Gọi / Zalo
+                    </a>
+                    <button onclick="closeChatModal()" style="background: none; border: none; color: #fff; font-size: 18px; cursor: pointer;">&times;</button>
+                </div>
+            </div>
+
+            <div id="chatMessages" class="chat-modal-body">
+                <div class="chat-msg msg-received">Xin chào Sàn SportHub! Tôi cần hỗ trợ về đơn đặt sân và quyết toán tuần này.</div>
+                <div class="chat-msg msg-sent">SportHub chào bạn! Ban quản trị sàn đã ghi nhận, bạn cần trao đổi cụ thể về vấn đề gì ạ?</div>
+            </div>
+
+            <div class="chat-modal-footer">
+                <input type="text" id="chatInputText" class="chat-input" placeholder="Nhập tin nhắn phản hồi từ Admin..." onkeypress="if(event.key === 'Enter') sendAdminMessage()">
+                <button type="button" class="btn-send" onclick="sendAdminMessage()">Gửi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Xử Lý Chat Box -->
+    <script>
+        function openChatModal(name, role, phone) {
+            document.getElementById('chatTargetName').innerText = name || 'Người dùng';
+            document.getElementById('chatTargetRole').innerText = role + (phone ? ' • SĐT: ' + phone : '');
+            
+            // Cập nhật link liên hệ nhanh qua Zalo nếu có SĐT
+            const zaloBtn = document.getElementById('zaloLink');
+            if (phone && phone.trim() !== '') {
+                const cleanPhone = phone.replace(/[^0-9]/g, '');
+                zaloBtn.href = 'https://zalo.me/' + cleanPhone;
+                zaloBtn.style.display = 'inline-block';
+            } else {
+                zaloBtn.style.display = 'none';
+            }
+
+            document.getElementById('chatModal').style.display = 'flex';
+            document.getElementById('chatInputText').focus();
+        }
+
+        function closeChatModal() {
+            document.getElementById('chatModal').style.display = 'none';
+        }
+
+        function sendAdminMessage() {
+            const input = document.getElementById('chatInputText');
+            const message = input.value.trim();
+            if (message === '') return;
+
+            const chatMessages = document.getElementById('chatMessages');
+            const newMsg = document.createElement('div');
+            newMsg.className = 'chat-msg msg-sent';
+            newMsg.innerText = message;
+            chatMessages.appendChild(newMsg);
+
+            input.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Đóng khi click ngoài nền đen
+        window.onclick = function(e) {
+            const modal = document.getElementById('chatModal');
+            if (e.target === modal) {
+                closeChatModal();
+            }
+        };
+    </script>
+
+</body>
+</html>

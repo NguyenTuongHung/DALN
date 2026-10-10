@@ -8,6 +8,11 @@ public class HomeController {
 
     @GetMapping("/")
     public String home() {
-        return "forward:/index.html";
+        return "index";
+    }
+
+    @GetMapping("/ban-do")
+    public String mapPage() {
+        return "map";
     }
 }

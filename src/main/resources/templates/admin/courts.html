@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý sân bãi — SportHub Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f0f5f9; display: flex; height: 100vh; overflow: hidden; }
+        .admin-sidebar { width: 250px; background: #064e3b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-brand { padding: 24px 20px; font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #34d399; }
+        .sidebar-menu { list-style: none; padding: 10px 0; flex: 1; }
+        .menu-item a { display: flex; align-items: center; gap: 12px; padding: 14px 24px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 600; }
+        .menu-item a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .menu-item a.active { background: rgba(255,255,255,0.14); color: #fff; border-left: 4px solid #34d399; }
+        .admin-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .top-navbar { height: 60px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; }
+        .dashboard-content { padding: 28px 32px; }
+        .table-panel { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; padding: 24px; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-add { background: #059669; color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: left; }
+        th { padding: 12px 14px; color: #64748b; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #f8fafc; }
+        td { padding: 14px; border-bottom: 1px solid #f8fafc; color: #334155; }
+        .badge { padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+        .badge-active { background: #dcfce7; color: #15803d; }
+    </style>
+</head>
+<body>
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand"><i class="fa-solid fa-shield-halved"></i> SportHub Admin</div>
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a th:href="@{/admin/dashboard}"><i class="fa-solid fa-chart-pie"></i> Tổng quan</a></li>
+            <li class="menu-item"><a th:href="@{/admin/courts}" class="active"><i class="fa-solid fa-store"></i> Quản lý sân bãi</a></li>
+            <li class="menu-item"><a th:href="@{/admin/bookings}"><i class="fa-solid fa-calendar-check"></i> Đơn đặt sân</a></li>
+            <li class="menu-item"><a th:href="@{/admin/users}"><i class="fa-solid fa-users"></i> Khách hàng &amp; Chủ sân</a></li>
+            <li class="menu-item"><a th:href="@{/admin/reports}"><i class="fa-solid fa-money-bill-trend-up"></i> Báo cáo doanh thu</a></li>
+            <li class="menu-item"><a th:href="@{/admin/settings}"><i class="fa-solid fa-gear"></i> Cài đặt hệ thống</a></li>
+        </ul>
+        <div style="padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08);">
+            <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; font-weight: 600;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+        </div>
+    </aside>
+
+    <div class="admin-main">
+        <header class="top-navbar">
+            <span style="font-size: 15px; font-weight: 700;">Quản Lý Cơ Sở Sân Bãi Toàn Sàn</span>
+            <span style="color: #064e3b; font-weight: 700; font-size: 13.5px;"><i class="fa-solid fa-circle-user"></i> Admin</span>
+        </header>
+
+        <main class="dashboard-content">
+            <div class="table-panel">
+                <div class="panel-header">
+                    <h3 style="font-size: 16px; font-weight: 800;">Danh sách 445 cụm sân đã liên kết</h3>
+                    <button class="btn-add"><i class="fa-solid fa-plus"></i> Thêm Cụm Sân Mới</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã Sân</th>
+                            <th>Tên Cụm Sân</th>
+                            <th>Môn Thể Thao</th>
+                            <th>Chủ Sở Hữu</th>
+                            <th>Địa Chỉ</th>
+                            <th>Giá Trung Bình</th>
+                            <th>Trạng Thái</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#CRT-101</td>
+                            <td><strong>002 Pickleball Club</strong></td>
+                            <td><span style="background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Pickleball</span></td>
+                            <td>Nguyễn Tường Hưng</td>
+                            <td>Thảo Điền, TP. Thủ Đức</td>
+                            <td><strong>180.000đ/h</strong></td>
+                            <td><span class="badge badge-active">Hoạt động</span></td>
+                            <td><button style="border: 1px solid #cbd5e1; background: #fff; padding: 4px 10px; border-radius: 6px; cursor: pointer;">Sửa</button></td>
+                        </tr>
+                        <tr>
+                            <td>#CRT-102</td>
+                            <td><strong>Arsenal Mini Football Center</strong></td>
+                            <td><span style="background: #dcfce7; color: #15803d; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Bóng đá</span></td>
+                            <td>Vũ Đình Trọng</td>
+                            <td>Quận Cầu Giấy, Hà Nội</td>
+                            <td><strong>350.000đ/h</strong></td>
+                            <td><span class="badge badge-active">Hoạt động</span></td>
+                            <td><button style="border: 1px solid #cbd5e1; background: #fff; padding: 4px 10px; border-radius: 6px; cursor: pointer;">Sửa</button></td>
+                        </tr>
+                        <tr>
+                            <td>#CRT-103</td>
+                            <td><strong>CLB Cầu Lông ACE</strong></td>
+                            <td><span style="background: #fef3c7; color: #b45309; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Cầu lông</span></td>
+                            <td>Lê Thị Thảo</td>
+                            <td>Quận Hải Châu, Đà Nẵng</td>
+                            <td><strong>120.000đ/h</strong></td>
+                            <td><span class="badge badge-active">Hoạt động</span></td>
+                            <td><button style="border: 1px solid #cbd5e1; background: #fff; padding: 4px 10px; border-radius: 6px; cursor: pointer;">Sửa</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

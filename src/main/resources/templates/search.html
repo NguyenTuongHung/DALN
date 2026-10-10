@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm kiếm sân thể thao — SportHub</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f8fafc; color: #1e293b; display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* Top Header / Search banner */
+        .search-header {
+            background-color: #064e3b;
+            background-image: radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.15), transparent 40%);
+            color: #ffffff;
+            padding: 36px 20px 40px;
+        }
+        .header-inner { max-width: 1200px; margin: 0 auto; }
+        .breadcrumb { font-size: 13px; color: #a7f3d0; margin-bottom: 12px; }
+        .breadcrumb a { color: #a7f3d0; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .header-title { font-size: 28px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+        .match-count { font-size: 14px; color: #6ee7b7; margin-bottom: 24px; }
+
+        /* Horizontal Filter Bar */
+        .search-bar {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: 2fr 1.2fr 1.2fr 1.2fr auto;
+            gap: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        .input-group { position: relative; display: flex; align-items: center; }
+        .input-group i { position: absolute; left: 14px; color: #94a3b8; font-size: 15px; }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 14px 12px 38px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            color: #334155;
+            background: #f8fafc;
+        }
+        .input-group input:focus, .input-group select:focus {
+            border-color: #10b981;
+            background: #fff;
+        }
+        .btn-search {
+            background: #059669;
+            color: #ffffff;
+            border: none;
+            padding: 0 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-search:hover { background: #047857; }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: flex;
+            gap: 28px;
+            flex: 1;
+            width: 100%;
+        }
+
+        /* Sidebar Filter */
+        .sidebar { width: 260px; flex-shrink: 0; }
+        .filter-panel {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .filter-heading {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .reset-link { font-size: 12px; color: #059669; text-decoration: none; font-weight: normal; }
+        .reset-link:hover { text-decoration: underline; }
+
+        .category-nav { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+        .category-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #475569;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .category-btn i { width: 20px; }
+        .category-btn:hover { background: #f1f5f9; color: #0f172a; }
+        .category-btn.active { background: #ecfdf5; color: #065f46; font-weight: 600; }
+        .category-badge { font-size: 11px; background: #e2e8f0; padding: 2px 7px; border-radius: 12px; color: #475569; }
+        .category-btn.active .category-badge { background: #a7f3d0; color: #065f46; }
+
+        .filter-group-item { margin-bottom: 16px; }
+        .filter-group-item:last-child { margin-bottom: 0; }
+        .custom-checkbox { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; margin-bottom: 8px; cursor: pointer; }
+        .custom-checkbox input { accent-color: #059669; }
+
+        /* Main Content List */
+        .content { flex: 1; }
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .sort-select {
+            padding: 6px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            background: #ffffff;
+            outline: none;
+        }
+
+        /* Court Card */
+        .court-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .court-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -4px rgba(0,0,0,0.08);
+            border-color: #cbd5e1;
+        }
+        .court-thumb {
+            width: 110px;
+            height: 110px;
+            border-radius: 10px;
+            object-fit: cover;
+            background: #e2e8f0;
+            flex-shrink: 0;
+        }
+        .court-body { flex: 1; }
+        .court-name { font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+        .status-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block; }
+        .court-meta { font-size: 13px; color: #64748b; margin-bottom: 6px; display: flex; gap: 14px; flex-wrap: wrap; }
+        .court-meta span { display: flex; align-items: center; gap: 5px; }
+        .badge-type {
+            font-size: 12px;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 3px 9px;
+            border-radius: 4px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .court-end { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; min-width: 150px; }
+        .court-price { font-size: 16px; font-weight: 700; color: #ea580c; }
+        .court-price small { font-size: 12px; font-weight: normal; color: #64748b; }
+        .card-actions { display: flex; gap: 8px; }
+        .btn-outline {
+            border: 1px solid #059669;
+            color: #059669;
+            background: #fff;
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+        .btn-outline:hover { background: #f0fdf4; }
+        .btn-solid {
+            background: #059669;
+            color: #fff;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+        .btn-solid:hover { background: #047857; }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin: 30px 0 10px;
+        }
+        .page-item {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #334155;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .page-item:hover { border-color: #059669; color: #059669; }
+        .page-item.active { background: #059669; color: #fff; border-color: #059669; }
+
+        /* Footer */
+        .main-footer {
+            background-color: #064e3b;
+            color: #cbd5e1;
+            padding-top: 50px;
+            margin-top: auto;
+        }
+        .footer-top {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 40px;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1.5fr;
+            gap: 36px;
+        }
+        .footer-col h4 { color: #ffffff; font-size: 16px; margin-bottom: 18px; font-weight: 700; }
+        .footer-col p { font-size: 13px; line-height: 1.6; color: #94a3b8; margin-bottom: 16px; }
+        .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+        .footer-col ul a { color: #94a3b8; text-decoration: none; font-size: 13px; transition: color 0.2s; }
+        .footer-col ul a:hover { color: #34d399; }
+        .footer-contact li { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #94a3b8; }
+        .footer-contact i { color: #34d399; }
+        .footer-bottom {
+            background: #022c22;
+            padding: 18px 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header & Bộ lọc ngang nhanh -->
+    <header class="search-header">
+        <div class="header-inner">
+            <div class="breadcrumb">
+                <a th:href="@{/}">Trang chủ</a> &gt; <span>Tìm sân thể thao</span>
+            </div>
+            <h1 class="header-title"><i class="fa-solid fa-magnifying-glass"></i> Tìm sân thể thao</h1>
+            <p class="match-count">Tìm thấy 445 cơ sở sẵn sàng đón khách</p>
+
+            <form class="search-bar" th:action="@{/tim-san}" method="get">
+                <!-- Tên sân hoặc vị trí -->
+                <div class="input-group">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="keyword" th:value="${keyword}" placeholder="Nhập tên sân, địa chỉ, đường...">
+                </div>
+
+                <!-- Lọc Tỉnh / Thành phố -->
+                <div class="input-group">
+                    <i class="fa-solid fa-city"></i>
+                    <select name="city">
+                        <option value="">Tất cả tỉnh thành</option>
+                        <option value="HN">Hà Nội</option>
+                        <option value="HCM">Hồ Chí Minh</option>
+                        <option value="DN">Đà Nẵng</option>
+                        <option value="BD">Bình Dương</option>
+                    </select>
+                </div>
+
+                <!-- Lọc Quận / Huyện -->
+                <div class="input-group">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <select name="district">
+                        <option value="">Tất cả quận / huyện</option>
+                        <option value="cầu giấy">Cầu Giấy</option>
+                        <option value="đống đa">Đống Đa</option>
+                        <option value="thủ đức">Thủ Đức</option>
+                        <option value="quận 1">Quận 1</option>
+                        <option value="quận 7">Quận 7</option>
+                    </select>
+                </div>
+
+                <!-- Lọc môn thể thao -->
+                <div class="input-group">
+                    <i class="fa-solid fa-trophy"></i>
+                    <select name="type">
+                        <option value="all">Tất cả bộ môn</option>
+                        <option value="football" th:selected="${selectedType == 'football'}">Bóng đá</option>
+                        <option value="pickleball" th:selected="${selectedType == 'pickleball'}">Pickleball</option>
+                        <option value="badminton" th:selected="${selectedType == 'badminton'}">Cầu lông</option>
+                        <option value="tennis" th:selected="${selectedType == 'tennis'}">Quần vợt (Tennis)</option>
+                        <option value="basketball" th:selected="${selectedType == 'basketball'}">Bóng rổ</option>
+                    </select>
+                </div>
+
+                <!-- Nút Submit -->
+                <button type="submit" class="btn-search">
+                    <i class="fa-solid fa-filter"></i> Tìm kiếm
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <!-- Khung nội dung chính -->
+    <div class="container">
+        <!-- Cột lọc chi tiết bên trái -->
+        <aside class="sidebar">
+            <!-- Danh mục môn -->
+            <div class="filter-panel">
+                <div class="filter-heading">
+                    <span>Loại sân thể thao</span>
+                    <a th:href="@{/tim-san}" class="reset-link">Xóa lọc</a>
+                </div>
+                <ul class="category-nav">
+                    <li>
+                        <a th:href="@{/tim-san}" class="category-btn" th:classappend="${selectedType == null or selectedType == 'all'} ? 'active' : ''">
+                            <span><i class="fa-solid fa-border-all"></i> Tất cả</span><span class="category-badge">445</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/tim-san(type='football')}" class="category-btn" th:classappend="${selectedType == 'football'} ? 'active' : ''">
+                            <span><i class="fa-solid fa-futbol"></i> Bóng đá</span><span class="category-badge">120</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/tim-san(type='pickleball')}" class="category-btn" th:classappend="${selectedType == 'pickleball'} ? 'active' : ''">
+                            <span><i class="fa-solid fa-table-tennis-paddle-ball"></i> Pickleball</span><span class="category-badge">185</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/tim-san(type='badminton')}" class="category-btn" th:classappend="${selectedType == 'badminton'} ? 'active' : ''">
+                            <span><i class="fa-solid fa-feather"></i> Cầu lông</span><span class="category-badge">75</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/tim-san(type='tennis')}" class="category-btn" th:classappend="${selectedType == 'tennis'} ? 'active' : ''">
+                            <span><i class="fa-solid fa-baseball-bat-ball"></i> Tennis</span><span class="category-badge">38</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a th:href="@{/tim-san(type='basketball')}" class="category-btn" th:classappend="${selectedType == 'basketball'} ? 'active' : ''">
+                            <span><i class="fa-solid fa-basketball"></i> Bóng rổ</span><span class="category-badge">27</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Lọc theo giá & tiện ích -->
+            <div class="filter-panel">
+                <div class="filter-heading">
+                    <span>Mức giá mỗi giờ</span>
+                </div>
+                <div class="filter-group-item">
+                    <label class="custom-checkbox"><input type="checkbox"> Dưới 150.000đ</label>
+                    <label class="custom-checkbox"><input type="checkbox"> 150.000đ - 300.000đ</label>
+                    <label class="custom-checkbox"><input type="checkbox"> 300.000đ - 500.000đ</label>
+                    <label class="custom-checkbox"><input type="checkbox"> Trên 500.000đ</label>
+                </div>
+
+                <div class="filter-heading" style="margin-top: 20px;">
+                    <span>Tiện ích sân</span>
+                </div>
+                <div class="filter-group-item">
+                    <label class="custom-checkbox"><input type="checkbox" checked> Bãi đỗ xe ô tô</label>
+                    <label class="custom-checkbox"><input type="checkbox"> Đèn chiếu sáng đêm</label>
+                    <label class="custom-checkbox"><input type="checkbox"> Phòng thay đồ &amp; Tắm</label>
+                    <label class="custom-checkbox"><input type="checkbox"> Căng tin nước uống</label>
+                    <label class="custom-checkbox"><input type="checkbox"> Cho thuê dụng cụ</label>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Danh sách sân bên phải -->
+        <main class="content">
+            <div class="toolbar">
+                <span>Hiển thị <strong>1 - 10</strong> trong số <strong>445</strong> cơ sở</span>
+                <div>
+                    <label for="sort" style="margin-right: 6px;">Sắp xếp theo:</label>
+                    <select id="sort" class="sort-select">
+                        <option value="az">Tên A-Z</option>
+                        <option value="za">Tên Z-A</option>
+                        <option value="price_asc">Giá tăng dần</option>
+                        <option value="price_desc">Giá giảm dần</option>
+                        <option value="rating">Đánh giá cao nhất</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Court 1: 002 Pickleball Club (ID = 1) -->
+            <!-- DANH SÁCH SÂN ĐƯỢC LOAD ĐỘNG TỪ DATABASE -->
+<div th:each="court : ${courts}" class="court-card" th:attr="data-sport=${court.sportType}">
+    <img th:src="${court.imageUrl}" class="court-thumb" th:alt="${court.name}">
+    <div class="court-body">
+        <h3 class="court-name">
+            <span class="status-dot"></span> 
+            <span th:text="${court.name}">002 Pickleball Club</span>
+        </h3>
+        <div class="court-meta">
+            <span><i class="fa-solid fa-location-dot" style="color: #ef4444;"></i> <span th:text="${court.address}">Địa chỉ</span></span>
+        </div>
+        <div class="court-meta">
+            <span><i class="fa-solid fa-clock"></i> <span th:text="${court.openHours}">06:00 - 22:30</span></span>
+            <span><i class="fa-solid fa-star" style="color: #f59e0b;"></i> <span th:text="${court.rating}">4.9</span> (<span th:text="${court.reviewCount}">56</span> đánh giá)</span>
+        </div>
+        <span class="badge-type" th:text="${court.sportType}">Pickleball</span>
+    </div>
+    <div class="court-end">
+        <div class="court-price">
+            <span th:text="${#numbers.formatDecimal(court.pricePerHour, 0, 'COMMA', 0, 'POINT')}">180.000</span>đ <small>/giờ</small>
+        </div>
+        <span style="font-size: 12px; color: #059669; font-weight: 600;">Sẵn sàng đón khách</span>
+        <div class="card-actions">
+            <a th:href="@{/san-bong/{id}(id=${court.id})}" class="btn-outline">Chi tiết</a>
+            <a th:href="@{/san-bong/{id}(id=${court.id})}" class="btn-solid">Đặt ngay</a>
+        </div>
+    </div>
+</div>
+
+<div th:if="${courts == null or courts.isEmpty()}" style="text-align: center; padding: 40px; background: #fff; border-radius: 12px; color: #64748b;">
+    <i class="fa-solid fa-store-slash" style="font-size: 32px; margin-bottom: 10px; color: #cbd5e1;"></i>
+    <p>Không tìm thấy sân nào phù hợp với bộ lọc hiện tại.</p>
+</div>
+
+            <!-- Court 2: Trung Tâm Sân Bóng Arsenal (ID = 2) -->
+            <div class="court-card" data-sport="football">
+                <img src="https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=200&auto=format&fit=crop" class="court-thumb" alt="Arsenal Football">
+                <div class="court-body">
+                    <h3 class="court-name"><span class="status-dot"></span> Trung Tâm Sân Bóng Arsenal</h3>
+                    <div class="court-meta">
+                        <span><i class="fa-solid fa-location-dot" style="color: #ef4444;"></i> Số 18 Hoàng Diệu, Quận 3, TP. Hồ Chí Minh</span>
+                    </div>
+                    <div class="court-meta">
+                        <span><i class="fa-solid fa-clock"></i> 05:00 - 23:00</span>
+                        <span><i class="fa-solid fa-star" style="color: #f59e0b;"></i> 4.8 (112 đánh giá)</span>
+                    </div>
+                    <span class="badge-type" style="background: #fee2e2; color: #b91c1c;">Bóng đá</span>
+                </div>
+                <div class="court-end">
+                    <div class="court-price">350.000đ <small>/giờ</small></div>
+                    <span style="font-size: 12px; color: #059669; font-weight: 600;">Còn 1 sân trống tối nay</span>
+                    <div class="card-actions">
+                        <a th:href="@{/san-bong/2}" class="btn-outline">Chi tiết</a>
+                        <a th:href="@{/san-bong/2}" class="btn-solid">Đặt ngay</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Court 3: CLB Cầu Lông ACE Cầu Giấy (ID = 3) -->
+            <div class="court-card" data-sport="badminton">
+                <img src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=200&auto=format&fit=crop" class="court-thumb" alt="ACE Badminton">
+                <div class="court-body">
+                    <h3 class="court-name"><span class="status-dot"></span> CLB Cầu Lông ACE Cầu Giấy</h3>
+                    <div class="court-meta">
+                        <span><i class="fa-solid fa-location-dot" style="color: #ef4444;"></i> Đường Trần Thái Tông, Cầu Giấy, Hà Nội</span>
+                    </div>
+                    <div class="court-meta">
+                        <span><i class="fa-solid fa-clock"></i> 06:00 - 23:00</span>
+                        <span><i class="fa-solid fa-star" style="color: #f59e0b;"></i> 4.7 (40 đánh giá)</span>
+                    </div>
+                    <span class="badge-type" style="background: #fef3c7; color: #b45309;">Cầu lông</span>
+                </div>
+                <div class="court-end">
+                    <div class="court-price">120.000đ <small>/giờ</small></div>
+                    <span style="font-size: 12px; color: #059669; font-weight: 600;">Còn 4 sân trống</span>
+                    <div class="card-actions">
+                        <a th:href="@{/san-bong/3}" class="btn-outline">Chi tiết</a>
+                        <a th:href="@{/san-bong/3}" class="btn-solid">Đặt ngay</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination Điều hướng trang -->
+            <div class="pagination">
+                <a href="#" class="page-item"><i class="fa-solid fa-chevron-left"></i></a>
+                <a href="#" class="page-item active">1</a>
+                <a href="#" class="page-item">2</a>
+                <a href="#" class="page-item">3</a>
+                <a href="#" class="page-item">4</a>
+                <a href="#" class="page-item">...</a>
+                <a href="#" class="page-item">23</a>
+                <a href="#" class="page-item"><i class="fa-solid fa-chevron-right"></i></a>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer hoàn chỉnh -->
+    <footer class="main-footer">
+        <div class="footer-top">
+            <div class="footer-col">
+                <h4 style="font-size: 20px; color: #34d399;"><i class="fa-solid fa-futbol"></i> SportHub</h4>
+                <p>Nền tảng tìm kiếm và đặt lịch sân thể thao hàng đầu toàn quốc. Đem lại trải nghiệm đặt sân nhanh chóng, cập nhật lịch trống và bảng giá chuẩn xác nhất theo thời gian thực.</p>
+                <div style="display: flex; gap: 12px;">
+                    <a href="#" style="color: #cbd5e1; font-size: 18px;"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#" style="color: #cbd5e1; font-size: 18px;"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#" style="color: #cbd5e1; font-size: 18px;"><i class="fa-brands fa-tiktok"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>Về chúng tôi</h4>
+                <ul>
+                    <li><a href="#">Giới thiệu nền tảng</a></li>
+                    <li><a href="#">Bảng giá dịch vụ</a></li>
+                    <li><a href="#">Dành cho chủ sân</a></li>
+                    <li><a href="#">Chính sách &amp; Điều khoản</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Hỗ trợ khách hàng</h4>
+                <ul>
+                    <li><a href="#">Hướng dẫn đặt sân</a></li>
+                    <li><a href="#">Chính sách hoàn tiền/hủy sân</a></li>
+                    <li><a href="#">Quy định đặt lịch cọc</a></li>
+                    <li><a href="#">Câu hỏi thường gặp (FAQ)</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Liên hệ</h4>
+                <ul class="footer-contact">
+                    <li><i class="fa-solid fa-location-dot"></i> Hà Nội &amp; TP. Hồ Chí Minh</li>
+                    <li><i class="fa-solid fa-phone"></i> Hotline: 1900 xxxx (8:00 - 22:00)</li>
+                    <li><i class="fa-solid fa-envelope"></i> Email: support@sporthub.vn</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 SportHub Platform. Dự án Đồ án liên ngành. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script th:inline="javascript">
+        /* Nhận giá trị loại sân từ Spring Boot Model */
+        const currentType = /*[[${selectedType}]]*/ 'all';
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if (!currentType || currentType === 'all') return;
+
+            // Bảng đối chiếu mã loại sang tên hiển thị tiếng Việt
+            const typeNames = {
+                'football': 'Bóng đá',
+                'pickleball': 'Pickleball',
+                'badminton': 'Cầu lông',
+                'tennis': 'Tennis',
+                'basketball': 'Bóng rổ'
+            };
+
+            const currentName = typeNames[currentType];
+
+            // 1. Cập nhật lại tiêu đề trang
+            if (currentName) {
+                const pageTitle = document.querySelector('.header-title');
+                if (pageTitle) {
+                    pageTitle.innerHTML = `<i class="fa-solid fa-trophy"></i> Danh sách sân ${currentName}`;
+                }
+            }
+
+            // 2. Dropdown chọn đúng giá trị
+            const typeSelect = document.querySelector('select[name="type"]');
+            if (typeSelect) {
+                typeSelect.value = currentType;
+            }
+
+            // 3. Lọc ẩn/hiện các sân trong danh sách theo thuộc tính data-sport
+            const cards = document.querySelectorAll('.court-card');
+            cards.forEach(card => {
+                const sport = card.getAttribute('data-sport');
+                if (sport) {
+                    if (sport.toLowerCase() === currentType.toLowerCase()) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
