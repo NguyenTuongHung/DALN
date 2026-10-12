@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ cá nhân — SânThảo.vn</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f8fafc; color: #1e293b; min-height: 100vh; padding: 40px 20px; }
+        .container { max-width: 750px; margin: 0 auto; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .top-nav a { text-decoration: none; color: #064e3b; font-weight: 600; font-size: 14px; }
+        .card { background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); }
+        .profile-head { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 24px; margin-bottom: 24px; }
+        .avatar { width: 68px; height: 68px; border-radius: 50%; background: #059669; color: #fff; font-size: 28px; display: flex; align-items: center; justify-content: center; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+        .form-control:focus { border-color: #059669; }
+        .form-control:disabled { background: #f1f5f9; color: #64748b; }
+        .btn-save { background: #059669; color: #fff; border: none; padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .btn-save:hover { background: #047857; }
+        .alert-success { background: #dcfce7; color: #15803d; padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-nav">
+        <a th:href="@{/}"><i class="fa-solid fa-arrow-left"></i> Về trang chủ</a>
+        <div style="display: flex; gap: 16px;">
+            <a th:href="@{/lich-su-dat-san}">Lịch sử đặt sân</a>
+            <a th:href="@{/doi-mat-khau}">Đổi mật khẩu</a>
+            <a th:href="@{/logout}" style="color: #ef4444;">Đăng xuất</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div th:if="${param.success}" class="alert-success">
+            <i class="fa-solid fa-circle-check"></i> Cập nhật thông tin cá nhân thành công!
+        </div>
+
+        <div class="profile-head">
+            <div class="avatar"><i class="fa-solid fa-user"></i></div>
+            <div>
+                <h2 style="font-size: 20px;" th:text="${user?.fullName != null and user?.fullName != '' ? user.fullName : user?.username}">Tên người dùng</h2>
+                <p style="font-size: 13px; color: #64748b;">Tài khoản: <b th:text="${user?.username}">user</b></p>
+            </div>
+        </div>
+
+        <form th:action="@{/profile/update}" th:object="${user}" method="post">
+            <div class="form-group">
+                <label>Tên đăng nhập / Email</label>
+                <input type="text" class="form-control" th:value="${user?.username}" disabled>
+            </div>
+
+            <div class="form-group">
+                <label>Họ và tên</label>
+                <input type="text" class="form-control" th:field="*{fullName}" placeholder="Nhập họ và tên của bạn">
+            </div>
+
+            <div class="form-group">
+                <label>Số điện thoại</label>
+                <input type="tel" class="form-control" th:field="*{phone}" placeholder="Nhập số điện thoại liên hệ">
+            </div>
+
+            <div style="margin-top: 24px; text-align: right;">
+                <button type="submit" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

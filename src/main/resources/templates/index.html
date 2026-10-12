@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SânThảo.vn — Đặt sân thể thao nhanh, dễ, tiện</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a th:href="@{/}" class="logo"><span class="logo-mark"></span>SÂN THẢO</a>
+    <ul class="navlinks">
+      <li><a th:href="@{/tim-san}">Tìm sân</a></li>
+      <li><a th:href="@{/ban-do}">Bản đồ</a></li>
+      <li><a href="#blog">Blog</a></li>
+      <li class="has-drop">
+        <a href="#pm">Phần mềm quản lý ▾</a>
+        <div class="drop">
+          <a href="#">⚽ PM quản lý sân Bóng đá</a>
+          <a href="#">🏸 PM quản lý sân Cầu lông</a>
+          <a href="#">🏓 PM quản lý sân Pickleball</a>
+          <a href="#">🎾 PM quản lý sân Tennis</a>
+          <a href="#">🏀 PM quản lý sân Bóng rổ</a>
+        </div>
+      </li>
+      <li class="has-drop">
+        <a href="#loai-san">Loại sân ▾</a>
+        <div class="drop">
+          <a th:href="@{/tim-san(type='football')}">⚽ Bóng đá</a>
+          <a th:href="@{/tim-san(type='tennis')}">🎾 Tennis</a>
+          <a th:href="@{/tim-san(type='badminton')}">🏸 Cầu lông</a>
+          <a th:href="@{/tim-san(type='pickleball')}">🏓 Pickleball</a>
+          <a th:href="@{/tim-san(type='basketball')}">🏀 Bóng rổ</a>
+        </div>
+      </li>
+    </ul>
+
+    <div class="navcta">
+  <th:block sec:authorize="!isAuthenticated()">
+    <a th:href="@{/login}" class="txtlink">Đăng nhập</a>
+    <a th:href="@{/register}" class="txtlink">Đăng kí</a>
+  </th:block>
+
+  <th:block sec:authorize="isAuthenticated()">
+    <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/dashboard}" class="txtlink" style="color: #facc15; font-weight: 700;">
+      ⚙ Quản trị
+    </a>
+
+    <div class="user-dropdown-wrapper" style="position: relative; display: inline-block;">
+      <button type="button" class="user-btn" onclick="toggleUserDropdown(event)" 
+              style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); color: #fff; padding: 6px 14px; border-radius: 9999px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px;">
+        <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #10b981; border-radius: 50%; font-size: 12px;">👤</span>
+        <span sec:authentication="name">User</span>
+        <span style="font-size: 10px;">▼</span>
+      </button>
+
+      <div id="userDropdownMenu" 
+           style="display: none; position: absolute; right: 0; top: 125%; width: 220px; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; z-index: 1000; overflow: hidden; text-align: left;">
+        
+        <div style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9; background: #f8fafc;">
+          <div style="font-size: 12px; color: #64748b;">Xin chào,</div>
+          <div style="font-weight: 700; color: #064e3b; font-size: 14px;" sec:authentication="name">Người dùng</div>
+        </div>
+
+        <div style="padding: 6px 0;">
+          <a th:href="@{/profile}" 
+             style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: #334155; text-decoration: none; font-size: 13.5px; font-weight: 500; transition: background 0.15s;"
+             onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+            <span>👤</span> Hồ sơ cá nhân
+          </a>
+
+          <a th:href="@{/lich-su-dat-san}" 
+             style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: #334155; text-decoration: none; font-size: 13.5px; font-weight: 500; transition: background 0.15s;"
+             onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+            <span>📅</span> Lịch sử đặt sân
+          </a>
+
+          <a th:href="@{/doi-mat-khau}" 
+             style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: #334155; text-decoration: none; font-size: 13.5px; font-weight: 500; transition: background 0.15s;"
+             onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+            <span>🔒</span> Đổi mật khẩu
+          </a>
+        </div>
+
+        <div style="border-top: 1px solid #f1f5f9; padding: 6px 0;">
+          <a th:href="@{/logout}" 
+             style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: #ef4444; text-decoration: none; font-size: 13.5px; font-weight: 600; transition: background 0.15s;"
+             onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">
+            <span>🚪</span> Đăng xuất
+          </a>
+        </div>
+      </div>
+    </div>
+  </th:block>
+
+  <button class="menu-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</div>
+</header>
+
+<section class="hero">
+  <div class="pitch-lines">
+    <svg viewBox="0 0 1180 700" preserveAspectRatio="none">
+      <circle cx="1000" cy="120" r="180" fill="none" stroke="#fff" stroke-width="1.5"/>
+      <line x1="0" y1="500" x2="1180" y2="500" stroke="#fff" stroke-width="1.5"/>
+      <rect x="0" y="500" width="220" height="140" fill="none" stroke="#fff" stroke-width="1.5"/>
+    </svg>
+  </div>
+  <div class="wrap hero-inner">
+    <div>
+      <span class="hero-tag"><span class="dot"></span>Hơn 441 cơ sở thể thao trên toàn quốc</span>
+      <h1 class="display">Đặt sân<br>đấu <em>hôm nay,</em><br>chơi ngay tối nay</h1>
+      <p>Tìm và giữ sân bóng đá, tennis, cầu lông, pickleball trong vài giây — giá thật, lịch trống thật, không cần gọi hỏi.</p>
+      <div class="hero-btns">
+        <!-- Dùng Thymeleaf th:href để điều hướng chuẩn -->
+<a th:href="@{/tim-san}" class="btn-tim-san" style="background-color: #ea580c; color: #fff; padding: 12px 24px; border-radius: 9999px; text-decoration: none; font-weight: 600; display: inline-block;">
+    Tìm sân ngay
+</a>
+        <a th:href="@{/ban-do}" 
+   style="display: inline-flex; align-items: center; justify-content: center; 
+          padding: 12px 28px; border-radius: 9999px; border: 1.5px solid rgba(255, 255, 255, 0.4); 
+          background: rgba(255, 255, 255, 0.1); color: #ffffff !important; 
+          font-weight: 600; font-size: 15px; text-decoration: none; 
+          cursor: pointer; transition: all 0.2s ease;">
+    Xem bản đồ
+</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><b>624</b><span>Cơ sở</span></div>
+        <div class="stat"><b>857</b><span>Sân thể thao</span></div>
+        <div class="stat"><b>8</b><span>Loại sân</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <img src="https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=75" alt="Sân bóng đá">
+      <div class="badge"><div><b>Còn trống</b><br><span>18:00 – 19:00 hôm nay</span></div><span>Sân 5 người · Q.7</span></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="search-card" id="tim-san">
+      <div class="field">
+        <label>Địa điểm</label>
+        <div class="control">📍 <input placeholder="Nhập quận, thành phố..."></div>
+      </div>
+      <div class="field">
+        <label>Loại sân</label>
+        <div class="sport-pills">
+          <button class="sport-pill active">Tất cả</button>
+          <button class="sport-pill">⚽ Bóng đá</button>
+          <button class="sport-pill">🏸 Cầu lông</button>
+          <button class="sport-pill">🎾 Tennis</button>
+          <button class="sport-pill">🏓 Pickleball</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Ngày & giờ</label>
+        <div class="control">🗓️ <input type="text" placeholder="Hôm nay, 18:00"></div>
+      </div>
+      <button class="btn btn-clay">Tìm ngay</button>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Danh mục</span>
+        <h2>Chọn môn thể thao bạn chơi</h2>
+      </div>
+      <a th:href="@{/tim-san}" class="btn btn-ghost-dark">Xem tất cả sân</a>
+    </div>
+
+    <div class="cat-grid">
+      <a th:href="@{/tim-san(type='football')}" class="cat-card">
+        <div class="cat-icon">⚽</div>
+        <b>Bóng đá</b>
+        <span>312 sân</span>
+      </a>
+
+      <a th:href="@{/tim-san(type='tennis')}" class="cat-card">
+        <div class="cat-icon">🎾</div>
+        <b>Tennis</b>
+        <span>96 sân</span>
+      </a>
+
+      <a th:href="@{/tim-san(type='badminton')}" class="cat-card">
+        <div class="cat-icon">🏸</div>
+        <b>Cầu lông</b>
+        <span>184 sân</span>
+      </a>
+
+      <a th:href="@{/tim-san(type='pickleball')}" class="cat-card">
+        <div class="cat-icon">🏓</div>
+        <b>Pickleball</b>
+        <span>140 sân</span>
+      </a>
+
+      <a th:href="@{/tim-san(type='basketball')}" class="cat-card">
+        <div class="cat-icon">🏀</div>
+        <b>Bóng rổ</b>
+        <span>58 sân</span>
+      </a>
+
+      <a th:href="@{/tim-san(type='volleyball')}" class="cat-card">
+        <div class="cat-icon">🏐</div>
+        <b>Bóng chuyền</b>
+        <span>34 sân</span>
+      </a>
+
+      <a th:href="@{/tim-san(type='table-tennis')}" class="cat-card">
+        <div class="cat-icon">🏓</div>
+        <b>Bóng bàn</b>
+        <span>22 sân</span>
+      </a>
+
+      <a th:href="@{/tim-san(type='other')}" class="cat-card">
+        <div class="cat-icon">🏅</div>
+        <b>Khác</b>
+        <span>11 sân</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Nổi bật</span>
+        <h2>Cơ sở được yêu thích nhất</h2>
+        <p>Chất lượng sân tốt, giá rõ ràng, được người chơi đánh giá cao.</p>
+      </div>
+      <a href="#" class="btn btn-ghost-dark">Xem tất cả</a>
+    </div>
+    <div class="venue-row">
+      <div class="venue-card">
+        <div class="venue-img"><span class="venue-sport">🏓</span><img src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=400&q=75"></div>
+        <div class="venue-body">
+          <b>002 PB Club</b>
+          <div class="venue-addr">📍 28 Thảo Điền, Thủ Đức, TP.HCM</div>
+          <div class="venue-foot"><span>2 sân</span><a href="#">Xem chi tiết →</a></div>
+        </div>
+      </div>
+      <div class="venue-card">
+        <div class="venue-img"><span class="venue-sport">⚽</span><img src="https://images.unsplash.com/photo-1459865264687-595d652de67e?w=400&q=75"></div>
+        <div class="venue-body">
+          <b>Sân 5 Việt Thắng</b>
+          <div class="venue-addr">📍 1085 Tạ Quang Bửu, Q.8, TP.HCM</div>
+          <div class="venue-foot"><span>3 sân</span><a href="#">Xem chi tiết →</a></div>
+        </div>
+      </div>
+      <div class="venue-card">
+        <div class="venue-img"><span class="venue-sport">🎾</span><img src="https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=400&q=75"></div>
+        <div class="venue-body">
+          <b>Tennis Phú Nhuận</b>
+          <div class="venue-addr">📍 3373 Phạm Thế Hiển, Q.7, TP.HCM</div>
+          <div class="venue-foot"><span>4 sân</span><a href="#">Xem chi tiết →</a></div>
+        </div>
+      </div>
+      <div class="venue-card">
+        <div class="venue-img"><span class="venue-sport">🏸</span><img src="https://images.unsplash.com/photo-1613918431703-aa50889a9a2b?w=400&q=75"></div>
+        <div class="venue-body">
+          <b>Cầu lông ACE</b>
+          <div class="venue-addr">📍 Cát Linh, Đống Đa, Hà Nội</div>
+          <div class="venue-foot"><span>2 sân</span><a href="#">Xem chi tiết →</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap process">
+    <div>
+      <span class="eyebrow">Quy trình</span>
+      <h2 class="display" style="font-size:38px;color:var(--pitch);margin-bottom:20px">Đặt sân trong<br>3 bước</h2>
+      <div class="steps">
+        <div class="step active">
+          <div class="step-num">01</div>
+          <div><h3>Tìm sân gần bạn</h3><p>Nhập địa chỉ hoặc bật định vị để tìm sân trong khu vực của bạn.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div><h3>Chọn ngày & giờ</h3><p>Xem lịch trống theo thời gian thực, chọn khung giờ và kiểm tra giá.</p></div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div><h3>Xác nhận & đến sân</h3><p>Nhập số điện thoại, xác nhận. Nhận thông báo qua Zalo/SMS và đến chơi.</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="process-visual">
+      <div class="pin" style="top:22%;left:28%"></div>
+      <div class="pin" style="top:64%;left:70%"></div>
+      <div class="pin" style="top:36%;left:64%"></div>
+      <div class="center-card"><b>18:00</b><span>Sân trống hôm nay</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="map-section" id="ban-do">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow" style="color:var(--field-bright)">Bản đồ</span>
+        <h2>Sân gần bạn nhất</h2>
+        <p>Bật định vị để tìm sân thể thao gần nhất, hoặc xem toàn bộ trên bản đồ.</p>
+      </div>
+      <a href="#" class="btn btn-outline">Vị trí của tôi</a>
+    </div>
+    <div class="map-box">
+      <div class="map-grid"></div>
+      <div class="map-pin" style="top:30%;left:22%"></div>
+      <div class="map-pin" style="top:52%;left:48%"></div>
+      <div class="map-pin" style="top:38%;left:70%"></div>
+      <div class="map-pin" style="top:68%;left:80%"></div>
+      <div class="map-cta">
+        <span>Bản đồ đang hiển thị <b>0</b> cơ sở gần bạn</span>
+        <a href="#" class="btn btn-clay" style="padding:10px 20px">Mở bản đồ đầy đủ</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Toàn quốc</span>
+        <h2>Đặt sân theo tỉnh thành</h2>
+        <p>Có mặt tại 34 tỉnh thành trên cả nước.</p>
+      </div>
+    </div>
+    <div class="province-grid">
+      <div class="province-chip">⚽ Bóng đá</div>
+      <div class="province-chip">🎾 Tennis</div>
+      <div class="province-chip">🏸 Cầu lông</div>
+      <div class="province-chip">🏓 Pickleball</div>
+      <div class="province-chip">🏀 Bóng rổ</div>
+      <div class="province-chip">🏐 Bóng chuyền</div>
+      <div class="province-chip">🏓 Bóng bàn</div>
+      <div class="province-chip">🏅 Khác</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="promo">
+      <div class="promo-text">
+        <span class="eyebrow" style="color:var(--field-bright)">Giải pháp công nghệ</span>
+        <h2>Phần mềm quản lý sân chuyên nghiệp</h2>
+        <p>Giúp chủ sân quản lý lịch đặt, doanh thu, khách hàng tự động — giảm sân trống đến 40%.</p>
+        <ul class="promo-list">
+          <li><span class="check">✓</span>Quản lý lịch đặt sân real-time, tránh trùng lịch</li>
+          <li><span class="check">✓</span>Báo cáo doanh thu chi tiết theo ngày, tuần, tháng</li>
+          <li><span class="check">✓</span>Phân loại khách hàng VIP tự động</li>
+          <li><span class="check">✓</span>Thông báo Zalo/Telegram khi có đơn mới</li>
+        </ul>
+        <div class="promo-cta">
+          <a href="#" class="btn btn-clay">Dùng thử miễn phí</a>
+          <span class="hotline">Hotline<br><b>081 22 88 111</b></span>
+        </div>
+      </div>
+      <div class="promo-visual">
+        <img src="https://images.unsplash.com/photo-1517649763962-0c623066013b?w=700&q=75" alt="Quản lý sân">
+        <div class="promo-stat"><b>-40%</b><span>sân trống</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Đánh giá</span>
+        <h2>Người chơi nói gì?</h2>
+      </div>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <span class="testi-mark">"</span>
+        <p>Đặt sân cho cả đội chỉ mất 30 giây. Giao diện rõ ràng, xem lịch trống rất dễ.</p>
+        <div class="testi-who"><img src="https://i.pravatar.cc/80?img=3"><div><b>Minh Tuấn</b><span>⚽ Đội bóng Q. Phú Nhuận</span></div></div>
+      </div>
+      <div class="testi-card">
+        <span class="testi-mark">"</span>
+        <p>Trước đây nhắn tin chủ sân không trả lời. Từ khi dùng nền tảng này là đặt được ngay.</p>
+        <div class="testi-who"><img src="https://i.pravatar.cc/80?img=5"><div><b>Thanh Hà</b><span>🎾 Người chơi Tennis</span></div></div>
+      </div>
+      <div class="testi-card">
+        <span class="testi-mark">"</span>
+        <p>Pickleball đang hot mà tìm sân rất khó. Ở đây có đủ sân gần nhà, giá hiển thị rõ ràng.</p>
+        <div class="testi-who"><img src="https://i.pravatar.cc/80?img=8"><div><b>Đức Khải</b><span>🏓 Pickleball Q. Tân Bình</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="strip">
+      <div>
+        <h3>Nhận voucher 20%</h3>
+        <p>Đăng ký để nhận ưu đãi cho lần đặt sân đầu tiên.</p>
+      </div>
+      <form onsubmit="return false">
+        <input type="email" placeholder="Email của bạn">
+        <button class="btn">Đăng ký</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <span class="foot-logo">SÂN THẢO</span>
+        <p>Nền tảng đặt sân thể thao trực tuyến, kết nối người chơi với hàng trăm sân trên cả nước.</p>
+        <div class="foot-social">
+          <a href="#">f</a><a href="#">t</a><a href="#">yt</a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4>Khám phá</h4>
+        <ul>
+          <li><a href="#tim-san">Tìm sân</a></li>
+          <li><a href="#ban-do">Bản đồ</a></li>
+          <li><a href="#">Sân bóng đá</a></li>
+          <li><a href="#">Sân tennis</a></li>
+          <li><a href="#">Sân cầu lông</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Hỗ trợ</h4>
+        <ul>
+          <li><a href="#">Hướng dẫn đặt sân</a></li>
+          <li><a href="#">Câu hỏi thường gặp</a></li>
+          <li><a href="#">Liên hệ</a></li>
+          <li><a href="#">Chính sách hoàn tiền</a></li>
+          <li><a href="#">Điều khoản sử dụng</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>Liên hệ</h4>
+        <ul>
+          <li>Hotline 24/7</li>
+          <li style="color:#fff;font-weight:700">081 22 88 111</li>
+          <li><a href="#">Đăng ký chủ sân</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 SânThảo.vn — All rights reserved.</span>
+      <span>Thiết kế lấy cảm hứng từ sanbong.vn</span>
+    </div>
+  </div>
+</footer>
+
+<script th:src="@{/js/main.js}" src="/js/main.js"></script>
+
+
+
+<script>
+  function toggleUserDropdown(event) {
+    event.stopPropagation();
+    const menu = document.getElementById('userDropdownMenu');
+    if (menu) {
+      menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+    }
+  }
+
+  // Đóng dropdown khi click ra ngoài
+  window.addEventListener('click', function(e) {
+    const menu = document.getElementById('userDropdownMenu');
+    if (menu && !e.target.closest('.user-dropdown-wrapper')) {
+      menu.style.display = 'none';
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt sân &amp; Thanh toán — SportHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background: #f8fafc; color: #1e293b; padding: 30px 16px 80px; }
+
+        .container { max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+
+        .card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 22px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .card-step-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 16px; }
+        .step-num { width: 22px; height: 22px; border-radius: 50%; background: #16a34a; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
+
+        /* Bước 1: Cơ sở đã chọn */
+        .selected-court-box { display: flex; align-items: center; justify-content: space-between; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 12px; }
+        .court-meta { display: flex; align-items: center; gap: 14px; }
+        .thumb { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; }
+        .btn-change { color: #16a34a; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+
+        /* Bước 2: Chọn sân & lịch */
+        .subcourt-selector { display: flex; gap: 14px; margin-bottom: 20px; }
+        .subcourt-option { flex: 1; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px; text-align: center; cursor: pointer; transition: all 0.15s; }
+        .subcourt-option.active { border-color: #f43f5e; background: #fff1f2; }
+        .subcourt-name { font-weight: 700; font-size: 13.5px; color: #0f172a; margin-top: 4px; }
+        .subcourt-capacity { font-size: 12px; color: #64748b; }
+
+        .date-duration-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+        .field-label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; }
+        .input-date { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none; }
+        
+        .duration-btns { display: flex; gap: 8px; }
+        .btn-dur { flex: 1; padding: 10px; border: 1.5px solid #cbd5e1; background: #fff; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+        .btn-dur.active { border-color: #16a34a; background: #ecfdf5; color: #16a34a; }
+
+        /* Lưới chọn giờ bắt đầu */
+        .time-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .time-btn { border: 1px solid #e2e8f0; background: #fff; color: #334155; font-size: 13px; font-weight: 600; padding: 10px 4px; border-radius: 8px; cursor: pointer; text-align: center; }
+        .time-btn:hover { border-color: #16a34a; }
+        .time-btn.active { background: #16a34a; color: #fff; border-color: #16a34a; }
+
+        /* Bước 3: Thông tin liên hệ */
+        .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .form-input { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none; }
+        .form-input:focus { border-color: #16a34a; }
+        .form-textarea { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; height: 80px; resize: vertical; outline: none; }
+
+        /* Card tóm tắt bên phải */
+        .summary-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 22px; position: sticky; top: 20px; }
+        .sum-title { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+        .sum-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 12px; color: #64748b; }
+        .sum-val { font-weight: 600; color: #0f172a; }
+        .sum-total-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 14px; margin-top: 14px; font-size: 14px; font-weight: 700; }
+        .sum-total-val { font-size: 18px; font-weight: 800; color: #16a34a; }
+
+        .btn-confirm-order { width: 100%; background: #86efac; color: #fff; border: none; padding: 13px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: not-allowed; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+        .btn-confirm-order.ready { background: #16a34a; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <form th:action="@{/dat-san/confirm}" method="post">
+        <input type="hidden" name="courtId" th:value="${court != null ? court.id : 1}">
+        <input type="hidden" id="selectedSubCourtInput" name="subCourtId" value="1">
+        <input type="hidden" id="selectedTimeSlotInput" name="timeSlot" value="08:00 - 09:00">
+        <input type="hidden" id="totalPriceInput" name="totalPrice" value="100000">
+        <input type="hidden" id="depositAmountInput" name="depositAmount" value="30000">
+
+        <div class="container">
+            <!-- CỘT TRÁI (3 BƯỚC THỰC HIỆN) -->
+            <div>
+                <!-- Bước 1: Cơ sở đã chọn -->
+                <div class="card">
+                    <div class="card-step-title"><span class="step-num"><i class="fa-solid fa-check"></i></span> Cơ sở đã chọn</div>
+                    <div class="selected-court-box">
+                        <div class="court-meta">
+                            <img src="https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=100&auto=format&fit=crop" class="thumb" alt="Court">
+                            <div>
+                                <strong style="font-size: 14px;" th:text="${court != null ? court.name : '002 PB Club'}">002 PB Club</strong>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 2px;"><i class="fa-solid fa-location-dot" style="color: #22c55e;"></i> <span th:text="${court != null ? court.address : '28 Thảo Điền, Hồ Chí Minh'}">28 Thảo Điền, Hồ Chí Minh</span></div>
+                                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">📍 2 sân</div>
+                            </div>
+                        </div>
+                        <a th:href="@{/tim-san}" class="btn-change"><i class="fa-solid fa-rotate"></i> Đổi</a>
+                    </div>
+                </div>
+
+                <!-- Bước 2: Chọn sân & lịch -->
+                <div class="card">
+                    <div class="card-step-title"><span class="step-num">2</span> Chọn sân &amp; lịch</div>
+
+                    <label class="field-label">CHỌN SÂN</label>
+                    <div class="subcourt-selector">
+                        <div class="subcourt-option active" onclick="pickSubCourt(this, 1, 'Sân PB 1')">
+                            <span style="color: #f43f5e; font-size: 18px;">📍</span>
+                            <div class="subcourt-name">Sân PB 1</div>
+                            <div class="subcourt-capacity">4 người</div>
+                        </div>
+                        <div class="subcourt-option" onclick="pickSubCourt(this, 2, 'Sân PB 2')">
+                            <span style="color: #f43f5e; font-size: 18px;">📍</span>
+                            <div class="subcourt-name">Sân PB 2</div>
+                            <div class="subcourt-capacity">4 người</div>
+                        </div>
+                    </div>
+
+                    <div class="date-duration-grid">
+                        <div>
+                            <label class="field-label"><i class="fa-regular fa-calendar"></i> NGÀY ĐẶT SÂN</label>
+                            <input type="date" name="bookingDate" id="bookingDateInput" class="input-date" value="2026-10-09" onchange="updateSummaryDate(this.value)" required>
+                        </div>
+                        <div>
+                            <label class="field-label"><i class="fa-regular fa-hourglass-half"></i> THỜI LƯỢNG</label>
+                            <div class="duration-btns">
+                                <button type="button" class="btn-dur active" onclick="pickDuration(this, 1)">1h</button>
+                                <button type="button" class="btn-dur" onclick="pickDuration(this, 1.5)">1.5h</button>
+                                <button type="button" class="btn-dur" onclick="pickDuration(this, 2)">2h</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <label class="field-label"><i class="fa-regular fa-clock"></i> CHỌN GIỜ BẮT ĐẦU</label>
+                    <div class="time-grid">
+                        <button type="button" class="time-btn" onclick="pickTime(this, '06:00')">06:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '07:00')">07:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '08:00')">08:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '09:00')">09:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '10:00')">10:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '11:00')">11:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '12:00')">12:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '13:00')">13:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '14:00')">14:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '15:00')">15:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '16:00')">16:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '17:00')">17:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '18:00')">18:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '19:00')">19:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '20:00')">20:00</button>
+                        <button type="button" class="time-btn" onclick="pickTime(this, '21:00')">21:00</button>
+                    </div>
+                </div>
+
+                <!-- Bước 3: Thông tin liên hệ -->
+                <div class="card">
+                    <div class="card-step-title"><span class="step-num">3</span> Thông tin liên hệ</div>
+
+                    <div class="contact-grid">
+                        <div>
+                            <label class="field-label">HỌ TÊN *</label>
+                            <input type="text" name="customerName" class="form-input" placeholder="Nguyễn Văn A" required>
+                        </div>
+                        <div>
+                            <label class="field-label">SỐ ĐIỆN THOẠI *</label>
+                            <input type="tel" name="customerPhone" class="form-input" placeholder="0901234567" required>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label class="field-label">EMAIL</label>
+                        <input type="email" name="customerEmail" class="form-input" placeholder="email@example.com">
+                    </div>
+
+                    <div>
+                        <label class="field-label">GHI CHÚ</label>
+                        <textarea name="customerNote" class="form-textarea" placeholder="Yêu cầu đặc biệt..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI (TÓM TẮT ĐƠN ĐẶT) -->
+            <aside>
+                <div class="summary-card">
+                    <div class="sum-title"><span style="color: #16a34a;">■</span> Tóm tắt</div>
+
+                    <div class="sum-row">
+                        <span>Cơ sở</span>
+                        <span class="sum-val" th:text="${court != null ? court.name : '002 PB Club'}">002 PB Club</span>
+                    </div>
+                    <div class="sum-row">
+                        <span>Sân</span>
+                        <span class="sum-val" id="sumSubCourt">Sân PB 1</span>
+                    </div>
+                    <div class="sum-row">
+                        <span>Ngày</span>
+                        <span class="sum-val" id="sumDate">09/10/2026</span>
+                    </div>
+                    <div class="sum-row">
+                        <span>Giờ</span>
+                        <span class="sum-val" id="sumTime" style="color: #16a34a;">Chưa chọn</span>
+                    </div>
+                    <div class="sum-row">
+                        <span>Thời lượng</span>
+                        <span class="sum-val" id="sumDuration">1 giờ</span>
+                    </div>
+
+                    <div class="sum-total-row">
+                        <span>Tổng thanh toán</span>
+                        <span class="sum-total-val" id="sumTotalPrice">—</span>
+                    </div>
+
+                    <button type="submit" id="btnSubmitOrder" class="btn-confirm-order" disabled>
+                        <i class="fa-regular fa-calendar-check"></i> Xác nhận đặt sân
+                    </button>
+
+                    <small style="display: block; text-align: center; color: #94a3b8; font-size: 11px; margin-top: 12px;">
+                        <i class="fa-solid fa-shield-halved"></i> Hủy trước 2 giờ miễn phí
+                    </small>
+                </div>
+            </aside>
+        </div>
+    </form>
+
+    <script>
+        let selectedDuration = 1.0;
+        let selectedStartTime = '';
+        const pricePerHour = 100000; // 100K/h
+
+        function pickSubCourt(el, id, name) {
+            document.querySelectorAll('.subcourt-option').forEach(o => o.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('selectedSubCourtInput').value = id;
+            document.getElementById('sumSubCourt').innerText = name;
+        }
+
+        function pickDuration(btn, dur) {
+            document.querySelectorAll('.btn-dur').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedDuration = dur;
+            document.getElementById('sumDuration').innerText = dur + ' giờ';
+            calculateTotal();
+        }
+
+        function pickTime(btn, time) {
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedStartTime = time;
+            document.getElementById('sumTime').innerText = time;
+            document.getElementById('selectedTimeSlotInput').value = time;
+            calculateTotal();
+        }
+
+        function updateSummaryDate(val) {
+            if (!val) return;
+            const parts = val.split('-');
+            document.getElementById('sumDate').innerText = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function calculateTotal() {
+            if (!selectedStartTime) return;
+
+            const total = pricePerHour * selectedDuration;
+            const deposit = total * 0.3; // 30% cọc sàn
+
+            document.getElementById('sumTotalPrice').innerText = total.toLocaleString('vi-VN') + 'đ';
+            document.getElementById('totalPriceInput').value = total;
+            document.getElementById('depositAmountInput').value = deposit;
+
+            // Kích hoạt nút xác nhận
+            const btn = document.getElementById('btnSubmitOrder');
+            btn.classList.add('ready');
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>

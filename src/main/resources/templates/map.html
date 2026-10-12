@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản đồ sân thể thao</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body, html { width: 100%; height: 100%; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* Top Navbar */
+        .navbar {
+            height: 60px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 1000;
+        }
+        .nav-brand { font-size: 22px; font-weight: 800; color: #15803d; text-decoration: none; display: flex; align-items: center; gap: 6px; }
+        .nav-links { display: flex; align-items: center; gap: 20px; list-style: none; }
+        .nav-links a { text-decoration: none; font-size: 14px; font-weight: 600; color: #374151; display: flex; align-items: center; gap: 6px; }
+        .nav-links a.active { color: #16a34a; background: #dcfce7; padding: 6px 14px; border-radius: 9999px; }
+        .nav-actions { display: flex; align-items: center; gap: 14px; }
+        .btn-owner { background: #16a34a; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
+
+        /* Map Container Wrapper */
+        .map-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: calc(100vh - 60px);
+        }
+
+        #map { width: 100%; height: 100%; z-index: 1; }
+
+        /* Floating Sidebar (List sân bên trái) */
+        .court-sidebar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 330px;
+            max-height: calc(100% - 40px);
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .court-list-scroll {
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Card Sân thu nhỏ */
+        .map-court-card {
+            background: #ffffff;
+            border: 1px solid #f3f4f6;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .map-court-card:hover {
+            border-color: #22c55e;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transform: translateY(-1px);
+        }
+        .map-court-card img {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #f3f4f6;
+        }
+        .card-details { flex: 1; min-width: 0; }
+        .court-h3 { font-size: 14px; font-weight: 700; color: #111827; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .court-sub { font-size: 11px; color: #6b7280; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+        .court-tag { font-size: 11px; color: #15803d; font-weight: 600; display: inline-block; margin-bottom: 6px; }
+        .card-actions-mini { display: flex; gap: 6px; }
+        .btn-mini-book { background: #16a34a; color: #fff; border: none; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+        .btn-mini-detail { background: #f3f4f6; color: #374151; border: none; font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+
+        /* Floating Top Center Controls (Search + Filters) */
+        .top-controls {
+            position: absolute;
+            top: 20px;
+            left: 370px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .search-input-box {
+            position: relative;
+            width: 480px;
+        }
+        .search-input-box input {
+            width: 100%;
+            height: 44px;
+            border-radius: 9999px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            padding: 0 40px 0 42px;
+            font-size: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            outline: none;
+        }
+        .search-input-box .fa-magnifying-glass { position: absolute; left: 16px; top: 14px; color: #9ca3af; }
+
+        /* Filter Chips */
+        .filter-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+        .chip {
+            background: #ffffff;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .chip.active { background: #16a34a; color: #ffffff; border-color: #16a34a; }
+        .chip:hover { border-color: #16a34a; }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header class="navbar">
+        <a th:href="@{/}" class="nav-brand"><i class="fa-solid fa-futbol"></i> SânBóng.vn</a>
+        <ul class="nav-links">
+            <li><a th:href="@{/tim-san}"><i class="fa-solid fa-magnifying-glass"></i> Tìm sân</a></li>
+            <li><a th:href="@{/ban-do}" class="active"><i class="fa-solid fa-map-location-dot"></i> Bản đồ</a></li>
+            <li><a href="#"><i class="fa-solid fa-newspaper"></i> Blog</a></li>
+        </ul>
+        <div class="nav-actions">
+            <a href="#" style="font-size: 13px; text-decoration: none; color: #4b5563; font-weight: 600;">Đăng nhập</a>
+            <a href="#" class="btn-owner"><i class="fa-solid fa-house-chimney"></i> Chủ Sân</a>
+        </div>
+    </header>
+
+    <!-- Map & Overlay Components -->
+    <main class="map-wrapper">
+        <!-- Floating Sidebar bên trái -->
+        <aside class="court-sidebar">
+            <div class="sidebar-header">
+                <span><i class="fa-solid fa-store" style="color: #16a34a;"></i> 445 cơ sở</span>
+                <i class="fa-solid fa-xmark" style="color: #9ca3af; cursor: pointer;"></i>
+            </div>
+            <div class="court-list-scroll" id="courtList">
+                <!-- Danh sách sân render động bằng JavaScript -->
+            </div>
+        </aside>
+
+        <!-- Floating Controls: Search & Tag bộ môn -->
+        <div class="top-controls">
+            <div class="search-input-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="Tìm cơ sở theo tên, quận, thành phố...">
+            </div>
+            <div class="filter-chips">
+                <span class="chip active" onclick="filterType('all', this)"><i class="fa-solid fa-border-all"></i> Tất cả</span>
+                <span class="chip" onclick="filterType('Pickleball', this)"><span style="color: #ea580c;">●</span> Pickleball</span>
+                <span class="chip" onclick="filterType('Bóng đá', this)"><span style="color: #2563eb;">●</span> Bóng đá</span>
+                <span class="chip" onclick="filterType('Cầu lông', this)"><span style="color: #ca8a04;">●</span> Cầu lông</span>
+                <span class="chip" onclick="filterType('Bóng rổ', this)"><span style="color: #dc2626;">●</span> Bóng rổ</span>
+            </div>
+        </div>
+
+        <!-- Thẻ chứa bản đồ Leaflet -->
+        <div id="map"></div>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 1. Dữ liệu mẫu các cơ sở thể thao (tọa độ thực tế tại Hà Nội và TP.HCM)
+        const courts = [
+            {
+                id: 1,
+                name: "002 PB Club",
+                address: "28 Thảo Điền, TP. Thủ Đức, HCM",
+                type: "Pickleball",
+                slots: 2,
+                lat: 10.8038,
+                lng: 106.7324,
+                img: "https://images.unsplash.com/photo-1543351611-58f69d7c1781?w=120&auto=format&fit=crop"
+            },
+            {
+                id: 2,
+                name: "3T PB Club Q8",
+                address: "1085 Tạ Quang Bửu, P.6, Quận 8, HCM",
+                type: "Pickleball",
+                slots: 2,
+                lat: 10.7412,
+                lng: 106.6578,
+                img: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=120&auto=format&fit=crop"
+            },
+            {
+                id: 3,
+                name: "ACE PB Club",
+                address: "Cát Linh, Q. Đống Đa, Hà Nội",
+                type: "Pickleball",
+                slots: 2,
+                lat: 21.0285,
+                lng: 105.8285,
+                img: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=120&auto=format&fit=crop"
+            },
+            {
+                id: 4,
+                name: "Sân Bóng Đá Cầu Giấy",
+                address: "Trần Thái Tông, Cầu Giấy, Hà Nội",
+                type: "Bóng đá",
+                slots: 4,
+                lat: 21.0345,
+                lng: 105.7892,
+                img: "https://images.unsplash.com/photo-1529900245534-47fbf866b35d?w=120&auto=format&fit=crop"
+            }
+        ];
+
+        // 2. Khởi tạo bản đồ trung tâm Việt Nam
+        const map = L.map('map', {
+            zoomControl: false // Ẩn nút zoom mặc định bên trái để không che sidebar
+        }).setView([16.047079, 108.20623], 6);
+
+        // Đặt nút zoom sang góc dưới bên phải như hình mẫu
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // Layer tile bản đồ OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        const markers = {};
+
+        // 3. Render danh sách sân ra Sidebar & ghim Marker lên Bản đồ
+        function renderCourts(list) {
+            const listContainer = document.getElementById('courtList');
+            listContainer.innerHTML = '';
+
+            // Xóa các marker cũ
+            for (let id in markers) {
+                map.removeLayer(markers[id]);
+            }
+
+            list.forEach(c => {
+                // Tạo Marker trên bản đồ
+                const marker = L.marker([c.lat, c.lng]).addTo(map);
+                marker.bindPopup(`
+                    <div style="font-size: 13px;">
+                        <strong style="color: #15803d;">${c.name}</strong><br>
+                        <span>${c.address}</span><br>
+                        <span style="color: #ea580c;">Loại: ${c.type}</span>
+                    </div>
+                `);
+                markers[c.id] = marker;
+
+                // Render card vào sidebar
+                const card = document.createElement('div');
+                card.className = 'map-court-card';
+                card.innerHTML = `
+                    <img src="${c.img}" alt="${c.name}">
+                    <div class="card-details">
+                        <div class="court-h3">${c.name}</div>
+                        <div class="court-sub"><i class="fa-solid fa-location-dot" style="color: #ef4444;"></i> ${c.address}</div>
+                        <div class="court-tag">● ${c.slots} sân trống</div>
+                        <div class="card-actions-mini">
+                            <button class="btn-mini-book">Đặt sân</button>
+                            <button class="btn-mini-detail">Chi tiết</button>
+                        </div>
+                    </div>
+                `;
+
+                // Bấm vào card thì bản đồ bay tới sân đó
+                card.addEventListener('click', () => {
+                    map.flyTo([c.lat, c.lng], 15, { animate: true, duration: 1.2 });
+                    marker.openPopup();
+                });
+
+                listContainer.appendChild(card);
+            });
+        }
+
+        renderCourts(courts);
+
+        // 4. Lọc theo bộ môn thể thao
+        function filterType(type, element) {
+            document.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            if (type === 'all') {
+                renderCourts(courts);
+            } else {
+                const filtered = courts.filter(item => item.type === type);
+                renderCourts(filtered);
+            }
+        }
+
+        // 5. Tìm kiếm theo tên hoặc địa chỉ
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const filtered = courts.filter(item => 
+                item.name.toLowerCase().includes(query) || 
+                item.address.toLowerCase().includes(query)
+            );
+            renderCourts(filtered);
+        });
+    </script>
+</body>
+</html>

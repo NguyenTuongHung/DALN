@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${court.id == null ? 'Thêm sân mới' : 'Sửa thông tin sân'}">
+        Quản lý sân
+    </title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        body {
+            background: #f0f5f9;
+            min-height: 100vh;
+            padding: 30px 16px;
+            color: #334155;
+        }
+
+        .form-card {
+            max-width: 760px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            color: #064e3b;
+            margin-bottom: 24px;
+            font-size: 24px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            background: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 12px 14px;
+            border-radius: 7px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 11px 20px;
+            border: none;
+            border-radius: 7px;
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            background: #059669;
+            color: #fff;
+        }
+
+        .btn-save:hover {
+            background: #047857;
+        }
+
+        .btn-back {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .required-note {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .form-card {
+                padding: 20px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="form-card">
+
+    <h2 th:text="${court.id == null ? 'Thêm sân mới' : 'Sửa thông tin sân'}">
+        Thêm sân mới
+    </h2>
+
+    <p class="required-note">Các trường có dấu * là bắt buộc.</p>
+
+    <div th:if="${error}"
+         class="error-message"
+         th:text="${error}">
+        Đã xảy ra lỗi.
+    </div>
+
+    <form th:action="@{/admin/courts/save}"
+          th:object="${court}"
+          method="post">
+
+        <input type="hidden" th:field="*{id}">
+
+        <div class="grid">
+            <div class="field">
+                <label for="name">Tên sân *</label>
+                <input id="name"
+                       type="text"
+                       th:field="*{name}"
+                       maxlength="150"
+                       required>
+            </div>
+
+            <div class="field">
+                <label for="sportType">Môn thể thao *</label>
+                <select id="sportType"
+                        th:field="*{sportType}"
+                        required>
+                    <option value="">-- Chọn môn thể thao --</option>
+                    <option value="football">Bóng đá</option>
+                    <option value="pickleball">Pickleball</option>
+                    <option value="badminton">Cầu lông</option>
+                    <option value="tennis">Tennis</option>
+                    <option value="basketball">Bóng rổ</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="address">Địa chỉ</label>
+                <input id="address"
+                       type="text"
+                       th:field="*{address}"
+                       placeholder="Nhập địa chỉ sân">
+            </div>
+
+            <div class="field">
+                <label for="pricePerHour">Giá thuê mỗi giờ (VNĐ) *</label>
+                <input id="pricePerHour"
+                       type="number"
+                       th:field="*{pricePerHour}"
+                       min="0"
+                       step="1000"
+                       required>
+            </div>
+
+            <div class="field">
+                <label for="openHours">Giờ mở cửa</label>
+                <input id="openHours"
+                       type="text"
+                       th:field="*{openHours}"
+                       placeholder="06:00 - 22:00">
+            </div>
+
+            <div class="field">
+                <label for="imageUrl">Đường dẫn ảnh</label>
+                <input id="imageUrl"
+                       type="url"
+                       th:field="*{imageUrl}"
+                       placeholder="https://example.com/image.jpg">
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="amenities">Tiện ích</label>
+            <input id="amenities"
+                   type="text"
+                   th:field="*{amenities}"
+                   placeholder="Bãi đỗ xe, đèn chiếu sáng, phòng thay đồ...">
+        </div>
+
+        <div class="field">
+            <label for="description">Mô tả sân</label>
+            <textarea id="description"
+                      th:field="*{description}"
+                      placeholder="Nhập thông tin giới thiệu sân..."></textarea>
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn btn-save">
+                Lưu sân
+            </button>
+
+            <a class="btn btn-back" th:href="@{/admin/courts}">
+                Quay lại
+            </a>
+        </div>
+    </form>
+
+</div>
+</body>
+</html>

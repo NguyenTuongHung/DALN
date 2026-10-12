@@ -1,0 +1,1289 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý người dùng | SportHub Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        :root {
+            --green: #059669;
+            --green-dark: #064e3b;
+            --green-light: #d1fae5;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --background: #f1f5f9;
+            --white: #ffffff;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* SIDEBAR - giống Dashboard */
+        .admin-sidebar {
+            width: 258px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--green-dark);
+            color: white;
+        }
+
+        .sidebar-brand {
+            min-height: 88px;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 22px;
+            color: #34d399;
+            font-size: 21px;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+        }
+
+        .sidebar-brand i {
+            font-size: 25px;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            list-style: none;
+            padding: 18px 10px;
+        }
+
+        .menu-item {
+            margin-bottom: 6px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 14px 15px;
+            color: #d1fae5;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .menu-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .menu-link:hover,
+        .menu-link.active {
+            color: white;
+            background: rgba(255,255,255,.15);
+        }
+
+        .menu-link.active {
+            box-shadow: inset 3px 0 #34d399;
+        }
+
+        .logout-area {
+            padding: 20px 22px;
+            border-top: 1px solid rgba(255,255,255,.1);
+        }
+
+        .logout-area a {
+            color: #fca5a5;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* MAIN - giống Dashboard */
+        .admin-main {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .admin-nav {
+            min-height: 76px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            padding: 16px 32px;
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-heading {
+            font-size: 19px;
+            font-weight: 800;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        .admin-greeting {
+            color: var(--green-dark);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .customer-link {
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .customer-link:hover {
+            color: #047857;
+        }
+
+        .admin-content {
+            padding: 30px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .content-heading {
+            margin-bottom: 24px;
+        }
+
+        .content-heading h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .content-heading p {
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* THÔNG BÁO */
+        .flash-message {
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .flash-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .flash-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* TABS */
+        .tab-buttons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            padding: 11px 18px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: white;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 700;
+            transition: .2s;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        .tab-btn.active {
+            background: var(--green);
+            color: white;
+            border-color: var(--green);
+        }
+
+        /* PANEL - cùng form Dashboard */
+        .data-panel {
+            overflow: hidden;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 3px 10px rgba(15,23,42,.025);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            padding: 24px 26px;
+        }
+
+        .panel-title {
+            color: var(--text);
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .panel-subtitle {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .panel-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            width: min(100%, 320px);
+            min-height: 40px;
+            padding: 10px 13px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: white;
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .search-box:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(5,150,105,.1);
+        }
+
+        /* BUTTONS */
+        .btn {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: white;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .btn:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            color: white;
+            background: var(--green);
+            border-color: var(--green);
+        }
+
+        .btn-primary:hover {
+            color: white;
+            background: #047857;
+        }
+
+        .btn-msg {
+            color: #0369a1;
+            background: #e0f2fe;
+            border-color: #bae6fd;
+        }
+
+        .btn-msg:hover {
+            background: #bae6fd;
+        }
+
+        .btn-toggle {
+            color: #b91c1c;
+            background: #fee2e2;
+            border-color: #fecaca;
+        }
+
+        .btn-toggle:hover {
+            background: #fecaca;
+        }
+
+        .btn-toggle.unlock {
+            color: #15803d;
+            background: #dcfce7;
+            border-color: #bbf7d0;
+        }
+
+        .btn-toggle.unlock:hover {
+            background: #bbf7d0;
+        }
+
+        .btn-save {
+            min-width: 38px;
+            min-height: 38px;
+            color: white;
+            background: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .btn-save:hover {
+            color: white;
+            background: #047857;
+        }
+
+        /* TABLE */
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 26px 24px;
+        }
+
+        .admin-table {
+            width: 100%;
+            min-width: 1100px;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .admin-table thead th {
+            padding: 15px 16px;
+            color: #475569;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .admin-table thead th:first-child {
+            border-radius: 9px 0 0 0;
+        }
+
+        .admin-table thead th:last-child {
+            border-radius: 0 9px 0 0;
+        }
+
+        .admin-table tbody td {
+            padding: 17px 16px;
+            border-bottom: 1px solid #edf2f7;
+            vertical-align: middle;
+            color: #334155;
+        }
+
+        .admin-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .business-name,
+        .customer-name {
+            color: var(--text);
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        .sub-text {
+            display: inline-block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .sub-text i {
+            width: 14px;
+        }
+
+        /* TRẠNG THÁI */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-ACTIVE {
+            color: #15803d;
+            background: #dcfce7;
+        }
+
+        .status-LOCKED {
+            color: #b91c1c;
+            background: #fee2e2;
+        }
+
+        /* HOA HỒNG */
+        .commission-form {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .commission-form input {
+            width: 75px;
+            min-height: 38px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            font-size: 13px;
+        }
+
+        .commission-form input:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(5,150,105,.1);
+        }
+
+        .commission-symbol {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .action-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-group form {
+            margin: 0;
+        }
+
+        .empty-state {
+            padding: 48px 20px !important;
+            text-align: center;
+            color: var(--muted) !important;
+        }
+
+        .empty-state i {
+            display: block;
+            margin-bottom: 14px;
+            color: #94a3b8;
+            font-size: 34px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .panel-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 15px 26px;
+            border-top: 1px solid #edf2f7;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* CHAT MODAL */
+        .chat-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: rgba(15,23,42,.45);
+        }
+
+        .chat-modal-box {
+            width: 480px;
+            max-width: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(15,23,42,.2);
+        }
+
+        .chat-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 18px 20px;
+            background: var(--green-dark);
+            color: white;
+        }
+
+        .chat-modal-header h4 {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .chat-modal-header small {
+            display: inline-block;
+            margin-top: 5px;
+            color: #a7f3d0;
+            font-size: 12px;
+        }
+
+        .chat-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-header-actions a {
+            color: #6ee7b7;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .chat-close {
+            padding: 0 4px;
+            border: none;
+            background: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .chat-modal-body {
+            min-height: 140px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 20px;
+            background: #f8fafc;
+        }
+
+        .chat-msg {
+            max-width: 85%;
+            padding: 11px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .msg-received {
+            align-self: flex-start;
+            color: #1e293b;
+            background: #e2e8f0;
+            border-bottom-left-radius: 3px;
+        }
+
+        .msg-sent {
+            align-self: flex-end;
+            color: white;
+            background: var(--green);
+            border-bottom-right-radius: 3px;
+        }
+
+        .chat-modal-footer {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            border-top: 1px solid var(--border);
+            background: white;
+        }
+
+        .chat-input {
+            flex: 1;
+            min-width: 0;
+            min-height: 40px;
+            padding: 10px 13px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            outline: none;
+            font-size: 13px;
+        }
+
+        .chat-input:focus {
+            border-color: var(--green);
+        }
+
+        /* RESPONSIVE giống Dashboard */
+        @media (max-width: 1250px) {
+            .admin-content {
+                padding: 22px;
+            }
+        }
+
+        @media (max-width: 850px) {
+            body {
+                flex-direction: column;
+            }
+
+            .admin-sidebar {
+                width: 100%;
+            }
+
+            .sidebar-brand {
+                min-height: 65px;
+            }
+
+            .sidebar-menu {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 5px;
+                padding: 10px;
+            }
+
+            .menu-item {
+                margin: 0;
+            }
+
+            .menu-link {
+                padding: 10px 12px;
+            }
+
+            .logout-area {
+                padding: 12px 20px;
+            }
+
+            .admin-nav {
+                padding: 18px 20px;
+            }
+
+            .admin-content {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .admin-nav {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-right {
+                justify-content: flex-start;
+                gap: 12px;
+            }
+
+            .content-heading h1 {
+                font-size: 21px;
+            }
+
+            .panel-header {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .panel-actions {
+                width: 100%;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .table-wrapper {
+                padding: 0 14px 16px;
+            }
+
+            .panel-footer {
+                padding: 14px 18px;
+            }
+
+            .tab-btn {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="admin-sidebar">
+    <div class="sidebar-brand">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>SportHub Admin</span>
+    </div>
+
+    <ul class="sidebar-menu">
+        <li class="menu-item">
+            <a th:href="@{/admin/dashboard}" class="menu-link">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Tổng quan</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/courts}" class="menu-link">
+                <i class="fa-solid fa-store"></i>
+                <span>Quản lý sân bãi</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/bookings}" class="menu-link">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Đơn đặt sân</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/users}" class="menu-link active">
+                <i class="fa-solid fa-users"></i>
+                <span>Khách hàng &amp; Chủ sân</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/reports}" class="menu-link">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Báo cáo doanh thu</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/settings}" class="menu-link">
+                <i class="fa-solid fa-gear"></i>
+                <span>Cài đặt hệ thống</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="logout-area">
+        <a th:href="@{/logout}">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Đăng xuất
+        </a>
+    </div>
+</aside>
+
+<div class="admin-main">
+
+    <header class="admin-nav">
+        <div class="page-heading">Trang quản trị hệ thống</div>
+
+        <div class="nav-right">
+            <span class="admin-greeting">
+                <i class="fa-solid fa-circle-user"></i>
+                Xin chào, Admin!
+            </span>
+
+            <a th:href="@{/}" class="customer-link">
+                Xem Web Khách
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="admin-content">
+
+        <div class="content-heading">
+            <h1>Quản lý người dùng</h1>
+            <p>Quản lý chủ sân, khách hàng, trạng thái tài khoản và tỷ lệ hoa hồng.</p>
+        </div>
+
+        <div th:if="${successMessage}"
+             class="flash-message flash-success"
+             th:text="${successMessage}"></div>
+
+        <div th:if="${errorMessage}"
+             class="flash-message flash-error"
+             th:text="${errorMessage}"></div>
+
+        <!-- TABS -->
+        <div class="tab-buttons">
+            <a th:href="@{/admin/users(tab='owners')}"
+               class="tab-btn"
+               th:classappend="${activeTab == 'owners' ? ' active' : ''}">
+                <i class="fa-solid fa-handshake"></i>
+                Đối tác chủ sân
+                (<span th:text="${owners != null ? owners.size() : 0}">0</span>)
+            </a>
+
+            <a th:href="@{/admin/users(tab='customers')}"
+               class="tab-btn"
+               th:classappend="${activeTab == 'customers' ? ' active' : ''}">
+                <i class="fa-solid fa-user-group"></i>
+                Người chơi / Khách hàng
+                (<span th:text="${customers != null ? customers.size() : 0}">0</span>)
+            </a>
+        </div>
+
+        <!-- PANEL CHỦ SÂN -->
+        <section class="data-panel" th:if="${activeTab == 'owners'}">
+
+            <div class="panel-header">
+                <div>
+                    <h3 class="panel-title">Danh sách đối tác cung cấp sân bãi</h3>
+                    <p class="panel-subtitle">
+                        Quản lý thông tin đối tác, quyết toán và tỷ lệ hoa hồng của sàn.
+                    </p>
+                </div>
+
+                <div class="panel-actions">
+                    <input type="search"
+                           class="search-box"
+                           id="ownerSearch"
+                           placeholder="Tìm chủ sân, cơ sở, số điện thoại...">
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="admin-table" id="ownersTable">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cơ sở / Doanh nghiệp</th>
+                        <th>Đại diện &amp; SĐT</th>
+                        <th>Thông tin quyết toán</th>
+                        <th>Hoa hồng sàn</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="o : ${owners}">
+                        <td th:text="${o.id}">1</td>
+
+                        <td>
+                            <div class="business-name"
+                                 th:text="${o.businessName != null ? o.businessName : 'Chưa cập nhật'}">
+                                Tên cơ sở
+                            </div>
+                            <span class="sub-text">
+                                Tài khoản:
+                                <span th:text="${o.username}">chusanhung</span>
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="customer-name"
+                                 th:text="${o.fullName != null ? o.fullName : 'Chưa cập nhật'}">
+                                Nguyễn Văn A
+                            </div>
+                            <span class="sub-text">
+                                <i class="fa-solid fa-phone"></i>
+                                <span th:text="${o.phone != null ? o.phone : 'Chưa có'}">09123...</span>
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="sub-text">
+                                Ngân hàng:
+                                <b th:text="${o.bankName != null ? o.bankName : 'Chưa cập nhật'}">VCB</b>
+                            </span>
+                            <br>
+                            <span class="sub-text">
+                                STK:
+                                <b th:text="${o.bankAccountNumber != null ? o.bankAccountNumber : 'Chưa cập nhật'}">
+                                    1029...
+                                </b>
+                            </span>
+                            <br>
+                            <span class="sub-text">
+                                Tên:
+                                <span th:text="${o.bankAccountName != null ? o.bankAccountName : 'Chưa cập nhật'}">
+                                    NGUYEN VAN A
+                                </span>
+                            </span>
+                        </td>
+
+                        <td>
+                            <form class="commission-form"
+                                  th:action="@{/admin/owners/{id}/update-commission(id=${o.id})}"
+                                  method="post">
+                                <input type="number"
+                                       name="commissionRate"
+                                       min="0"
+                                       max="100"
+                                       step="0.5"
+                                       th:value="${o.commissionRate != null ? o.commissionRate : 8.0}"
+                                       required
+                                       aria-label="Tỷ lệ hoa hồng">
+                                <span class="commission-symbol">%</span>
+                                <button type="submit"
+                                        class="btn btn-save"
+                                        title="Lưu hoa hồng">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                            </form>
+                        </td>
+
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${'status-' + (o.status != null ? o.status : 'ACTIVE')}"
+                                  th:text="${o.status == 'ACTIVE' ? 'Đang hợp tác' : 'Bị khóa'}">
+                                Đang hợp tác
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="action-group">
+                                <button type="button"
+                                        class="btn btn-msg"
+                                        th:data-name="${o.fullName != null ? o.fullName : (o.businessName != null ? o.businessName : o.username)}"
+                                        th:data-role="'Chủ sân'"
+                                        th:data-phone="${o.phone}"
+                                        onclick="openChatModal(this.dataset.name, this.dataset.role, this.dataset.phone)">
+                                    <i class="fa-regular fa-comment-dots"></i>
+                                    Nhắn tin
+                                </button>
+
+                                <form th:action="@{/admin/users/{id}/toggle-status(id=${o.id})}"
+                                      method="post"
+                                      onsubmit="return confirm('Bạn có chắc muốn thay đổi trạng thái tài khoản này?');">
+                                    <input type="hidden" name="tab" value="owners">
+
+                                    <button type="submit"
+                                            class="btn btn-toggle"
+                                            th:classappend="${o.status == 'ACTIVE' ? '' : ' unlock'}">
+                                        <i th:class="${o.status == 'ACTIVE' ? 'fa-solid fa-lock' : 'fa-solid fa-lock-open'}"></i>
+                                        <span th:text="${o.status == 'ACTIVE' ? 'Khóa tài khoản' : 'Mở khóa'}">
+                                            Khóa tài khoản
+                                        </span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${owners == null or owners.isEmpty()}">
+                        <td colspan="7" class="empty-state">
+                            <i class="fa-regular fa-folder-open"></i>
+                            <p>Chưa có tài khoản chủ sân nào.</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel-footer">
+                <span>
+                    <i class="fa-solid fa-database"></i>
+                    Dữ liệu được lấy từ hệ thống
+                </span>
+                <span>
+                    Tổng chủ sân:
+                    <strong th:text="${owners != null ? owners.size() : 0}">0</strong>
+                </span>
+            </div>
+        </section>
+
+        <!-- PANEL KHÁCH HÀNG -->
+        <section class="data-panel" th:if="${activeTab == 'customers'}">
+
+            <div class="panel-header">
+                <div>
+                    <h3 class="panel-title">Danh sách người chơi / khách hàng</h3>
+                    <p class="panel-subtitle">
+                        Quản lý thông tin và trạng thái tài khoản khách hàng.
+                    </p>
+                </div>
+
+                <div class="panel-actions">
+                    <input type="search"
+                           class="search-box"
+                           id="customerSearch"
+                           placeholder="Tìm tên, tài khoản, số điện thoại...">
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="admin-table" id="customersTable">
+                    <thead>
+                    <tr>
+                        <th>Mã khách hàng</th>
+                        <th>Tên khách hàng</th>
+                        <th>Tên đăng nhập / Email</th>
+                        <th>Số điện thoại</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="c : ${customers}">
+                        <td>
+                            <span class="booking-code" th:text="|#KH-${c.id}|">#KH-1</span>
+                        </td>
+
+                        <td>
+                            <div class="customer-name"
+                                 th:text="${c.fullName != null ? c.fullName : 'Chưa cập nhật'}">
+                                Trần Minh Tuấn
+                            </div>
+                        </td>
+
+                        <td th:text="${c.username}">khachhang01</td>
+
+                        <td th:text="${c.phone != null ? c.phone : 'Chưa có'}">
+                            0988111222
+                        </td>
+
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${'status-' + (c.status != null ? c.status : 'ACTIVE')}"
+                                  th:text="${c.status == 'ACTIVE' ? 'Bình thường' : 'Bị khóa'}">
+                                Bình thường
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="action-group">
+                                <button type="button"
+                                        class="btn btn-msg"
+                                        th:data-name="${c.fullName != null ? c.fullName : c.username}"
+                                        th:data-role="'Khách hàng'"
+                                        th:data-phone="${c.phone}"
+                                        onclick="openChatModal(this.dataset.name, this.dataset.role, this.dataset.phone)">
+                                    <i class="fa-regular fa-comment-dots"></i>
+                                    Nhắn tin
+                                </button>
+
+                                <form th:action="@{/admin/users/{id}/toggle-status(id=${c.id})}"
+                                      method="post"
+                                      onsubmit="return confirm('Bạn có chắc muốn thay đổi trạng thái tài khoản này?');">
+                                    <input type="hidden" name="tab" value="customers">
+
+                                    <button type="submit"
+                                            class="btn btn-toggle"
+                                            th:classappend="${c.status == 'ACTIVE' ? '' : ' unlock'}">
+                                        <i th:class="${c.status == 'ACTIVE' ? 'fa-solid fa-lock' : 'fa-solid fa-lock-open'}"></i>
+                                        <span th:text="${c.status == 'ACTIVE' ? 'Khóa tài khoản' : 'Mở khóa'}">
+                                            Khóa tài khoản
+                                        </span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${customers == null or customers.isEmpty()}">
+                        <td colspan="6" class="empty-state">
+                            <i class="fa-regular fa-user"></i>
+                            <p>Chưa có khách hàng nào.</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel-footer">
+                <span>
+                    <i class="fa-solid fa-database"></i>
+                    Dữ liệu được lấy từ hệ thống
+                </span>
+                <span>
+                    Tổng khách hàng:
+                    <strong th:text="${customers != null ? customers.size() : 0}">0</strong>
+                </span>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- HỘP THOẠI NHẮN TIN -->
+<div id="chatModal"
+     class="chat-modal-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="chatTargetName">
+
+    <div class="chat-modal-box">
+
+        <div class="chat-modal-header">
+            <div>
+                <h4 id="chatTargetName">Trao đổi với người dùng</h4>
+                <small id="chatTargetRole">Người dùng</small>
+            </div>
+
+            <div class="chat-header-actions">
+                <a id="zaloLink"
+                   href="#"
+                   target="_blank"
+                   rel="noopener">
+                    <i class="fa-solid fa-phone"></i>
+                    Gọi / Zalo
+                </a>
+
+                <button type="button"
+                        class="chat-close"
+                        onclick="closeChatModal()"
+                        aria-label="Đóng cửa sổ">
+                    &times;
+                </button>
+            </div>
+        </div>
+
+        <div id="chatMessages" class="chat-modal-body">
+            <div class="chat-msg msg-received">
+                Đây là hộp thoại minh họa. Tin nhắn chưa được lưu hoặc gửi đến người dùng.
+            </div>
+        </div>
+
+        <div class="chat-modal-footer">
+            <input type="text"
+                   id="chatInputText"
+                   class="chat-input"
+                   placeholder="Nhập tin nhắn (chỉ hiển thị minh họa)...">
+
+            <button type="button"
+                    class="btn btn-primary"
+                    onclick="sendAdminMessage()">
+                <i class="fa-solid fa-paper-plane"></i>
+                Gửi
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openChatModal(name, role, phone) {
+        document.getElementById('chatTargetName').textContent =
+            name || 'Người dùng';
+
+        document.getElementById('chatTargetRole').textContent =
+            (role || 'Người dùng') + (phone ? ' • SĐT: ' + phone : '');
+
+        const zaloBtn = document.getElementById('zaloLink');
+        const cleanPhone = (phone || '').replace(/[^0-9]/g, '');
+
+        if (cleanPhone) {
+            zaloBtn.href = 'https://zalo.me/' + cleanPhone;
+            zaloBtn.style.display = 'inline-flex';
+        } else {
+            zaloBtn.style.display = 'none';
+            zaloBtn.href = '#';
+        }
+
+        const messages = document.getElementById('chatMessages');
+
+        messages.innerHTML = '';
+
+        const welcomeMessage = document.createElement('div');
+        welcomeMessage.className = 'chat-msg msg-received';
+        welcomeMessage.textContent =
+            'Đây là hộp thoại minh họa. Tin nhắn chưa được lưu hoặc gửi đến người dùng.';
+
+        messages.appendChild(welcomeMessage);
+
+        document.getElementById('chatModal').style.display = 'flex';
+        document.getElementById('chatInputText').focus();
+    }
+
+    function closeChatModal() {
+        document.getElementById('chatModal').style.display = 'none';
+    }
+
+    function sendAdminMessage() {
+        const input = document.getElementById('chatInputText');
+        const message = input.value.trim();
+
+        if (!message) {
+            return;
+        }
+
+        const node = document.createElement('div');
+        node.className = 'chat-msg msg-sent';
+        node.textContent = message;
+
+        const box = document.getElementById('chatMessages');
+        box.appendChild(node);
+
+        input.value = '';
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function setupTableSearch(inputId, tableId) {
+        const input = document.getElementById(inputId);
+        const table = document.getElementById(tableId);
+
+        if (!input || !table) {
+            return;
+        }
+
+        input.addEventListener('input', function() {
+            const query = this.value.trim().toLocaleLowerCase('vi');
+
+            table.querySelectorAll('tbody tr').forEach(function(row) {
+                if (row.querySelector('.empty-state')) {
+                    return;
+                }
+
+                row.style.display = row.innerText
+                    .toLocaleLowerCase('vi')
+                    .includes(query) ? '' : 'none';
+            });
+        });
+    }
+
+    setupTableSearch('ownerSearch', 'ownersTable');
+    setupTableSearch('customerSearch', 'customersTable');
+
+    document.getElementById('chatInputText').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            sendAdminMessage();
+        }
+
+        if (event.key === 'Escape') {
+            closeChatModal();
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeChatModal();
+        }
+    });
+
+    document.getElementById('chatModal').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeChatModal();
+        }
+    });
+</script>
+
+</body>
+</html>

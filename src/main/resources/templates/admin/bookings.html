@@ -1,0 +1,794 @@
+
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn đặt sân | SportHub Admin</title>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+        }
+
+        :root {
+            --green: #059669;
+            --green-dark: #064e3b;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --background: #f1f5f9;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* SIDEBAR */
+        .admin-sidebar {
+            width: 258px;
+            min-height: 100vh;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--green-dark);
+            color: white;
+        }
+
+        .sidebar-brand {
+            min-height: 88px;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 20px;
+            color: #34d399;
+            font-size: 20px;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+        }
+
+        .sidebar-brand i {
+            font-size: 25px;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            list-style: none;
+            padding: 18px 10px;
+        }
+
+        .menu-item {
+            margin-bottom: 5px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 15px;
+            border-radius: 9px;
+            color: #d1fae5;
+            font-size: 14px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .menu-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .menu-link:hover {
+            background: rgba(255,255,255,.08);
+            color: white;
+        }
+
+        .menu-link.active {
+            background: rgba(255,255,255,.15);
+            color: white;
+            box-shadow: inset 4px 0 #34d399;
+        }
+
+        .sidebar-logout {
+            padding: 20px 22px;
+            border-top: 1px solid rgba(255,255,255,.1);
+        }
+
+        .sidebar-logout a {
+            color: #fca5a5;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* MAIN */
+        .admin-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .admin-nav {
+            min-height: 82px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 16px 32px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        .nav-greeting {
+            color: var(--green-dark);
+            font-size: 13.5px;
+            font-weight: 700;
+        }
+
+        .customer-link {
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .customer-link:hover {
+            color: #047857;
+        }
+
+        .admin-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* PAGE HEADING */
+        .page-heading {
+            margin-bottom: 25px;
+        }
+
+        .page-heading h1 {
+            font-size: 25px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .page-heading p {
+            color: var(--muted);
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        /* TABLE CARD */
+        .table-card {
+            overflow: hidden;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(15,23,42,.025);
+        }
+
+        .table-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            padding: 24px 26px;
+        }
+
+        .card-heading h2 {
+            font-size: 17px;
+            font-weight: 800;
+            margin-bottom: 7px;
+        }
+
+        .card-heading h2 i {
+            color: var(--green);
+            margin-right: 7px;
+        }
+
+        .card-heading p {
+            color: var(--muted);
+            font-size: 12.5px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .search-input {
+            width: 290px;
+            max-width: 100%;
+            height: 42px;
+            padding: 0 12px 0 37px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            outline: none;
+            font-size: 12.5px;
+        }
+
+        .search-input:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(5,150,105,.1);
+        }
+
+        .btn-export {
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 15px;
+            border: 1px solid var(--green);
+            border-radius: 9px;
+            background: var(--green);
+            color: white;
+            font-size: 12.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: .2s;
+        }
+
+        .btn-export:hover {
+            background: #047857;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            padding: 0 26px 20px;
+        }
+
+        table {
+            width: 100%;
+            min-width: 1050px;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        thead th {
+            padding: 15px 13px;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        tbody td {
+            padding: 16px 13px;
+            border-bottom: 1px solid #edf2f7;
+            color: #334155;
+            vertical-align: middle;
+        }
+
+        tbody tr.booking-row:hover {
+            background: #f8fafc;
+        }
+
+        .booking-code {
+            color: #0369a1;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .customer-name {
+            color: var(--text);
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .customer-phone {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .total-price {
+            color: #047857;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-paid {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-completed {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-other {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-detail {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 9px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: white;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: .2s;
+        }
+
+        .btn-detail:hover {
+            border-color: var(--green);
+            color: #047857;
+            background: #ecfdf5;
+        }
+
+        .empty-row {
+            text-align: center;
+            padding: 42px 15px !important;
+            color: var(--muted);
+        }
+
+        .empty-row i {
+            display: block;
+            margin-bottom: 12px;
+            color: #94a3b8;
+            font-size: 32px;
+        }
+
+        .table-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 26px;
+            border-top: 1px solid #edf2f7;
+            color: var(--muted);
+            font-size: 12px;
+            flex-wrap: wrap;
+        }
+
+        .table-footer strong {
+            color: var(--text);
+        }
+
+        @media (max-width: 1000px) {
+            .admin-sidebar {
+                width: 220px;
+            }
+
+            .admin-content {
+                padding: 22px 18px;
+            }
+
+            .admin-nav {
+                padding: 16px 20px;
+            }
+
+            .table-card-header {
+                padding: 22px 18px;
+            }
+
+            .table-wrapper {
+                padding: 0 18px 18px;
+            }
+
+            .search-input {
+                width: 245px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            body {
+                min-height: 100vh;
+                flex-direction: column;
+            }
+
+            .admin-sidebar {
+                width: 100%;
+                min-height: auto;
+            }
+
+            .sidebar-brand {
+                min-height: 65px;
+                padding: 15px 18px;
+            }
+
+            .sidebar-menu {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                padding: 8px;
+            }
+
+            .menu-link {
+                padding: 11px 10px;
+                font-size: 12px;
+            }
+
+            .sidebar-logout {
+                padding: 12px 18px;
+            }
+
+            .admin-nav {
+                align-items: flex-start;
+                flex-direction: column;
+                min-height: auto;
+                padding: 16px;
+            }
+
+            .nav-title {
+                font-size: 15px;
+            }
+
+            .nav-right {
+                gap: 12px;
+            }
+
+            .admin-content {
+                padding: 20px 12px;
+            }
+
+            .page-heading h1 {
+                font-size: 22px;
+            }
+
+            .table-card-header {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 20px 15px;
+            }
+
+            .toolbar {
+                width: 100%;
+            }
+
+            .search-box {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+
+            .btn-export {
+                padding: 0 12px;
+            }
+
+            .table-wrapper {
+                padding: 0 12px 14px;
+            }
+
+            .table-footer {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="admin-sidebar">
+    <div class="sidebar-brand">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>SportHub Admin</span>
+    </div>
+
+    <ul class="sidebar-menu">
+        <li class="menu-item">
+            <a th:href="@{/admin/dashboard}" class="menu-link">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Tổng quan</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/courts}" class="menu-link">
+                <i class="fa-solid fa-store"></i>
+                <span>Quản lý sân bãi</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/bookings}" class="menu-link active">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Đơn đặt sân</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/users}" class="menu-link">
+                <i class="fa-solid fa-users"></i>
+                <span>Khách hàng &amp; Chủ sân</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/reports}" class="menu-link">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Báo cáo doanh thu</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/settings}" class="menu-link">
+                <i class="fa-solid fa-gear"></i>
+                <span>Cài đặt hệ thống</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-logout">
+        <a th:href="@{/logout}">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Đăng xuất
+        </a>
+    </div>
+</aside>
+
+<div class="admin-main">
+
+    <header class="admin-nav">
+        <div class="nav-title">Trang quản trị hệ thống</div>
+
+        <div class="nav-right">
+            <span class="nav-greeting">
+                <i class="fa-solid fa-circle-user"></i>
+                Xin chào, Admin!
+            </span>
+
+            <a th:href="@{/}" class="customer-link" target="_blank">
+                Xem Web Khách <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="admin-content">
+
+        <div class="page-heading">
+            <h1>Đơn đặt sân</h1>
+            <p>
+                Theo dõi lịch đặt sân, thông tin khách hàng và tình trạng thanh toán.
+            </p>
+        </div>
+
+        <section class="table-card">
+
+            <div class="table-card-header">
+                <div class="card-heading">
+                    <h2>
+                        <i class="fa-solid fa-calendar-check"></i>
+                        Lịch sử &amp; đơn đặt sân mới nhận
+                    </h2>
+                    <p>Danh sách đơn đặt sân được tải từ cơ sở dữ liệu.</p>
+                </div>
+
+                <div class="toolbar">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input
+                                type="text"
+                                id="searchInput"
+                                class="search-input"
+                                placeholder="Tìm mã đơn, tên hoặc số điện thoại..."
+                                oninput="searchBookings()">
+                    </div>
+
+                    <a th:href="@{/admin/bookings/export}" class="btn-export">
+                        <i class="fa-solid fa-file-excel"></i>
+                        Xuất Excel
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="bookingsTable">
+                    <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Sân thể thao</th>
+                        <th>Ngày đặt</th>
+                        <th>Thời gian chơi</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="bookingsBody">
+
+                    <tr th:each="booking : ${bookings}" class="booking-row">
+                        <td>
+                            <span class="booking-code"
+                                  th:text="${booking.bookingCode != null ? booking.bookingCode : 'Chưa có mã'}">
+                                BK-0001
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="customer-name"
+                                 th:text="${booking.customerName != null ? booking.customerName : (booking.user != null ? booking.user.fullName : 'Chưa cập nhật')}">
+                                Nguyễn Văn A
+                            </div>
+
+                            <div class="customer-phone"
+                                 th:text="${booking.customerPhone != null ? booking.customerPhone : (booking.user != null ? booking.user.phone : 'Chưa có số điện thoại')}">
+                                0900000000
+                            </div>
+                        </td>
+
+                        <td>
+                            <span th:text="${booking.court != null ? booking.court.name : 'Chưa cập nhật'}">
+                                Sân 1
+                            </span>
+                        </td>
+
+                        <td>
+                            <span th:text="${booking.bookingDate != null ? #temporals.format(booking.bookingDate, 'dd/MM/yyyy') : 'Chưa có'}">
+                                09/10/2026
+                            </span>
+                        </td>
+
+                        <td>
+                            <span th:text="${booking.timeSlot != null ? booking.timeSlot : 'Chưa có'}">
+                                08:00
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="total-price"
+                                  th:text="${booking.totalPrice != null ? #numbers.formatDecimal(booking.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}">
+                                100,000 đ
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="status-badge"
+                                  th:classappend="${booking.paymentStatus == 'PAID_DEPOSIT' ? ' status-paid' : (booking.paymentStatus == 'PENDING_DEPOSIT' ? ' status-pending' : (booking.paymentStatus == 'COMPLETED' ? ' status-completed' : ' status-other'))}">
+
+                                <i class="fa-solid"
+                                   th:classappend="${booking.paymentStatus == 'PAID_DEPOSIT' ? ' fa-circle-check' : (booking.paymentStatus == 'PENDING_DEPOSIT' ? ' fa-clock' : (booking.paymentStatus == 'COMPLETED' ? ' fa-check-double' : ' fa-circle-info'))}">
+                                </i>
+
+                                <span th:text="${booking.paymentStatus == 'PAID_DEPOSIT' ? 'Đã thanh toán cọc' : (booking.paymentStatus == 'PENDING_DEPOSIT' ? 'Chờ đặt cọc' : (booking.paymentStatus == 'COMPLETED' ? 'Hoàn thành' : (booking.paymentStatus != null ? booking.paymentStatus : 'Chưa cập nhật')))}">
+                                    Chưa cập nhật
+                                </span>
+                            </span>
+                        </td>
+
+                        <td>
+                            <a th:href="@{/admin/bookings/{id}(id=${booking.id})}"
+                               class="btn-detail">
+                                <i class="fa-solid fa-eye"></i>
+                                Chi tiết
+                            </a>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${bookings == null or #lists.isEmpty(bookings)}">
+                        <td colspan="8" class="empty-row">
+                            <i class="fa-solid fa-calendar-xmark"></i>
+                            <strong>Chưa có đơn đặt sân nào</strong>
+                            <p>Đơn đặt sân sẽ xuất hiện tại đây khi có dữ liệu.</p>
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+
+                <div id="noSearchResult" class="empty-row" style="display:none;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <strong>Không tìm thấy đơn đặt sân phù hợp</strong>
+                    <p>Thử tìm bằng mã đơn, tên khách hàng hoặc số điện thoại khác.</p>
+                </div>
+            </div>
+
+            <div class="table-footer">
+                <span>
+                    <i class="fa-solid fa-database"></i>
+                    Dữ liệu từ MySQL
+                </span>
+
+                <span>
+                    Tổng số đơn hiển thị:
+                    <strong id="totalCount"
+                            th:text="${bookings != null ? bookings.size() : 0}">0</strong>
+                </span>
+            </div>
+
+        </section>
+    </main>
+</div>
+
+<script>
+    function searchBookings() {
+        const input = document.getElementById('searchInput');
+        const keyword = input.value.trim().toLowerCase();
+
+        const rows = document.querySelectorAll(
+            '#bookingsBody tr.booking-row'
+        );
+
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            const text = row.innerText.toLowerCase();
+            const matched = text.includes(keyword);
+
+            row.style.display = matched ? '' : 'none';
+
+            if (matched) {
+                visibleCount++;
+            }
+        });
+
+        document.getElementById('noSearchResult').style.display =
+            rows.length > 0 && visibleCount === 0 ? 'block' : 'none';
+
+        document.getElementById('totalCount').textContent = visibleCount;
+    }
+</script>
+
+</body>
+</html>

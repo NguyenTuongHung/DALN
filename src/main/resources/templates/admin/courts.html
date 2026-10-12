@@ -1,0 +1,876 @@
+
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý sân bãi | SportHub Admin</title>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+        }
+
+        :root {
+            --green: #059669;
+            --green-dark: #064e3b;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --background: #f1f5f9;
+            --white: #ffffff;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* SIDEBAR */
+        .admin-sidebar {
+            width: 258px;
+            min-height: 100vh;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--green-dark);
+            color: white;
+        }
+
+        .sidebar-brand {
+            min-height: 88px;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 20px;
+            color: #34d399;
+            font-size: 20px;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+        }
+
+        .sidebar-brand i {
+            font-size: 25px;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            list-style: none;
+            padding: 18px 10px;
+        }
+
+        .menu-item {
+            margin-bottom: 5px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 15px;
+            border-radius: 9px;
+            color: #d1fae5;
+            font-size: 14px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .menu-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .menu-link:hover {
+            background: rgba(255,255,255,.08);
+            color: white;
+        }
+
+        .menu-link.active {
+            background: rgba(255,255,255,.15);
+            color: white;
+            box-shadow: inset 4px 0 #34d399;
+        }
+
+        .logout-area {
+            padding: 20px 22px;
+            border-top: 1px solid rgba(255,255,255,.1);
+        }
+
+        .logout-area a {
+            color: #fca5a5;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* MAIN */
+        .admin-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .admin-nav {
+            min-height: 82px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            padding: 16px 32px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        .admin-greeting {
+            color: var(--green-dark);
+            font-size: 13.5px;
+            font-weight: 700;
+        }
+
+        .customer-link {
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .customer-link:hover {
+            color: #047857;
+        }
+
+        .dashboard-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* PAGE TITLE */
+        .page-intro {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .page-title {
+            font-size: 25px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .page-description {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        /* BUTTONS */
+        .btn {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: white;
+            color: #334155;
+            font-size: 12.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .btn:hover {
+            background: #f8fafc;
+        }
+
+        .btn-add {
+            background: var(--green);
+            border-color: var(--green);
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #047857;
+            border-color: #047857;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1d4ed8;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+            border-color: #dc2626;
+            color: white;
+        }
+
+        /* ALERTS */
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .alert-success {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+            color: #166534;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+
+        /* TABLE */
+        .table-panel {
+            overflow: hidden;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(15,23,42,.025);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            padding: 24px 26px;
+            flex-wrap: wrap;
+        }
+
+        .panel-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .panel-title i {
+            color: var(--green);
+            margin-right: 7px;
+        }
+
+        .panel-subtitle {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12.5px;
+        }
+
+        .panel-tools {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .search-input {
+            width: 250px;
+            height: 41px;
+            padding: 0 12px 0 35px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            outline: none;
+            font-size: 12.5px;
+        }
+
+        .search-input:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(5,150,105,.1);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 26px 22px;
+        }
+
+        table {
+            width: 100%;
+            min-width: 1050px;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        thead th {
+            padding: 15px 14px;
+            background: #f8fafc;
+            color: #475569;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        tbody td {
+            padding: 16px 14px;
+            border-bottom: 1px solid #edf2f7;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .court-id {
+            color: #0284c7;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .court-name {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .sport-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 7px;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .owner-name {
+            font-weight: 600;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .price {
+            color: #047857;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-active {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .action-group {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .action-group form {
+            margin: 0;
+        }
+
+        .empty-state {
+            padding: 48px 20px !important;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .empty-state i {
+            display: block;
+            margin-bottom: 14px;
+            color: #94a3b8;
+            font-size: 34px;
+        }
+
+        .empty-state p {
+            margin-top: 7px;
+            font-size: 13px;
+        }
+
+        .panel-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 26px;
+            border-top: 1px solid #edf2f7;
+            color: var(--muted);
+            font-size: 12px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 1000px) {
+            .dashboard-content {
+                padding: 22px;
+            }
+
+            .admin-sidebar {
+                width: 220px;
+            }
+        }
+
+        @media (max-width: 800px) {
+            body {
+                flex-direction: column;
+            }
+
+            .admin-sidebar {
+                width: 100%;
+                min-height: auto;
+            }
+
+            .sidebar-brand {
+                min-height: 65px;
+            }
+
+            .sidebar-menu {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 5px;
+                padding: 10px;
+            }
+
+            .menu-item {
+                margin: 0;
+            }
+
+            .menu-link {
+                padding: 10px 12px;
+            }
+
+            .logout-area {
+                padding: 12px 20px;
+            }
+
+            .admin-nav {
+                padding: 18px 20px;
+            }
+
+            .dashboard-content {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .admin-nav {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .page-intro {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .btn-add {
+                width: 100%;
+            }
+
+            .panel-header {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .panel-tools {
+                width: 100%;
+            }
+
+            .search-box {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+
+            .table-wrapper {
+                padding: 0 14px 16px;
+            }
+
+            .panel-footer {
+                padding: 14px 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="admin-sidebar">
+    <div class="sidebar-brand">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>SportHub Admin</span>
+    </div>
+
+    <ul class="sidebar-menu">
+        <li class="menu-item">
+            <a th:href="@{/admin/dashboard}" class="menu-link">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Tổng quan</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/courts}" class="menu-link active">
+                <i class="fa-solid fa-store"></i>
+                <span>Quản lý sân bãi</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/bookings}" class="menu-link">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Đơn đặt sân</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/users}" class="menu-link">
+                <i class="fa-solid fa-users"></i>
+                <span>Khách hàng &amp; Chủ sân</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/reports}" class="menu-link">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Báo cáo doanh thu</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/settings}" class="menu-link">
+                <i class="fa-solid fa-gear"></i>
+                <span>Cài đặt hệ thống</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="logout-area">
+        <a th:href="@{/logout}">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Đăng xuất
+        </a>
+    </div>
+</aside>
+
+<div class="admin-main">
+
+    <header class="admin-nav">
+        <div class="nav-title">Trang quản trị hệ thống</div>
+
+        <div class="nav-right">
+            <span class="admin-greeting">
+                <i class="fa-solid fa-circle-user"></i>
+                Xin chào, Admin!
+            </span>
+
+            <a th:href="@{/}" class="customer-link">
+                Xem Web Khách <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="dashboard-content">
+
+        <section class="page-intro">
+            <div>
+                <h1 class="page-title">Quản lý sân bãi</h1>
+                <p class="page-description">
+                    Quản lý thông tin, địa chỉ và giá thuê của các cơ sở sân trên hệ thống.
+                </p>
+            </div>
+
+            <a th:href="@{/admin/courts/new}" class="btn btn-add">
+                <i class="fa-solid fa-plus"></i>
+                Thêm sân mới
+            </a>
+        </section>
+
+        <!-- THÔNG BÁO THÀNH CÔNG -->
+        <div th:if="${param.success != null}" class="alert alert-success">
+            <i class="fa-solid fa-circle-check"></i>
+            <div>
+                <span th:if="${param.success[0] == 'created'}">
+                    Thêm sân thành công.
+                </span>
+                <span th:if="${param.success[0] == 'updated'}">
+                    Cập nhật thông tin sân thành công.
+                </span>
+                <span th:if="${param.success[0] == 'deleted'}">
+                    Xóa sân thành công.
+                </span>
+            </div>
+        </div>
+
+        <!-- THÔNG BÁO LỖI -->
+        <div th:if="${param.error != null}" class="alert alert-error">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <div>
+                <span th:if="${param.error[0] == 'notfound'}">
+                    Không tìm thấy sân cần thao tác.
+                </span>
+                <span th:if="${param.error[0] == 'related'}">
+                    Không thể xóa sân vì sân đang liên kết với sân con hoặc đơn đặt sân.
+                </span>
+                <span th:if="${param.error[0] == 'delete'}">
+                    Không thể xóa sân. Hãy kiểm tra nhật ký ứng dụng.
+                </span>
+            </div>
+        </div>
+
+        <section class="table-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2 class="panel-title">
+                        <i class="fa-solid fa-building"></i>
+                        Danh sách cơ sở sân
+                    </h2>
+                    <p class="panel-subtitle">
+                        Thông tin sân được tải trực tiếp từ cơ sở dữ liệu.
+                    </p>
+                </div>
+
+                <div class="panel-tools">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input
+                                type="text"
+                                id="searchInput"
+                                class="search-input"
+                                placeholder="Tìm tên sân, địa chỉ..."
+                                oninput="searchCourts()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Mã sân</th>
+                        <th>Tên sân</th>
+                        <th>Môn thể thao</th>
+                        <th>Chủ sở hữu</th>
+                        <th>Địa chỉ</th>
+                        <th>Giá/giờ</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="courtsBody">
+
+                    <tr th:each="court : ${courts}" class="court-row">
+
+                        <td>
+                            <span class="court-id"
+                                  th:text="${'CRT-' + court.id}">
+                                CRT-1
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="court-name"
+                                  th:text="${court.name}">
+                                Tên sân
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="sport-badge"
+                                  th:text="${court.sportType != null ? court.sportType : 'Chưa phân loại'}">
+                                Bóng đá
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="owner-name"
+                                  th:text="${court.owner != null and court.owner.fullName != null ? court.owner.fullName : 'Chưa có'}">
+                                Chưa có
+                            </span>
+                        </td>
+
+                        <td>
+                            <span th:text="${court.address != null and !court.address.isEmpty() ? court.address : 'Chưa cập nhật'}">
+                                Địa chỉ
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="price"
+                                  th:if="${court.pricePerHour != null}"
+                                  th:text="${#numbers.formatDecimal(court.pricePerHour, 0, 'COMMA', 0, 'POINT') + ' đ'}">
+                                180,000 đ
+                            </span>
+
+                            <span class="muted"
+                                  th:unless="${court.pricePerHour != null}">
+                                Chưa cập nhật
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="badge badge-active">
+                                <i class="fa-solid fa-circle-check"></i>
+                                Đã lưu
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="action-group">
+
+                                <a class="btn btn-edit"
+                                   th:href="@{/admin/courts/edit/{id}(id=${court.id})}">
+                                    <i class="fa-solid fa-pen"></i>
+                                    Sửa
+                                </a>
+
+                                <form
+                                        th:action="@{/admin/courts/delete/{id}(id=${court.id})}"
+                                        method="post"
+                                        onsubmit="return confirm('Bạn có chắc chắn muốn xóa sân này không?');">
+
+                                    <button type="submit" class="btn btn-delete">
+                                        <i class="fa-solid fa-trash"></i>
+                                        Xóa
+                                    </button>
+                                </form>
+
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${courts == null or #lists.isEmpty(courts)}">
+                        <td colspan="8" class="empty-state">
+                            <i class="fa-solid fa-building-circle-exclamation"></i>
+                            <strong>Chưa có sân nào</strong>
+                            <p>Nhấn “Thêm sân mới” để tạo cơ sở sân đầu tiên.</p>
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+
+                <div id="noSearchResult"
+                     class="empty-state"
+                     style="display:none;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <strong>Không tìm thấy sân phù hợp</strong>
+                    <p>Thử tìm bằng tên sân hoặc địa chỉ khác.</p>
+                </div>
+            </div>
+
+            <div class="panel-footer">
+                <span>
+                    <i class="fa-solid fa-database"></i>
+                    Dữ liệu từ MySQL
+                </span>
+
+                <span>
+                    Tổng số sân:
+                    <strong id="courtCount"
+                            th:text="${courts != null ? courts.size() : 0}">0</strong>
+                </span>
+            </div>
+
+        </section>
+    </main>
+</div>
+
+<script>
+    function searchCourts() {
+        const keyword = document
+            .getElementById('searchInput')
+            .value
+            .trim()
+            .toLowerCase();
+
+        const rows = document.querySelectorAll(
+            '#courtsBody tr.court-row'
+        );
+
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            const matched = row.innerText.toLowerCase().includes(keyword);
+
+            row.style.display = matched ? '' : 'none';
+
+            if (matched) {
+                visibleCount++;
+            }
+        });
+
+        document.getElementById('noSearchResult').style.display =
+            rows.length > 0 && visibleCount === 0 ? 'block' : 'none';
+
+        document.getElementById('courtCount').textContent = visibleCount;
+    }
+</script>
+
+</body>
+</html>

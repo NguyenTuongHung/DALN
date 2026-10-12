@@ -1,0 +1,813 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | SportHub Admin</title>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        :root {
+            --green: #059669;
+            --green-dark: #064e3b;
+            --green-light: #d1fae5;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --background: #f1f5f9;
+            --white: #ffffff;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* SIDEBAR */
+        .admin-sidebar {
+            width: 258px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--green-dark);
+            color: white;
+        }
+
+        .sidebar-brand {
+            min-height: 88px;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 22px;
+            color: #34d399;
+            font-size: 21px;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+        }
+
+        .sidebar-brand i {
+            font-size: 25px;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            list-style: none;
+            padding: 18px 10px;
+        }
+
+        .menu-item {
+            margin-bottom: 6px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 14px 15px;
+            color: #d1fae5;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: .2s;
+        }
+
+        .menu-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .menu-link:hover,
+        .menu-link.active {
+            color: white;
+            background: rgba(255,255,255,.15);
+        }
+
+        .menu-link.active {
+            box-shadow: inset 3px 0 #34d399;
+        }
+
+        .logout-area {
+            padding: 20px 22px;
+            border-top: 1px solid rgba(255,255,255,.1);
+        }
+
+        .logout-area a {
+            color: #fca5a5;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* MAIN */
+        .admin-main {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .admin-nav {
+            min-height: 76px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            padding: 16px 32px;
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-heading {
+            font-size: 19px;
+            font-weight: 800;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        .admin-greeting {
+            color: var(--green-dark);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .customer-link {
+            color: var(--green);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .customer-link:hover {
+            color: #047857;
+        }
+
+        .admin-content {
+            padding: 30px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 23px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 3px 10px rgba(15,23,42,.025);
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 9px 24px rgba(15,23,42,.07);
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .stat-val {
+            margin-top: 9px;
+            color: var(--text);
+            font-size: clamp(19px, 1.5vw, 26px);
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            min-width: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            font-size: 21px;
+        }
+
+        .icon-green {
+            color: #059669;
+            background: #d1fae5;
+        }
+
+        .icon-blue {
+            color: #2563eb;
+            background: #dbeafe;
+        }
+
+        .icon-orange {
+            color: #d97706;
+            background: #fef3c7;
+        }
+
+        .icon-purple {
+            color: #9333ea;
+            background: #f3e8ff;
+        }
+
+        /* PANEL */
+        .data-panel {
+            overflow: hidden;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 3px 10px rgba(15,23,42,.025);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            padding: 24px 26px;
+        }
+
+        .panel-title {
+            color: var(--text);
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .panel-subtitle {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .panel-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: white;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .btn:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+        .btn-excel {
+            color: white;
+            background: var(--green);
+            border-color: var(--green);
+        }
+
+        .btn-excel:hover {
+            color: white;
+            background: #047857;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 26px 24px;
+        }
+
+        .admin-table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .admin-table thead th {
+            padding: 15px 16px;
+            color: #475569;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .admin-table thead th:first-child {
+            border-radius: 9px 0 0 0;
+        }
+
+        .admin-table thead th:last-child {
+            border-radius: 0 9px 0 0;
+        }
+
+        .admin-table tbody td {
+            padding: 17px 16px;
+            border-bottom: 1px solid #edf2f7;
+            vertical-align: middle;
+        }
+
+        .admin-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .booking-code {
+            color: #0284c7;
+            font-weight: 800;
+        }
+
+        .customer-name {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .customer-phone {
+            display: inline-block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-paid {
+            color: #15803d;
+            background: #dcfce7;
+        }
+
+        .status-pending {
+            color: #b45309;
+            background: #fef3c7;
+        }
+
+        .status-other {
+            color: #475569;
+            background: #e2e8f0;
+        }
+
+        .empty-state {
+            padding: 48px 20px !important;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .empty-state i {
+            display: block;
+            margin-bottom: 14px;
+            color: #94a3b8;
+            font-size: 34px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .panel-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 15px 26px;
+            border-top: 1px solid #edf2f7;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1250px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .admin-content {
+                padding: 22px;
+            }
+        }
+
+        @media (max-width: 850px) {
+            body {
+                flex-direction: column;
+            }
+
+            .admin-sidebar {
+                width: 100%;
+            }
+
+            .sidebar-brand {
+                min-height: 65px;
+            }
+
+            .sidebar-menu {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 5px;
+                padding: 10px;
+            }
+
+            .menu-item {
+                margin: 0;
+            }
+
+            .menu-link {
+                padding: 10px 12px;
+            }
+
+            .logout-area {
+                padding: 12px 20px;
+            }
+
+            .admin-nav {
+                padding: 18px 20px;
+            }
+
+            .admin-content {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 18px;
+            }
+
+            .admin-nav {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-right {
+                justify-content: flex-start;
+                gap: 12px;
+            }
+
+            .panel-header {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .panel-actions {
+                width: 100%;
+            }
+
+            .btn {
+                flex: 1;
+            }
+
+            .table-wrapper {
+                padding: 0 14px 16px;
+            }
+
+            .panel-footer {
+                padding: 14px 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="admin-sidebar">
+    <div class="sidebar-brand">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>SportHub Admin</span>
+    </div>
+
+    <ul class="sidebar-menu">
+        <li class="menu-item">
+            <a th:href="@{/admin/dashboard}" class="menu-link active">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Tổng quan</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/courts}" class="menu-link">
+                <i class="fa-solid fa-store"></i>
+                <span>Quản lý sân bãi</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/bookings}" class="menu-link">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Đơn đặt sân</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/users}" class="menu-link">
+                <i class="fa-solid fa-users"></i>
+                <span>Khách hàng &amp; Chủ sân</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/reports}" class="menu-link">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Báo cáo doanh thu</span>
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/settings}" class="menu-link">
+                <i class="fa-solid fa-gear"></i>
+                <span>Cài đặt hệ thống</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="logout-area">
+        <a th:href="@{/logout}">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Đăng xuất
+        </a>
+    </div>
+</aside>
+
+<div class="admin-main">
+
+    <header class="admin-nav">
+        <div class="page-heading">Trang quản trị hệ thống</div>
+
+        <div class="nav-right">
+            <span class="admin-greeting">
+                <i class="fa-solid fa-circle-user"></i>
+                Xin chào, Admin!
+            </span>
+
+            <a th:href="@{ / }" class="customer-link">
+                Xem Web Khách <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="admin-content">
+
+        <!-- THỐNG KÊ TỪ BACKEND -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Tổng giá trị đơn đã ghi nhận</div>
+                    <div class="stat-val"
+                         th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + ' đ'}">
+                        0 đ
+                    </div>
+                </div>
+                <div class="stat-icon icon-green">
+                    <i class="fa-solid fa-coins"></i>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Lượt đặt hôm nay</div>
+                    <div class="stat-val"
+                         th:text="${todayBookingsCount + ' đơn'}">
+                        0 đơn
+                    </div>
+                </div>
+                <div class="stat-icon icon-blue">
+                    <i class="fa-solid fa-calendar-day"></i>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Tổng cơ sở sân</div>
+                    <div class="stat-val"
+                         th:text="${totalCourtsCount + ' sân'}">
+                        0 sân
+                    </div>
+                </div>
+                <div class="stat-icon icon-orange">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Người dùng đăng ký</div>
+                    <div class="stat-val"
+                         th:text="${totalUsersCount + ' user'}">
+                        0 user
+                    </div>
+                </div>
+                <div class="stat-icon icon-purple">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- DANH SÁCH ĐƠN ĐẶT SÂN -->
+        <section class="data-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h3 class="panel-title">Đơn đặt sân mới nhất</h3>
+                    <p class="panel-subtitle">
+                        Danh sách đơn gần đây từ cơ sở dữ liệu
+                    </p>
+                </div>
+
+                <div class="panel-actions">
+                    <a th:href="@{/admin/bookings/export}"
+                       class="btn btn-excel">
+                        <i class="fa-solid fa-file-excel"></i>
+                        Xuất Excel
+                    </a>
+
+                    <a th:href="@{/admin/bookings}"
+                       class="btn">
+                        <i class="fa-solid fa-list"></i>
+                        Xem tất cả đơn
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Sân thể thao</th>
+                        <th>Ngày đặt</th>
+                        <th>Thời gian chơi</th>
+                        <th>Số tiền</th>
+                        <th>Trạng thái thanh toán</th>
+                        <th>Hành động</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="booking : ${latestBookings}">
+
+                        <td>
+                            <span class="booking-code"
+                                  th:text="${booking.bookingCode}">
+                                BK-0001
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="customer-name"
+                                 th:text="${booking.customerName != null and !booking.customerName.isEmpty()
+                                    ? booking.customerName
+                                    : (booking.user != null ? booking.user.fullName : 'Khách hàng')}">
+                                Khách hàng
+                            </div>
+
+                            <span class="customer-phone"
+                                  th:text="${booking.customerPhone != null and !booking.customerPhone.isEmpty()
+                                    ? booking.customerPhone
+                                    : (booking.user != null ? booking.user.phone : '')}">
+                            </span>
+                        </td>
+
+                        <td th:text="${booking.court != null
+                            ? booking.court.name : 'Chưa xác định sân'}">
+                            Tên sân
+                        </td>
+
+                        <td>
+                            <span th:if="${booking.bookingDate != null}"
+                                  th:text="${#temporals.format(booking.bookingDate, 'dd/MM/yyyy')}">
+                                11/10/2026
+                            </span>
+                            <span th:unless="${booking.bookingDate != null}">
+                                Chưa xác định
+                            </span>
+                        </td>
+
+                        <td th:text="${booking.timeSlot != null
+                            ? booking.timeSlot : 'Chưa xác định'}">
+                            18:00 - 20:00
+                        </td>
+
+                        <td>
+                            <strong th:text="${booking.totalPrice != null
+                                ? #numbers.formatDecimal(booking.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ'
+                                : '0 đ'}">
+                                360.000 đ
+                            </strong>
+                        </td>
+
+                        <td>
+                            <span th:if="${booking.paymentStatus == 'PAID_DEPOSIT'}"
+                                  class="status-badge status-paid">
+                                <i class="fa-solid fa-circle-check"></i>
+                                Đã thanh toán cọc
+                            </span>
+
+                            <span th:if="${booking.paymentStatus == 'PENDING_DEPOSIT'}"
+                                  class="status-badge status-pending">
+                                <i class="fa-solid fa-clock"></i>
+                                Chờ đặt cọc
+                            </span>
+
+                            <span th:if="${booking.paymentStatus == 'COMPLETED'}"
+                                  class="status-badge status-paid">
+                                <i class="fa-solid fa-check-double"></i>
+                                Hoàn thành
+                            </span>
+
+                            <span th:if="${booking.paymentStatus == null
+                                or (booking.paymentStatus != 'PAID_DEPOSIT'
+                                    and booking.paymentStatus != 'PENDING_DEPOSIT'
+                                    and booking.paymentStatus != 'COMPLETED')}"
+                                  class="status-badge status-other"
+                                  th:text="${booking.paymentStatus != null
+                                    ? booking.paymentStatus : 'Chưa xác định'}">
+                                Chưa xác định
+                            </span>
+                        </td>
+
+                        <td>
+                            <a class="btn"
+                               th:href="@{/admin/bookings}">
+                                <i class="fa-regular fa-eye"></i>
+                                Chi tiết
+                            </a>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(latestBookings)}">
+                        <td colspan="8" class="empty-state">
+                            <i class="fa-regular fa-calendar-xmark"></i>
+                            <p>Chưa có đơn đặt sân nào trong cơ sở dữ liệu.</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel-footer">
+                <span>
+                    <i class="fa-solid fa-database"></i>
+                    Dữ liệu được lấy từ hệ thống
+                </span>
+                <span>SportHub Admin</span>
+            </div>
+
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>
