@@ -2,106 +2,211 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý sân bãi — SportHub Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f0f5f9; display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar Admin */
         .admin-sidebar { width: 250px; background: #064e3b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-brand { padding: 24px 20px; font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #34d399; }
-        .sidebar-menu { list-style: none; padding: 10px 0; flex: 1; }
-        .menu-item a { display: flex; align-items: center; gap: 12px; padding: 14px 24px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 600; }
-        .menu-item a:hover { background: rgba(255,255,255,0.08); color: #fff; }
-        .menu-item a.active { background: rgba(255,255,255,0.14); color: #fff; border-left: 4px solid #34d399; }
+        .sidebar-brand { padding: 22px 20px; font-size: 20px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; color: #34d399; }
+        .sidebar-menu { list-style: none; padding: 12px 0; flex: 1; overflow-y: auto; }
+        .menu-item { margin-bottom: 2px; }
+        .menu-link { display: flex; align-items: center; gap: 12px; padding: 12px 22px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .menu-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .menu-link.active { background: rgba(255,255,255,0.14); color: #fff; border-left: 4px solid #34d399; }
+
+        /* Workspace */
         .admin-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .top-navbar { height: 60px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; }
+        .top-navbar { height: 62px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
         .dashboard-content { padding: 28px 32px; }
-        .table-panel { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; padding: 24px; }
+
+        /* Thông báo flash */
+        .alert-success { background: #dcfce7; border: 1px solid #86efac; color: #15803d; padding: 12px 18px; border-radius: 8px; font-size: 13.5px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .alert-error { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 12px 18px; border-radius: 8px; font-size: 13.5px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+        /* Table & Data Panel */
+        .table-panel { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-add { background: #059669; color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .panel-title { font-size: 16px; font-weight: 800; color: #0f172a; }
+        
         table { width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: left; }
-        th { padding: 12px 14px; color: #64748b; font-weight: 600; border-bottom: 1px solid #f1f5f9; background: #f8fafc; }
-        td { padding: 14px; border-bottom: 1px solid #f8fafc; color: #334155; }
-        .badge { padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+        th { padding: 12px 14px; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+        td { padding: 14px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+
+        .badge-sport { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; }
+        .badge-pickleball { background: #e0f2fe; color: #0369a1; }
+        .badge-football { background: #dcfce7; color: #15803d; }
+        .badge-badminton { background: #fef3c7; color: #b45309; }
+        .badge-other { background: #f1f5f9; color: #475569; }
+
+        /* Badges trạng thái phê duyệt */
+        .badge-status { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
         .badge-active { background: #dcfce7; color: #15803d; }
+        .badge-pending { background: #fef3c7; color: #b45309; }
+        .badge-rejected { background: #fee2e2; color: #b91c1c; }
+        
+        .action-btns { display: flex; align-items: center; gap: 6px; }
+        .btn-approve { background: #059669; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: background 0.15s; }
+        .btn-approve:hover { background: #047857; }
+        .btn-reject { background: #f59e0b; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: background 0.15s; }
+        .btn-reject:hover { background: #d97706; }
+        .btn-view { border: 1px solid #cbd5e1; background: #fff; color: #0284c7; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+        .btn-view:hover { background: #f0f9ff; border-color: #38bdf8; }
+        .btn-delete { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s; }
+        .btn-delete:hover { background: #fecaca; }
     </style>
 </head>
 <body>
+
+    <!-- Sidebar Admin -->
     <aside class="admin-sidebar">
-        <div class="sidebar-brand"><i class="fa-solid fa-shield-halved"></i> SportHub Admin</div>
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-shield-halved"></i> SportHub Admin
+        </div>
         <ul class="sidebar-menu">
-            <li class="menu-item"><a th:href="@{/admin/dashboard}"><i class="fa-solid fa-chart-pie"></i> Tổng quan</a></li>
-            <li class="menu-item"><a th:href="@{/admin/courts}" class="active"><i class="fa-solid fa-store"></i> Quản lý sân bãi</a></li>
-            <li class="menu-item"><a th:href="@{/admin/bookings}"><i class="fa-solid fa-calendar-check"></i> Đơn đặt sân</a></li>
-            <li class="menu-item"><a th:href="@{/admin/users}"><i class="fa-solid fa-users"></i> Khách hàng &amp; Chủ sân</a></li>
-            <li class="menu-item"><a th:href="@{/admin/reports}"><i class="fa-solid fa-money-bill-trend-up"></i> Báo cáo doanh thu</a></li>
-            <li class="menu-item"><a th:href="@{/admin/settings}"><i class="fa-solid fa-gear"></i> Cài đặt hệ thống</a></li>
+            <li class="menu-item"><a th:href="@{/admin/dashboard}" class="menu-link"><i class="fa-solid fa-chart-pie"></i> Tổng quan</a></li>
+            <li class="menu-item"><a th:href="@{/admin/courts}" class="menu-link active"><i class="fa-solid fa-store"></i> Quản lý sân bãi</a></li>
+            <li class="menu-item"><a th:href="@{/admin/bookings}" class="menu-link"><i class="fa-solid fa-calendar-check"></i> Đơn đặt sân</a></li>
+            <li class="menu-item"><a th:href="@{/admin/users}" class="menu-link"><i class="fa-solid fa-users"></i> Khách hàng &amp; Chủ sân</a></li>
+            <li class="menu-item"><a th:href="@{/admin/reports}" class="menu-link"><i class="fa-solid fa-money-bill-trend-up"></i> Báo cáo doanh thu</a></li>
+            <li class="menu-item"><a th:href="@{/admin/settings}" class="menu-link"><i class="fa-solid fa-gear"></i> Cài đặt hệ thống</a></li>
         </ul>
-        <div style="padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08);">
-            <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; font-weight: 600;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </a>
         </div>
     </aside>
 
+    <!-- Main Workspace -->
     <div class="admin-main">
         <header class="top-navbar">
-            <span style="font-size: 15px; font-weight: 700;">Quản Lý Cơ Sở Sân Bãi Toàn Sàn</span>
-            <span style="color: #064e3b; font-weight: 700; font-size: 13.5px;"><i class="fa-solid fa-circle-user"></i> Admin</span>
+            <span style="font-size: 15px; font-weight: 700; color: #1e293b;">Quản Lý Cơ Sở Sân Bãi Toàn Sàn</span>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span style="color: #064e3b; font-weight: 700; font-size: 13.5px;"><i class="fa-solid fa-circle-user"></i> Admin</span>
+                <a th:href="@{/tim-san}" target="_blank" style="font-size: 13px; color: #059669; text-decoration: none; font-weight: 600;">Xem Trang Tìm Sân &rarr;</a>
+            </div>
         </header>
 
         <main class="dashboard-content">
+            <!-- Thông báo flash -->
+            <div th:if="${successMessage}" class="alert-success">
+                <i class="fa-solid fa-circle-check"></i> <span th:text="${successMessage}">Thao tác thành công!</span>
+            </div>
+            <div th:if="${errorMessage}" class="alert-error">
+                <i class="fa-solid fa-triangle-exclamation"></i> <span th:text="${errorMessage}">Đã xảy ra lỗi!</span>
+            </div>
+
             <div class="table-panel">
                 <div class="panel-header">
-                    <h3 style="font-size: 16px; font-weight: 800;">Danh sách 445 cụm sân đã liên kết</h3>
-                    <button class="btn-add"><i class="fa-solid fa-plus"></i> Thêm Cụm Sân Mới</button>
+                    <div>
+                        <h3 class="panel-title">
+                            Danh sách <span th:text="${courts != null ? courts.size() : 0}" style="color: #059669;">0</span> cụm sân trên toàn hệ thống
+                        </h3>
+                        <small style="color: #64748b; font-size: 12.5px;">Bao gồm các cơ sở đang hoạt động và hồ sơ sân mới do Chủ sân gửi lên chờ duyệt</small>
+                    </div>
                 </div>
+
                 <table>
                     <thead>
                         <tr>
+                            <th>Ảnh</th>
                             <th>Mã Sân</th>
                             <th>Tên Cụm Sân</th>
                             <th>Môn Thể Thao</th>
-                            <th>Chủ Sở Hữu</th>
+                            <th>Chủ Sân Quản Lý</th>
                             <th>Địa Chỉ</th>
-                            <th>Giá Trung Bình</th>
+                            <th>Giá Niêm Yết</th>
                             <th>Trạng Thái</th>
                             <th>Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>#CRT-101</td>
-                            <td><strong>002 Pickleball Club</strong></td>
-                            <td><span style="background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Pickleball</span></td>
-                            <td>Nguyễn Tường Hưng</td>
-                            <td>Thảo Điền, TP. Thủ Đức</td>
-                            <td><strong>180.000đ/h</strong></td>
-                            <td><span class="badge badge-active">Hoạt động</span></td>
-                            <td><button style="border: 1px solid #cbd5e1; background: #fff; padding: 4px 10px; border-radius: 6px; cursor: pointer;">Sửa</button></td>
+                        <!-- Vòng lặp lấy trực tiếp từ Model courts trong AdminController -->
+                        <tr th:each="c : ${courts}">
+                            <td style="width: 60px;">
+                                <img th:src="${c.imageUrl != null and !c.imageUrl.isBlank() ? c.imageUrl : 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=100'}" 
+                                     style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0;" alt="Ảnh sân">
+                            </td>
+                            <td><b style="color: #0284c7;" th:text="'#CRT-' + ${c.id}">#CRT-1</b></td>
+                            <td>
+                                <strong th:text="${c.name}">002 PB Club</strong><br>
+                                <small style="color: #64748b;" th:text="(${c.subCourts != null ? c.subCourts.size() : 0}) + ' sân con'">2 sân con</small>
+                            </td>
+                            <td>
+                                <span class="badge-sport" 
+                                      th:classappend="${c.sportType == 'pickleball' ? 'badge-pickleball' : (c.sportType == 'football' ? 'badge-football' : (c.sportType == 'badminton' ? 'badge-badminton' : 'badge-other'))}"
+                                      th:text="${c.sportType != null ? c.sportType : 'Thể thao'}">Pickleball</span>
+                            </td>
+                            <td>
+                                <strong th:text="${c.owner != null ? c.owner.fullName : 'Hệ thống'}">Nguyễn Tường Hưng</strong><br>
+                                <small style="color: #64748b;" th:text="${c.owner != null and c.owner.phone != null ? c.owner.phone : ''}">0912334455</small>
+                            </td>
+                            <td style="max-width: 220px;" th:text="${c.address}">28 Thảo Điền, TP. Thủ Đức</td>
+                            <td>
+                                <strong style="color: #059669;" 
+                                        th:text="${c.pricePerHour != null ? #numbers.formatDecimal(c.pricePerHour, 0, 'COMMA', 0, 'POINT') + 'đ/h' : '0đ/h'}">180.000đ/h</strong>
+                            </td>
+                            <td>
+                                <!-- Trạng thái: Đang hoạt động -->
+                                <span th:if="${c.status == 'ACTIVE' or c.status == null}" class="badge-status badge-active">
+                                    <i class="fa-solid fa-circle-check"></i> Đang hoạt động
+                                </span>
+                                <!-- Trạng thái: Chờ duyệt -->
+                                <span th:if="${c.status == 'PENDING'}" class="badge-status badge-pending">
+                                    <i class="fa-solid fa-clock"></i> Chờ duyệt
+                                </span>
+                                <!-- Trạng thái: Từ chối -->
+                                <span th:if="${c.status == 'REJECTED'}" class="badge-status badge-rejected">
+                                    <i class="fa-solid fa-circle-xmark"></i> Đã từ chối
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-btns">
+                                    <!-- Nút Duyệt sân nếu đang PENDING -->
+                                    <form th:if="${c.status == 'PENDING'}" th:action="@{/admin/courts/{id}/approve(id=${c.id})}" method="post" style="display:inline;">
+                                        <button type="submit" class="btn-approve" title="Duyệt đưa sân lên hệ thống">
+                                            <i class="fa-solid fa-check"></i> Duyệt
+                                        </button>
+                                    </form>
+
+                                    <!-- Nút Từ chối nếu đang PENDING -->
+                                    <form th:if="${c.status == 'PENDING'}" th:action="@{/admin/courts/{id}/reject(id=${c.id})}" method="post" style="display:inline;">
+                                        <button type="submit" class="btn-reject" title="Từ chối hồ sơ sân">
+                                            <i class="fa-solid fa-ban"></i> Từ chối
+                                        </button>
+                                    </form>
+
+                                    <!-- Nút Xem chi tiết công khai (khi đã ACTIVE) -->
+                                    <a th:if="${c.status == 'ACTIVE' or c.status == null}" th:href="@{/san-bong/{id}(id=${c.id})}" target="_blank" class="btn-view" title="Xem trang hiển thị cho khách">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem
+                                    </a>
+
+                                    <!-- Nút Xóa sân -->
+                                    <form th:action="@{/admin/courts/{id}/delete(id=${c.id})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa cụm sân này khỏi hệ thống?')">
+                                        <button type="submit" class="btn-delete" title="Xóa sân">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
-                        <tr>
-                            <td>#CRT-102</td>
-                            <td><strong>Arsenal Mini Football Center</strong></td>
-                            <td><span style="background: #dcfce7; color: #15803d; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Bóng đá</span></td>
-                            <td>Vũ Đình Trọng</td>
-                            <td>Quận Cầu Giấy, Hà Nội</td>
-                            <td><strong>350.000đ/h</strong></td>
-                            <td><span class="badge badge-active">Hoạt động</span></td>
-                            <td><button style="border: 1px solid #cbd5e1; background: #fff; padding: 4px 10px; border-radius: 6px; cursor: pointer;">Sửa</button></td>
-                        </tr>
-                        <tr>
-                            <td>#CRT-103</td>
-                            <td><strong>CLB Cầu Lông ACE</strong></td>
-                            <td><span style="background: #fef3c7; color: #b45309; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Cầu lông</span></td>
-                            <td>Lê Thị Thảo</td>
-                            <td>Quận Hải Châu, Đà Nẵng</td>
-                            <td><strong>120.000đ/h</strong></td>
-                            <td><span class="badge badge-active">Hoạt động</span></td>
-                            <td><button style="border: 1px solid #cbd5e1; background: #fff; padding: 4px 10px; border-radius: 6px; cursor: pointer;">Sửa</button></td>
+
+                        <!-- Hiển thị khi chưa có sân nào -->
+                        <tr th:if="${courts == null or courts.isEmpty()}">
+                            <td colspan="9" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                <i class="fa-regular fa-folder-open" style="font-size: 30px; margin-bottom: 8px; display: block;"></i>
+                                Chưa có cụm sân nào được ghi nhận trong cơ sở dữ liệu.
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </main>
     </div>
+
 </body>
 </html>

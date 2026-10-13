@@ -1,0 +1,154 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="ai-widget">
+    <!-- Nút bấm nổi mở Chatbot (Luôn nổi ở góc phải dưới) -->
+    <div id="sporthubAiToggleBtn" 
+         style="position: fixed !important; bottom: 25px !important; right: 25px !important; width: 60px !important; height: 60px !important; border-radius: 50% !important; background: linear-gradient(135deg, #059669, #0284c7) !important; color: #ffffff !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; box-shadow: 0 10px 25px -3px rgba(2, 132, 199, 0.45), 0 4px 6px -2px rgba(0, 0, 0, 0.1) !important; z-index: 2147483647 !important; transition: transform 0.2s, box-shadow 0.2s; user-select: none;">
+        <!-- Icon Robot SVG sắc nét, không bị phụ thuộc font bên ngoài -->
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+            <circle cx="12" cy="5" r="2"></circle>
+            <path d="M12 7v4"></path>
+            <line x1="8" y1="16" x2="8" y2="16.01"></line>
+            <line x1="16" y1="16" x2="16.01"></line>
+        </svg>
+    </div>
+
+    <!-- Hộp thoại Chatbox AI -->
+    <div id="sporthubAiChatBox" 
+         style="display: none; position: fixed !important; bottom: 95px !important; right: 25px !important; width: 380px !important; max-width: calc(100vw - 36px) !important; height: 530px !important; max-height: calc(100vh - 120px) !important; background: #ffffff !important; border-radius: 18px !important; box-shadow: 0 20px 40px -5px rgba(0,0,0,0.25) !important; border: 1px solid #e2e8f0 !important; z-index: 2147483647 !important; flex-direction: column !important; overflow: hidden !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;">
+        
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #064e3b, #0284c7); color: #fff; padding: 15px 18px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #fff;">SportHub AI Assistant</h4>
+                    <span style="color: #a7f3d0; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                        <span style="display: inline-block; width: 7px; height: 7px; background: #34d399; border-radius: 50%;"></span>
+                        Trực tuyến • Tư vấn tìm sân
+                    </span>
+                </div>
+            </div>
+            <button id="sporthubAiCloseBtn" style="background: none; border: none; color: #ffffff; font-size: 26px; cursor: pointer; line-height: 1; padding: 0 4px;">&times;</button>
+        </div>
+
+        <!-- Khung hiển thị tin nhắn -->
+        <div id="sporthubAiMessages" style="flex: 1; padding: 16px; background: #f8fafc; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 13.5px;">
+            <div style="align-self: flex-start; background: #e2e8f0; color: #1e293b; padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 2px; max-width: 85%; line-height: 1.5;">
+                Xin chào bạn! 👋 Mình là trợ lý AI của sàn SportHub. Bạn đang cần tìm sân bóng đá, cầu lông hay pickleball ở khu vực nào, tầm giá bao nhiêu cứ nhắn mình nhé!
+            </div>
+        </div>
+
+        <!-- Thanh nhập tin nhắn -->
+        <div style="padding: 12px 14px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; flex-shrink: 0; align-items: center;">
+            <input type="text" id="sporthubAiInput" placeholder="VD: Tìm sân pickleball ở Thủ Đức..." 
+                   style="flex: 1; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 24px; font-size: 13px; outline: none; box-sizing: border-box;">
+            <button id="sporthubAiSendBtn" 
+                    style="width: 38px; height: 38px; border-radius: 50%; background: #059669; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Script điều khiển hoạt động chắc chắn -->
+    <script>
+        (function() {
+            function setupSportHubAi() {
+                const btn = document.getElementById('sporthubAiToggleBtn');
+                const box = document.getElementById('sporthubAiChatBox');
+                const closeBtn = document.getElementById('sporthubAiCloseBtn');
+                const input = document.getElementById('sporthubAiInput');
+                const sendBtn = document.getElementById('sporthubAiSendBtn');
+                const msgList = document.getElementById('sporthubAiMessages');
+
+                if (!btn || !box) return;
+
+                // Mở / Đóng Box Chat
+                function toggleChat(e) {
+                    if (e) e.stopPropagation();
+                    if (box.style.display === 'none' || box.style.display === '') {
+                        box.style.setProperty('display', 'flex', 'important');
+                        if (input) input.focus();
+                    } else {
+                        box.style.setProperty('display', 'none', 'important');
+                    }
+                }
+
+                btn.onclick = toggleChat;
+                if (closeBtn) closeBtn.onclick = toggleChat;
+
+                function appendMessage(sender, text, isHtml) {
+                    const div = document.createElement('div');
+                    if (sender === 'user') {
+                        div.style.cssText = 'align-self: flex-end; background: #0284c7; color: #ffffff; padding: 10px 14px; border-radius: 12px; border-bottom-right-radius: 2px; max-width: 85%; line-height: 1.5; word-wrap: break-word;';
+                        div.innerText = text;
+                    } else {
+                        div.style.cssText = 'align-self: flex-start; background: #ffffff; color: #1e293b; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 2px; max-width: 88%; line-height: 1.5; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.04);';
+                        if (isHtml) {
+                            div.innerHTML = text;
+                        } else {
+                            div.innerText = text;
+                        }
+                    }
+                    msgList.appendChild(div);
+                    msgList.scrollTop = msgList.scrollHeight;
+                    return div;
+                }
+
+                function formatMarkdown(content) {
+                    return content
+                        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #0284c7; font-weight: 700; text-decoration: underline;">$1 &rarr;</a>')
+                        .replace(/\n/g, '<br>');
+                }
+
+                function handleSend() {
+                    const query = input.value.trim();
+                    if (!query) return;
+
+                    appendMessage('user', query, false);
+                    input.value = '';
+
+                    // Indicator chờ AI
+                    const loadingMsg = appendMessage('bot', '⏳ SportHub AI đang tra cứu sân phù hợp...', false);
+
+                    fetch('/api/ai/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: query })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        loadingMsg.remove();
+                        appendMessage('bot', formatMarkdown(data.reply || 'Dạ bạn cần tìm thêm thông tin gì nữa không ạ?'), true);
+                    })
+                    .catch(() => {
+                        loadingMsg.remove();
+                        appendMessage('bot', 'Dạ kết nối tạm thời bận, bạn vui lòng gửi lại câu hỏi nhé!', false);
+                    });
+                }
+
+                if (sendBtn) sendBtn.onclick = handleSend;
+                if (input) {
+                    input.onkeydown = function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleSend();
+                        }
+                    };
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupSportHubAi);
+            } else {
+                setupSportHubAi();
+            }
+        })();
+    </script>
+</th:block>

@@ -1,0 +1,541 @@
+
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết đơn đặt sân - SportHub Admin</title>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            display: flex;
+            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
+            color: #0f172a;
+        }
+
+        .admin-sidebar {
+            width: 250px;
+            background: #064e3b;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            padding: 22px 16px;
+            font-size: 20px;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #34d399;
+            white-space: nowrap;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 10px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            margin-bottom: 5px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            color: #d1fae5;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 9px;
+        }
+
+        .menu-link:hover {
+            background: rgba(255,255,255,.08);
+            color: white;
+        }
+
+        .menu-link.active {
+            background: rgba(255,255,255,.14);
+            color: white;
+            border-left: 4px solid #34d399;
+        }
+
+        .sidebar-logout {
+            padding: 18px 22px;
+            border-top: 1px solid rgba(255,255,255,.1);
+        }
+
+        .sidebar-logout a {
+            color: #fca5a5;
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 600;
+        }
+
+        .admin-main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .admin-nav {
+            min-height: 82px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            gap: 20px;
+        }
+
+        .nav-title {
+            font-weight: 800;
+            font-size: 18px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 13px;
+        }
+
+        .nav-right strong {
+            color: #064e3b;
+        }
+
+        .nav-right a {
+            color: #059669;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .admin-content {
+            padding: 28px 32px;
+        }
+
+        .page-heading {
+            margin-bottom: 25px;
+        }
+
+        .page-heading h1 {
+            font-size: 25px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .page-heading p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            margin-bottom: 22px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 23px 26px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .card-header h2 {
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .card-header h2 i {
+            color: #059669;
+            margin-right: 8px;
+        }
+
+        .card-body {
+            padding: 26px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 25px;
+        }
+
+        .info-item {
+            padding-bottom: 17px;
+            border-bottom: 1px solid #f1f5f9;
+            min-width: 0;
+        }
+
+        .label {
+            display: block;
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 9px;
+        }
+
+        .value {
+            font-size: 14px;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .booking-code {
+            color: #0369a1;
+            font-size: 17px;
+        }
+
+        .price {
+            color: #059669;
+            font-size: 21px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 20px;
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .note {
+            color: #334155;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .bottom-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 17px;
+            border-radius: 9px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .btn-back {
+            color: #334155;
+            background: white;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-back:hover {
+            color: #047857;
+            border-color: #059669;
+            background: #ecfdf5;
+        }
+
+        @media (max-width: 1000px) {
+            .admin-sidebar {
+                width: 215px;
+            }
+
+            .admin-content {
+                padding: 22px 18px;
+            }
+
+            .info-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 650px) {
+            body {
+                height: auto;
+                overflow: auto;
+                flex-direction: column;
+            }
+
+            .admin-sidebar {
+                width: 100%;
+            }
+
+            .sidebar-menu {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .admin-nav {
+                padding: 15px;
+                flex-wrap: wrap;
+            }
+
+            .nav-right {
+                flex-wrap: wrap;
+            }
+
+            .admin-content {
+                padding: 20px 12px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="admin-sidebar">
+
+    <div class="sidebar-brand">
+        <i class="fa-solid fa-shield-halved"></i>
+        SportHub Admin
+    </div>
+
+    <ul class="sidebar-menu">
+        <li class="menu-item">
+            <a th:href="@{/admin/dashboard}" class="menu-link">
+                <i class="fa-solid fa-chart-pie"></i>
+                Tổng quan
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/courts}" class="menu-link">
+                <i class="fa-solid fa-store"></i>
+                Quản lý sân bãi
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/bookings}" class="menu-link active">
+                <i class="fa-solid fa-calendar-check"></i>
+                Đơn đặt sân
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/users}" class="menu-link">
+                <i class="fa-solid fa-users"></i>
+                Khách hàng &amp; Chủ sân
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/reports}" class="menu-link">
+                <i class="fa-solid fa-money-bill-trend-up"></i>
+                Báo cáo doanh thu
+            </a>
+        </li>
+
+        <li class="menu-item">
+            <a th:href="@{/admin/settings}" class="menu-link">
+                <i class="fa-solid fa-gear"></i>
+                Cài đặt hệ thống
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-logout">
+        <a th:href="@{/logout}">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Đăng xuất
+        </a>
+    </div>
+
+</aside>
+
+<div class="admin-main">
+
+    <header class="admin-nav">
+        <div class="nav-title">Trang quản trị hệ thống</div>
+
+        <div class="nav-right">
+            <strong>
+                <i class="fa-solid fa-circle-user"></i>
+                Xin chào, Admin!
+            </strong>
+
+            <a th:href="@{/}" target="_blank">
+                Xem Web Khách <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+    </header>
+
+    <main class="admin-content">
+
+        <div class="page-heading">
+            <h1>Chi tiết đơn đặt sân</h1>
+            <p>
+                Xem thông tin khách hàng, lịch đặt sân và tình trạng thanh toán.
+            </p>
+        </div>
+
+        <section class="card">
+
+            <div class="card-header">
+                <h2>
+                    <i class="fa-solid fa-file-invoice"></i>
+                    Thông tin đơn hàng
+                </h2>
+            </div>
+
+            <div class="card-body">
+
+                <div class="info-grid">
+
+                    <div class="info-item">
+                        <span class="label">Mã đơn hàng</span>
+                        <div class="value booking-code"
+                             th:text="${booking.bookingCode}"></div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Trạng thái thanh toán</span>
+                        <div>
+                            <span class="status"
+                                  th:text="${
+                                      booking.paymentStatus == 'PAID_DEPOSIT' ? 'Đã thanh toán cọc' :
+                                      (booking.paymentStatus == 'PENDING_DEPOSIT' ? 'Chờ đặt cọc' :
+                                      (booking.paymentStatus == 'COMPLETED' ? 'Hoàn thành' :
+                                      (booking.paymentStatus != null ? booking.paymentStatus : 'Chưa cập nhật')))
+                                  }">
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Thời điểm tạo đơn</span>
+                        <div class="value"
+                             th:text="${booking.createdAt != null ? #temporals.format(booking.createdAt, 'HH:mm dd/MM/yyyy') : 'Chưa có thông tin'}">
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Tên khách hàng</span>
+                        <div class="value"
+                             th:text="${booking.customerName != null ? booking.customerName : (booking.user != null ? booking.user.fullName : 'Chưa có thông tin')}">
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Số điện thoại</span>
+                        <div class="value"
+                             th:text="${booking.customerPhone != null ? booking.customerPhone : (booking.user != null ? booking.user.phone : 'Chưa có thông tin')}">
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Sân thể thao</span>
+                        <div class="value"
+                             th:text="${booking.court != null ? booking.court.name : 'Chưa có thông tin'}">
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Sân con</span>
+                        <div class="value"
+                             th:text="${booking.subCourt != null ? booking.subCourt.name : 'Không có thông tin'}">
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Ngày đặt sân</span>
+                        <div class="value"
+                             th:text="${booking.bookingDate != null ? #temporals.format(booking.bookingDate, 'dd/MM/yyyy') : 'Chưa có thông tin'}">
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Thời gian chơi</span>
+                        <div class="value"
+                             th:text="${booking.timeSlot != null ? booking.timeSlot : 'Chưa có thông tin'}">
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Tổng tiền</span>
+                        <div class="value price"
+                             th:text="${booking.totalPrice != null ? #numbers.formatDecimal(booking.totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}">
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Tiền đặt cọc</span>
+                        <div class="value"
+                             th:text="${booking.depositAmount != null ? #numbers.formatDecimal(booking.depositAmount, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}">
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="label">Số tiền còn lại</span>
+                        <div class="value"
+                             th:text="${booking.remainingAmount != null ? #numbers.formatDecimal(booking.remainingAmount, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+
+            <div class="card-header">
+                <h2>
+                    <i class="fa-solid fa-note-sticky"></i>
+                    Ghi chú của khách hàng
+                </h2>
+            </div>
+
+            <div class="card-body">
+                <div class="note"
+                     th:text="${booking.customerNote != null && !booking.customerNote.isEmpty() ? booking.customerNote : 'Khách hàng không có ghi chú.'}">
+                </div>
+            </div>
+
+        </section>
+
+        <div class="bottom-actions">
+            <a th:href="@{/admin/bookings}" class="btn btn-back">
+                <i class="fa-solid fa-arrow-left"></i>
+                Quay lại danh sách đơn
+            </a>
+        </div>
+
+    </main>
+</div>
+
+</body>
+</html> 

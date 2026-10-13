@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết Nối Sân Với Sàn — SportHub Partner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f8fafc; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
+
+        .owner-sidebar { width: 250px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-brand { padding: 22px 20px; font-size: 19px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; color: #38bdf8; }
+        .sidebar-menu { list-style: none; padding: 14px 0; flex: 1; overflow-y: auto; }
+        .menu-item a { display: flex; align-items: center; gap: 12px; padding: 13px 22px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .menu-item a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .menu-item a.active { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-left: 4px solid #38bdf8; }
+
+        .owner-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .owner-nav { height: 62px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
+        .owner-content { padding: 28px 32px; max-width: 1100px; }
+
+        .card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .card-title { font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none; transition: border-color 0.15s; }
+        .form-control:focus { border-color: #0284c7; }
+
+        .btn-submit { background: #0284c7; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background 0.15s; }
+        .btn-submit:hover { background: #0369a1; }
+
+        .alert-success { background: #dcfce7; border: 1px solid #86efac; color: #15803d; padding: 12px 18px; border-radius: 8px; font-size: 13.5px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        th { padding: 12px; background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; text-align: left; }
+        td { padding: 14px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+
+        /* Badges trạng thái */
+        .badge-status { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+        .badge-verified { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .badge-pending { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .badge-rejected { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        
+        .badge-sport { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600; text-transform: capitalize; background: #f1f5f9; color: #475569; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Chủ Sân -->
+    <aside class="owner-sidebar">
+        <div class="sidebar-brand"><i class="fa-solid fa-store"></i> SportHub Partner</div>
+        <ul class="sidebar-menu">
+            <li class="menu-item"><a th:href="@{/owner/dashboard}"><i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách</a></li>
+            <li class="menu-item"><a th:href="@{/owner/courts/connect}" class="active"><i class="fa-solid fa-handshake"></i> Kết nối sân với Sàn</a></li>
+            <li class="menu-item"><a th:href="@{/owner/pricing}"><i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng</a></li>
+            <li class="menu-item"><a th:href="@{/owner/payout}"><i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền</a></li>
+            <li class="menu-item"><a th:href="@{/owner/support}"><i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin</a></li>
+        </ul>
+        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.08);">
+            <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <div class="owner-main">
+        <header class="owner-nav">
+            <div>
+                <strong style="color: #0f172a;" th:text="${owner != null and owner.businessName != null ? owner.businessName : 'Cụm Sân Thể Thao Hưng Phát'}">Cụm Sân Hưng Phát</strong>
+                <small style="color: #64748b; margin-left: 8px;"><i class="fa-solid fa-circle-check" style="color: #059669;"></i> Đối tác đã xác thực</small>
+            </div>
+            <a th:href="@{/}" target="_blank" style="font-size: 13px; color: #0284c7; text-decoration: none; font-weight: 600;">Xem Trang Đặt Sân &rarr;</a>
+        </header>
+
+        <main class="owner-content">
+            <!-- Thông báo khi gửi hồ sơ thành công -->
+            <div th:if="${successMessage}" class="alert-success">
+                <i class="fa-solid fa-circle-check"></i> <span th:text="${successMessage}">Thao tác thành công!</span>
+            </div>
+
+            <!-- Form đăng ký đưa cơ sở sân lên sàn -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fa-solid fa-plus-circle" style="color: #0284c7;"></i> Đăng Ký Đưa Cụm Sân Mới Lên Sàn SportHub
+                </div>
+                <form th:action="@{/owner/courts/connect}" method="post">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Tên cụm sân *</label>
+                            <input type="text" name="courtName" class="form-control" placeholder="VD: Sân Pickleball Thảo Điền" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Bộ môn thể thao *</label>
+                            <select name="sportType" class="form-control" required>
+                                <option value="pickleball">Pickleball</option>
+                                <option value="football">Bóng đá</option>
+                                <option value="badminton">Cầu lông</option>
+                                <option value="tennis">Tennis</option>
+                                <option value="basketball">Bóng rổ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Địa chỉ cụ thể *</label>
+                            <input type="text" name="address" class="form-control" placeholder="Số nhà, đường, quận, thành phố..." required>
+                        </div>
+                        <div class="form-group">
+                            <label>Giờ hoạt động *</label>
+                            <input type="text" name="openHours" class="form-control" value="06:00 - 22:30" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Giá niêm yết (VNĐ / giờ) *</label>
+                            <input type="number" name="pricePerHour" class="form-control" value="150000" step="10000" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Số lượng sân con bên trong *</label>
+                            <input type="number" name="numberOfSubCourts" class="form-control" value="2" min="1" max="10" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mô tả tiện ích cơ sở</label>
+                        <input type="text" name="description" class="form-control" placeholder="Mặt thảm cao cấp, có đèn đêm, bãi đỗ xe ô tô...">
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button type="submit" class="btn-submit">
+                            <i class="fa-solid fa-paper-plane"></i> Gửi Hồ Sơ Kết Nối Tới Admin
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Danh sách sân đã kết nối và trạng thái duyệt -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fa-solid fa-list" style="color: #059669;"></i> Danh Sách Cụm Sân Đang Kết Nối Với Sàn
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tên Cụm Sân</th>
+                            <th>Môn Thể Thao</th>
+                            <th>Địa Chỉ</th>
+                            <th>Giá Thuê / Giờ</th>
+                            <th>Trạng Thái Trên Sàn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="c : ${myCourts}">
+                            <td><strong th:text="${c.name}">002 PB Club</strong></td>
+                            <td>
+                                <span class="badge-sport" th:text="${c.sportType}">pickleball</span>
+                            </td>
+                            <td th:text="${c.address}">Thủ Đức, TP.HCM</td>
+                            <td>
+                                <b style="color: #059669;" th:text="${#numbers.formatDecimal(c.pricePerHour, 0, 'COMMA', 0, 'POINT')} + 'đ'">180.000đ</b>
+                            </td>
+                            <td>
+                                <!-- 1. Đang hoạt động (Đã được Admin duyệt) -->
+                                <span th:if="${c.status == 'ACTIVE' or c.status == null}" class="badge-status badge-verified">
+                                    <i class="fa-solid fa-circle-check"></i> Đang hoạt động (Verified)
+                                </span>
+
+                                <!-- 2. Đang chờ Admin duyệt -->
+                                <span th:if="${c.status == 'PENDING'}" class="badge-status badge-pending">
+                                    <i class="fa-solid fa-clock"></i> Đang chờ duyệt (Pending)
+                                </span>
+
+                                <!-- 3. Bị Admin từ chối -->
+                                <span th:if="${c.status == 'REJECTED'}" class="badge-status badge-rejected">
+                                    <i class="fa-solid fa-circle-xmark"></i> Từ chối (Cần sửa thông tin)
+                                </span>
+                            </td>
+                        </tr>
+                        <tr th:if="${myCourts == null or myCourts.isEmpty()}">
+                            <td colspan="5" style="text-align: center; padding: 36px; color: #94a3b8;">
+                                Bạn chưa đăng ký cụm sân nào. Hãy điền form bên trên để gửi hồ sơ tới Admin.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>
