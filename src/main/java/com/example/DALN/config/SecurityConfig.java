@@ -17,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -51,8 +53,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/owner/**").hasRole("OWNER")
-                .requestMatchers("/profile/**", "/lich-su-dat-san", "/doi-mat-khau").authenticated()
-                .requestMatchers("/", "/tim-san", "/san-bong/**", "/dat-san/**", "/ban-do", "/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/profile/**", "/lich-su-dat-san", "/doi-mat-khau", "/bookings/**").authenticated()
+                .requestMatchers("/", "/tim-san", "/san-bong/**", "/dat-san/**", "/ban-do", "/api/**", "/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(login -> login
@@ -82,7 +84,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // CHỈ DÙNG 1 BEAN INITDATA DUY NHẤT ĐỂ KHỞI TẠO CẢ TÀI KHOẢN LẪN DỮ LIỆU SÂN
     @Bean
     public CommandLineRunner initData(UserRepository userRepository, 
                                       CourtRepository courtRepository, 
@@ -130,24 +131,26 @@ public class SecurityConfig {
                         .build());
             }
 
-            // 4. Khởi tạo danh sách các sân bãi thực tế
+            // 4. Nếu chưa có sân nào trong Database: Tạo mới 3 cụm sân chuẩn
             if (courtRepository.count() == 0) {
                 Court c1 = courtRepository.save(Court.builder()
                         .name("002 Pickleball Club")
                         .sportType("pickleball")
-                        .address("Phường Linh Trung, TP. Thủ Đức, Hồ Chí Minh")
+                        .address("28 Thảo Điền, TP. Thủ Đức, Hồ Chí Minh")
                         .openHours("06:00 - 22:30")
                         .rating(4.9)
                         .reviewCount(56)
                         .pricePerHour(180000.0)
+                        .latitude(10.8032)
+                        .longitude(106.7321)
                         .imageUrl("https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&auto=format&fit=crop&q=80")
-                        .description("Cụm sân Pickleball tiêu chuẩn quốc tế với mặt thảm chống trượt Cushioned Acrylic, trang bị đèn LED chuyên dụng không chói mắt và phòng nghỉ tiện nghi.")
+                        .description("Cụm sân Pickleball tiêu chuẩn quốc tế với mặt thảm chống trượt Cushioned Acrylic, đèn LED chuyên dụng không chói mắt và phòng nghỉ tiện nghi.")
                         .amenities("Bãi đỗ xe ô tô, Đèn chiếu sáng đêm, Căng tin nước uống, Cho thuê vợt & bóng")
                         .owner(owner)
                         .build());
 
-                subCourtRepository.save(SubCourt.builder().name("Sân Pickleball 1 (Trong nhà)").court(c1).status("ACTIVE").build());
-                subCourtRepository.save(SubCourt.builder().name("Sân Pickleball 2 (Ngoài trời có mái)").court(c1).status("ACTIVE").build());
+                subCourtRepository.save(SubCourt.builder().name("Sân PB 1 (4 người)").court(c1).status("ACTIVE").build());
+                subCourtRepository.save(SubCourt.builder().name("Sân PB 2 (4 người)").court(c1).status("ACTIVE").build());
 
                 Court c2 = courtRepository.save(Court.builder()
                         .name("Trung Tâm Sân Bóng Arsenal")
@@ -157,6 +160,8 @@ public class SecurityConfig {
                         .rating(4.8)
                         .reviewCount(112)
                         .pricePerHour(350000.0)
+                        .latitude(10.7850)
+                        .longitude(106.6870)
                         .imageUrl("https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800&auto=format&fit=crop&q=80")
                         .description("Mặt cỏ nhân tạo sợi kim cương nhập khẩu, hệ thống thoát nước hiện đại thi đấu tốt trong mọi thời tiết.")
                         .amenities("Bãi đỗ xe ô tô, Đèn chiếu sáng đêm, Phòng thay đồ & Tắm, Căng tin nước uống")
@@ -174,6 +179,8 @@ public class SecurityConfig {
                         .rating(4.7)
                         .reviewCount(40)
                         .pricePerHour(120000.0)
+                        .latitude(21.0313)
+                        .longitude(105.7879)
                         .imageUrl("https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=800&auto=format&fit=crop&q=80")
                         .description("Thảm sàn cao su Yonex vân cát đạt chuẩn BWF chống chấn thương khớp gối. Trần cao thoáng mát.")
                         .amenities("Bãi đỗ xe ô tô, Đèn chiếu sáng đêm, Phòng thay đồ & Tắm, Căng tin nước uống")
@@ -182,6 +189,46 @@ public class SecurityConfig {
 
                 subCourtRepository.save(SubCourt.builder().name("Sân Cầu Lông 1").court(c3).status("ACTIVE").build());
                 subCourtRepository.save(SubCourt.builder().name("Sân Cầu Lông 2").court(c3).status("ACTIVE").build());
+            } else {
+                // 5. NẾU ĐÃ CÓ SÂN: CẬP NHẬT TRỰC TIẾP CÁC BẢN GHI BỊ THIẾU DỮ LIỆU (KHÔNG DÙNG DELETEALL ĐỂ TRÁNH LỖI KHÓA NGOẠI BOOKINGS)
+                List<Court> existingCourts = courtRepository.findAll();
+                for (Court c : existingCourts) {
+                    boolean changed = false;
+
+                    if (c.getOwner() == null) {
+                        c.setOwner(owner);
+                        changed = true;
+                    }
+                    if (c.getPricePerHour() == null || c.getPricePerHour() <= 0) {
+                        c.setPricePerHour(180000.0);
+                        changed = true;
+                    }
+                    if (c.getAddress() == null || c.getAddress().isBlank()) {
+                        c.setAddress("28 Thảo Điền, TP. Thủ Đức, Hồ Chí Minh");
+                        changed = true;
+                    }
+                    if (c.getLatitude() == null || c.getLongitude() == null) {
+                        c.setLatitude(10.8032);
+                        c.setLongitude(106.7321);
+                        changed = true;
+                    }
+                    if (c.getImageUrl() == null || c.getImageUrl().isBlank()) {
+                        c.setImageUrl("https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&auto=format&fit=crop&q=80");
+                        changed = true;
+                    }
+                    if (c.getOpenHours() == null || c.getOpenHours().isBlank()) {
+                        c.setOpenHours("06:00 - 22:30");
+                        changed = true;
+                    }
+                    if (c.getName() != null && c.getName().matches("^Sân \\d+.*")) {
+                        c.setName("Cụm Sân Thể Thao " + c.getName());
+                        changed = true;
+                    }
+
+                    if (changed) {
+                        courtRepository.save(c);
+                    }
+                }
             }
         };
     }

@@ -43,11 +43,12 @@
     <aside class="owner-sidebar">
         <div class="sidebar-brand"><i class="fa-solid fa-store"></i> SportHub Partner</div>
         <ul class="sidebar-menu">
-            <li class="menu-item"><a th:href="@{/owner/dashboard}"><i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách</a></li>
-            <li class="menu-item"><a th:href="@{/owner/pricing}"><i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng</a></li>
-            <li class="menu-item"><a th:href="@{/owner/payout}" class="active"><i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền</a></li>
-            <li class="menu-item"><a th:href="@{/owner/support}"><i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin</a></li>
-        </ul>
+    <li class="menu-item"><a th:href="@{/owner/dashboard}"><i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách</a></li>
+    <li class="menu-item"><a th:href="@{/owner/courts/connect}"><i class="fa-solid fa-handshake"></i> Kết nối sân với Sàn</a></li>
+    <li class="menu-item"><a th:href="@{/owner/pricing}"><i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng</a></li>
+    <li class="menu-item"><a th:href="@{/owner/payout}" class="active"><i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền</a></li>
+    <li class="menu-item"><a th:href="@{/owner/support}"><i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin</a></li>
+</ul>
         <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.08);">
             <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
                 <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trao đổi với Chủ Sân — SportHub Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f0f5f9; display: flex; height: 100vh; overflow: hidden; }
+
+        .admin-sidebar { width: 250px; background: #064e3b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-brand { padding: 22px 20px; font-size: 20px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; color: #34d399; }
+        .sidebar-menu { list-style: none; padding: 12px 0; flex: 1; }
+        .menu-link { display: flex; align-items: center; gap: 12px; padding: 12px 22px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 600; }
+        .menu-link.active { background: rgba(255,255,255,0.14); color: #fff; border-left: 4px solid #34d399; }
+
+        .admin-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .top-navbar { height: 62px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
+        .dashboard-content { padding: 24px 32px; max-width: 950px; }
+
+        .chat-container { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; height: calc(100vh - 120px); }
+        .chat-header { background: #064e3b; color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .chat-messages { flex: 1; padding: 20px 24px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; }
+        .msg { max-width: 70%; padding: 12px 16px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; word-wrap: break-word; }
+        
+        /* Tin nhắn của Chủ Sân (Bên trái) */
+        .msg-owner { align-self: flex-start; background: #e2e8f0; color: #0f172a; border-bottom-left-radius: 2px; }
+        /* Tin nhắn của Admin gửi (Bên phải) */
+        .msg-admin { align-self: flex-end; background: #059669; color: #fff; border-bottom-right-radius: 2px; }
+
+        .chat-footer { padding: 14px 20px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; gap: 12px; }
+        .chat-input { flex: 1; padding: 11px 16px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none; }
+        .chat-input:focus { border-color: #059669; }
+        .btn-send { background: #059669; color: #fff; border: none; padding: 0 24px; border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .btn-send:hover { background: #047857; }
+    </style>
+</head>
+<body>
+
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand"><i class="fa-solid fa-shield-halved"></i> SportHub Admin</div>
+        <ul class="sidebar-menu">
+            <li><a th:href="@{/admin/dashboard}" class="menu-link"><i class="fa-solid fa-chart-pie"></i> Tổng quan</a></li>
+            <li><a th:href="@{/admin/courts}" class="menu-link"><i class="fa-solid fa-store"></i> Quản lý sân bãi</a></li>
+            <li><a th:href="@{/admin/bookings}" class="menu-link"><i class="fa-solid fa-calendar-check"></i> Đơn đặt sân</a></li>
+            <li><a th:href="@{/admin/users}" class="menu-link active"><i class="fa-solid fa-users"></i> Khách hàng &amp; Chủ sân</a></li>
+            <li><a th:href="@{/admin/reports}" class="menu-link"><i class="fa-solid fa-money-bill-trend-up"></i> Báo cáo doanh thu</a></li>
+        </ul>
+    </aside>
+
+    <div class="admin-main">
+        <header class="top-navbar">
+            <div>
+                <a th:href="@{/admin/users?tab=owners}" style="color: #64748b; text-decoration: none; font-size: 13px; font-weight: 600;">&larr; Quay lại danh sách đối tác</a>
+                <strong style="margin-left: 12px; font-size: 15px; color: #0f172a;" 
+                        th:text="'Hội thoại với: ' + ${targetOwner.businessName} + ' (' +${targetOwner.fullName} + ')'">Hội thoại</strong>
+            </div>
+            <span style="color: #059669; font-weight: 700; font-size: 13px;"><i class="fa-solid fa-phone"></i> Hotline: <span th:text="${targetOwner.phone}">0912...</span></span>
+        </header>
+
+        <main class="dashboard-content">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <span style="font-size: 14px; font-weight: 700;"><i class="fa-solid fa-headset"></i> Kênh Hỗ Trợ Kỹ Thuật &amp; Đối Soát Doanh Thu</span>
+                    <span style="font-size: 12px; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px;">Chủ Sân Đang Kết Nối</span>
+                </div>
+
+                <div class="chat-messages" id="adminChatMessages">
+                    <div th:each="m : ${messages}" 
+                         th:class="${m.senderRole == 'ADMIN'} ? 'msg msg-admin' : 'msg msg-owner'"
+                         th:text="${m.content}">
+                    </div>
+                </div>
+
+                <form class="chat-footer" id="adminChatForm" onsubmit="handleAdminSend(event)">
+                    <input type="text" id="adminMsgInput" class="chat-input" placeholder="Nhập câu trả lời gửi tới Chủ Sân..." autocomplete="off" required>
+                    <button type="submit" class="btn-send"><i class="fa-solid fa-paper-plane"></i> Phản Hồi</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script th:inline="javascript">
+        const ownerId = /*[[${targetOwner.id}]]*/ 2;
+        const chatMessages = document.getElementById('adminChatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        function handleAdminSend(e) {
+            e.preventDefault();
+            const input = document.getElementById('adminMsgInput');
+            const content = input.value.trim();
+            if (!content) return;
+
+            fetch(`/admin/support/chat/${ownerId}/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ content: content })
+            }).then(res => res.text()).then(res => {
+                if (res === 'success') {
+                    const div = document.createElement('div');
+                    div.className = 'msg msg-admin';
+                    div.innerText = content;
+                    chatMessages.appendChild(div);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    input.value = '';
+                }
+            });
+        }
+
+        // Tự động cập nhật tin nhắn mới từ Chủ Sân mỗi 3 giây
+        setInterval(() => {
+            fetch(`/admin/support/chat/${ownerId}/messages`)
+                .then(res => res.json())
+                .then(data => {
+                    const currentCount = chatMessages.querySelectorAll('.msg').length;
+                    if (data.length > currentCount) {
+                        chatMessages.innerHTML = '';
+                        data.forEach(m => {
+                            const div = document.createElement('div');
+                            div.className = m.senderRole === 'ADMIN' ? 'msg msg-admin' : 'msg msg-owner';
+                            div.innerText = m.content;
+                            chatMessages.appendChild(div);
+                        });
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                });
+        }, 3000);
+    </script>
+</body>
+</html>

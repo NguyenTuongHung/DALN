@@ -9,10 +9,10 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f8fafc; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
 
-        /* Sidebar Chủ Sân (Tông màu xanh dương thể thao hiện đại, phân biệt với màu xanh lá của Admin) */
+        /* Sidebar Chủ Sân */
         .owner-sidebar { width: 250px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
         .sidebar-brand { padding: 22px 20px; font-size: 19px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; color: #38bdf8; }
-        .sidebar-menu { list-style: none; padding: 14px 0; flex: 1; }
+        .sidebar-menu { list-style: none; padding: 14px 0; flex: 1; overflow-y: auto; }
         .menu-item a { display: flex; align-items: center; gap: 12px; padding: 13px 22px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
         .menu-item a:hover { background: rgba(255,255,255,0.06); color: #fff; }
         .menu-item a.active { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-left: 4px solid #38bdf8; }
@@ -22,33 +22,47 @@
         .owner-nav { height: 62px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
         .owner-content { padding: 28px 32px; }
 
+        /* Thông báo flash */
+        .alert-success { background: #dcfce7; border: 1px solid #86efac; color: #15803d; padding: 12px 18px; border-radius: 8px; font-size: 13.5px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
         /* Stat Cards */
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 24px; }
-        .stat-card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; }
+        .stat-card { background: #fff; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .stat-val { font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 4px; }
         .stat-label { font-size: 12.5px; color: #64748b; font-weight: 600; }
         .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
 
-        /* Khung Lưới Lịch Sân Trực Quan */
-        .schedule-panel { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 22px; margin-bottom: 24px; }
-        .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .timeline-grid { display: grid; grid-template-columns: 120px repeat(6, 1fr); gap: 8px; font-size: 13px; text-align: center; }
+        /* Khung Lưới Lịch Sân */
+        .schedule-panel { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 22px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+        .timeline-grid { display: grid; grid-template-columns: 180px repeat(5, 1fr) 100px; gap: 8px; font-size: 13px; text-align: center; }
         .time-header { font-weight: 700; color: #64748b; background: #f1f5f9; padding: 8px 4px; border-radius: 6px; }
-        .court-row-label { font-weight: 700; color: #1e293b; background: #f8fafc; padding: 12px 6px; border-radius: 6px; text-align: left; display: flex; align-items: center; }
-        .slot { padding: 12px 6px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: transform 0.1s; }
-        .slot:hover { transform: scale(1.02); }
+        .court-row-label { font-weight: 700; color: #1e293b; background: #f8fafc; padding: 12px 10px; border-radius: 6px; text-align: left; display: flex; align-items: center; }
+        .slot { padding: 12px 6px; border-radius: 6px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
         .slot-free { background: #ecfdf5; color: #059669; border: 1px dashed #10b981; }
         .slot-booked { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
         .slot-locked { background: #f1f5f9; color: #94a3b8; border: 1px solid #cbd5e1; }
+        .btn-lock-slot { border: 1px solid #cbd5e1; background: #fff; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+        .btn-lock-slot:hover { border-color: #0284c7; color: #0284c7; }
 
-        /* Bảng Đơn Cần Đón Khách Hôm Nay */
-        .orders-panel { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 22px; }
+        /* Bảng Đơn Cần Đón Khách */
+        .orders-panel { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         table { width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: left; }
         th { padding: 12px 14px; background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; }
         td { padding: 14px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
-        .btn-checkin { background: #059669; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+        .btn-checkin { background: #059669; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s; }
         .btn-checkin:hover { background: #047857; }
-        .btn-call { background: #f1f5f9; color: #0284c7; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid #bae6fd; display: inline-flex; align-items: center; gap: 4px; }
+        .btn-call { background: #f0fdf4; color: #15803d; text-decoration: none; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid #bbf7d0; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; }
+        .badge-completed { background: #dcfce7; color: #15803d; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+
+        /* Modal Khóa Giờ */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-box { background: #fff; border-radius: 14px; width: 440px; max-width: 90%; padding: 22px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+        .modal-title { font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px; }
+        .form-control { width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none; }
+        .btn-modal-submit { width: 100%; background: #0284c7; color: #fff; border: none; padding: 11px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -59,27 +73,32 @@
             <i class="fa-solid fa-store"></i> SportHub Partner
         </div>
         <ul class="sidebar-menu">
-    <li class="menu-item">
-        <a th:href="@{/owner/dashboard}" class="active">
-            <i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách
-        </a>
-    </li>
-    <li class="menu-item">
-        <a th:href="@{/owner/pricing}">
-            <i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng
-        </a>
-    </li>
-    <li class="menu-item">
-        <a th:href="@{/owner/payout}">
-            <i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền
-        </a>
-    </li>
-    <li class="menu-item">
-        <a th:href="@{/owner/support}">
-            <i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin
-        </a>
-    </li>
-</ul>
+            <li class="menu-item">
+                <a th:href="@{/owner/dashboard}" class="active">
+                    <i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/courts/connect}">
+                    <i class="fa-solid fa-handshake"></i> Kết nối sân với Sàn
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/pricing}">
+                    <i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/payout}">
+                    <i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/support}">
+                    <i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin
+                </a>
+            </li>
+        </ul>
         <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.08);">
             <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
                 <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
@@ -103,28 +122,35 @@
         </header>
 
         <main class="owner-content">
+            <!-- Thông báo flash khi check-in hoặc thao tác thành công -->
+            <div th:if="${successMessage}" class="alert-success">
+                <i class="fa-solid fa-circle-check"></i> <span th:text="${successMessage}">Thao tác thành công!</span>
+            </div>
+
             <!-- 4 Thẻ Thống Kê Nhanh -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div>
                         <div class="stat-label">Doanh thu hôm nay (Gốc)</div>
-                        <div class="stat-val" style="color: #0f172a;">2.450.000đ</div>
+                        <div class="stat-val" style="color: #0f172a;" 
+                             th:text="${todayGross != null ? #numbers.formatDecimal(todayGross, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}">0đ</div>
                     </div>
                     <div class="stat-icon" style="background: #e0f2fe; color: #0284c7;"><i class="fa-solid fa-money-bill-wave"></i></div>
                 </div>
 
                 <div class="stat-card">
                     <div>
-                        <div class="stat-label">Thực nhận về ví (Sau 8% phí)</div>
-                        <div class="stat-val" style="color: #059669;">2.254.000đ</div>
+                        <div class="stat-label">Thực nhận về ví (Sau trừ phí sàn)</div>
+                        <div class="stat-val" style="color: #059669;" 
+                             th:text="${netRevenue != null ? #numbers.formatDecimal(netRevenue, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}">0đ</div>
                     </div>
                     <div class="stat-icon" style="background: #dcfce7; color: #15803d;"><i class="fa-solid fa-wallet"></i></div>
                 </div>
 
                 <div class="stat-card">
                     <div>
-                        <div class="stat-label">Lượt khách đặt hôm nay</div>
-                        <div class="stat-val">7 trận</div>
+                        <div class="stat-label">Tổng lượt đơn tiếp nhận</div>
+                        <div class="stat-val" th:text="(${todayBookings != null ? todayBookings.size() : 0}) + ' trận'">0 trận</div>
                     </div>
                     <div class="stat-icon" style="background: #fef3c7; color: #d97706;"><i class="fa-solid fa-users"></i></div>
                 </div>
@@ -132,25 +158,44 @@
                 <div class="stat-card">
                     <div>
                         <div class="stat-label">Tài khoản thụ hưởng</div>
-                        <div style="font-weight: 700; font-size: 14px; margin-top: 4px; color: #334155;">VCB - 1029384756</div>
+                        <div style="font-weight: 700; font-size: 13.5px; margin-top: 4px; color: #334155;"
+                             th:text="${owner != null and owner.bankName != null ? owner.bankName + ' - ' + owner.bankAccountNumber : 'VCB - 1029384756'}">VCB - 1029384756</div>
                     </div>
                     <div class="stat-icon" style="background: #f1f5f9; color: #475569;"><i class="fa-solid fa-building-columns"></i></div>
                 </div>
             </div>
 
-            <!-- Bảng Trực Quan Khung Giờ (Lưới Lịch Sân) -->
+            <!-- Bảng Trực Quan Khung Giờ (Lưới Lịch Sân) Kèm Bộ Lọc Dropdown -->
             <div class="schedule-panel">
                 <div class="panel-head">
-                    <h3 style="font-size: 15px; font-weight: 800;"><i class="fa-regular fa-clock" style="color: #0284c7;"></i> Lưới Khung Giờ Hoạt Động (Hôm nay)</h3>
+                    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                        <h3 style="font-size: 15px; font-weight: 800; margin: 0;">
+                            <i class="fa-regular fa-clock" style="color: #0284c7;"></i> Lưới Khung Giờ Hoạt Động (Hôm nay)
+                        </h3>
+                        
+                        <!-- Dropdown bộ lọc cụm sân -->
+                        <div th:if="${myCourts != null and !myCourts.isEmpty()}" style="display: flex; align-items: center; gap: 8px;">
+                            <label style="font-size: 13px; font-weight: 700; color: #475569;">Cụm sân:</label>
+                            <select id="courtSelector" onchange="filterCourtSchedule(this.value)" 
+                                    style="padding: 6px 14px; border: 1.5px solid #0284c7; border-radius: 8px; font-size: 13px; font-weight: 700; color: #0369a1; outline: none; background: #f0f9ff; cursor: pointer;">
+                                <option value="all">-- Hiển thị tất cả cụm sân --</option>
+                                <option th:each="court : ${myCourts}" 
+                                        th:value="${court.id}" 
+                                        th:text="${court.name} + ' (' + ${court.sportType} + ')'">
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div style="display: flex; gap: 14px; font-size: 12px; font-weight: 600;">
-                        <span><b style="color: #059669;">■</b> Trống (Khách đặt được)</span>
-                        <span><b style="color: #2563eb;">■</b> Đã có khách cọc</span>
-                        <span><b style="color: #94a3b8;">■</b> Khóa bảo trì/khách ngoài</span>
+                        <span><b style="color: #059669;">■</b> Trống</span>
+                        <span><b style="color: #2563eb;">■</b> Khách đã đặt</span>
+                        <span><b style="color: #94a3b8;">■</b> Khóa bảo trì</span>
                     </div>
                 </div>
 
                 <div class="timeline-grid">
-                    <div class="time-header">Cụm Sân</div>
+                    <div class="time-header">Cụm Sân / Sân Con</div>
                     <div class="time-header">16:00 - 17:00</div>
                     <div class="time-header">17:00 - 18:00</div>
                     <div class="time-header">18:00 - 19:30</div>
@@ -158,23 +203,44 @@
                     <div class="time-header">21:00 - 22:30</div>
                     <div class="time-header">Thao tác</div>
 
-                    <!-- Sân 1 -->
-                    <div class="court-row-label">Sân Pickleball 1</div>
-                    <div class="slot slot-free">Trống</div>
-                    <div class="slot slot-booked">Khách: Tuấn</div>
-                    <div class="slot slot-booked">Khách: Hùng</div>
-                    <div class="slot slot-free">Trống</div>
-                    <div class="slot slot-locked">Bảo dưỡng</div>
-                    <div><button style="border: 1px solid #cbd5e1; background: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">Khóa giờ</button></div>
+                    <!-- Lặp danh sách từng cụm sân và các sân con bên trong -->
+                    <th:block th:if="${myCourts != null and !myCourts.isEmpty()}">
+                        <th:block th:each="court : ${myCourts}">
+                            <th:block th:each="sub : ${court.subCourts}">
+                                <div class="court-row-label court-schedule-row" th:attr="data-court-id=${court.id}">
+                                    <strong th:text="${sub.name}">Sân 1</strong>
+                                    <small style="color: #64748b; font-size: 11px; margin-left: 6px;" th:text="'(' + ${court.name} + ')'"></small>
+                                </div>
+                                <div class="slot slot-free court-schedule-row" th:attr="data-court-id=${court.id}">Trống</div>
+                                <div class="slot slot-free court-schedule-row" th:attr="data-court-id=${court.id}">Trống</div>
+                                <div class="slot slot-booked court-schedule-row" th:attr="data-court-id=${court.id}">Khách cọc</div>
+                                <div class="slot slot-booked court-schedule-row" th:attr="data-court-id=${court.id}">Khách cọc</div>
+                                <div class="slot slot-free court-schedule-row" th:attr="data-court-id=${court.id}">Trống</div>
+                                <div class="court-schedule-row" th:attr="data-court-id=${court.id}">
+                                    <button type="button" class="btn-lock-slot" th:onclick="openLockModal([[${sub.id}]], [[${court.name} + ' - ' + ${sub.name}]])">Khóa giờ</button>
+                                </div>
+                            </th:block>
+                        </th:block>
+                    </th:block>
 
-                    <!-- Sân 2 -->
-                    <div class="court-row-label">Sân Pickleball 2</div>
-                    <div class="slot slot-free">Trống</div>
-                    <div class="slot slot-free">Trống</div>
-                    <div class="slot slot-booked">Khách: Thảo</div>
-                    <div class="slot slot-booked">Khách: Nam</div>
-                    <div class="slot slot-free">Trống</div>
-                    <div><button style="border: 1px solid #cbd5e1; background: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">Khóa giờ</button></div>
+                    <!-- Hiển thị mặc định nếu chưa có cụm sân nào -->
+                    <th:block th:if="${myCourts == null or myCourts.isEmpty()}">
+                        <div class="court-row-label">Sân Pickleball 1</div>
+                        <div class="slot slot-free">Trống</div>
+                        <div class="slot slot-booked">Khách cọc</div>
+                        <div class="slot slot-booked">Khách cọc</div>
+                        <div class="slot slot-free">Trống</div>
+                        <div class="slot slot-locked">Bảo dưỡng</div>
+                        <div><button type="button" class="btn-lock-slot" onclick="openLockModal(1, 'Sân Pickleball 1')">Khóa giờ</button></div>
+
+                        <div class="court-row-label">Sân Pickleball 2</div>
+                        <div class="slot slot-free">Trống</div>
+                        <div class="slot slot-free">Trống</div>
+                        <div class="slot slot-booked">Khách cọc</div>
+                        <div class="slot slot-booked">Khách cọc</div>
+                        <div class="slot slot-free">Trống</div>
+                        <div><button type="button" class="btn-lock-slot" onclick="openLockModal(2, 'Sân Pickleball 2')">Khóa giờ</button></div>
+                    </th:block>
                 </div>
             </div>
 
@@ -182,50 +248,73 @@
             <div class="orders-panel">
                 <div class="panel-head">
                     <h3 style="font-size: 15px; font-weight: 800;"><i class="fa-solid fa-list-check" style="color: #059669;"></i> Danh Sách Khách Đến Chơi Cần Tiếp Nhận</h3>
+                    <span style="font-size: 13px; color: #64748b;">Thời gian: <b>Tất cả đơn đặt mới nhất</b></span>
                 </div>
                 <table>
                     <thead>
                         <tr>
-                            <th>Khung Giờ</th>
+                            <th>Mã Đơn &amp; Khung Giờ</th>
                             <th>Sân Chỉ Định</th>
                             <th>Khách Hàng &amp; Liên Hệ</th>
                             <th>Tiền Trận</th>
-                            <th>Đã Cọc Qua Sàn</th>
+                            <th>Đã Cọc Sàn (30%)</th>
                             <th>Còn Thu Tại Sân</th>
                             <th>Hành Động Chủ Sân</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><strong style="color: #0284c7;">18:00 - 20:00</strong><br><small>Hôm nay</small></td>
-                            <td><strong>Sân 1</strong> (Trong nhà)</td>
+                        <tr th:each="b : ${todayBookings}">
                             <td>
-                                <strong>Nguyễn Văn Hùng</strong><br>
-                                <a href="https://zalo.me/0912345678" target="_blank" class="btn-call"><i class="fa-solid fa-phone"></i> 0912.345.678 (Zalo)</a>
+                                <strong style="color: #0284c7;" th:text="${b.timeSlot}">18:00 - 20:00</strong><br>
+                                <small style="color: #475569;"><i class="fa-regular fa-calendar"></i> <span th:text="${#temporals.format(b.bookingDate, 'dd/MM/yyyy')}">13/10/2026</span></small><br>
+                                <small style="color: #64748b;">Mã: <b th:text="${b.bookingCode}">BK-1001</b></small>
                             </td>
-                            <td><strong>360.000đ</strong></td>
-                            <td><span style="color: #059669; font-weight: 700;">108.000đ (30%)</span></td>
-                            <td><strong style="color: #dc2626;">252.000đ</strong></td>
                             <td>
-                                <form th:action="@{/owner/bookings/1/check-in}" method="post" style="display:inline;">
-                                    <button type="submit" class="btn-checkin"><i class="fa-solid fa-check"></i> Đã Đón Khách</button>
+                                <strong th:text="${b.subCourt != null ? b.subCourt.name : 'Sân chỉ định'}">Sân 1</strong><br>
+                                <small style="color: #64748b;" th:text="${b.court != null ? b.court.name : ''}">002 PB Club</small>
+                            </td>
+                            <td>
+                                <strong th:text="${b.customerName}">Nguyễn Văn Hùng</strong><br>
+                                <a th:if="${b.customerPhone != null}" 
+                                   th:href="'https://zalo.me/' + ${#strings.replace(b.customerPhone, ' ', '')}" 
+                                   target="_blank" class="btn-call">
+                                    <i class="fa-solid fa-phone"></i> <span th:text="${b.customerPhone}">0912345678</span> (Zalo)
+                                </a>
+                            </td>
+                            <td>
+                                <strong th:text="${#numbers.formatDecimal(b.totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'">360.000đ</strong>
+                            </td>
+                            <td>
+                                <span style="color: #059669; font-weight: 700;" 
+                                      th:text="${#numbers.formatDecimal(b.depositAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'">108.000đ</span>
+                            </td>
+                            <td>
+                                <strong style="color: #dc2626;" 
+                                        th:text="${#numbers.formatDecimal(b.remainingAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'">252.000đ</strong>
+                            </td>
+                            <td>
+                                <form th:if="${b.paymentStatus == 'PAID_DEPOSIT'}" 
+                                      th:action="@{/owner/bookings/{id}/check-in(id=${b.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn-checkin">
+                                        <i class="fa-solid fa-check"></i> Đã Đón Khách
+                                    </button>
                                 </form>
+
+                                <span th:if="${b.paymentStatus == 'COMPLETED'}" class="badge-completed">
+                                    <i class="fa-solid fa-circle-check"></i> Đã hoàn thành
+                                </span>
+
+                                <span th:if="${#strings.startsWith(b.paymentStatus, 'CANCELLED')}" 
+                                      style="background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                                    Đã hủy
+                                </span>
                             </td>
                         </tr>
-                        <tr>
-                            <td><strong style="color: #0284c7;">19:30 - 21:00</strong><br><small>Hôm nay</small></td>
-                            <td><strong>Sân 2</strong> (Ngoài trời)</td>
-                            <td>
-                                <strong>Trần Minh Tuấn</strong><br>
-                                <a href="https://zalo.me/0988111222" target="_blank" class="btn-call"><i class="fa-solid fa-phone"></i> 0988.111.222 (Zalo)</a>
-                            </td>
-                            <td><strong>270.000đ</strong></td>
-                            <td><span style="color: #059669; font-weight: 700;">81.000đ (30%)</span></td>
-                            <td><strong style="color: #dc2626;">189.000đ</strong></td>
-                            <td>
-                                <form th:action="@{/owner/bookings/2/check-in}" method="post" style="display:inline;">
-                                    <button type="submit" class="btn-checkin"><i class="fa-solid fa-check"></i> Đã Đón Khách</button>
-                                </form>
+
+                        <tr th:if="${todayBookings == null or todayBookings.isEmpty()}">
+                            <td colspan="7" style="text-align: center; padding: 36px; color: #94a3b8;">
+                                <i class="fa-regular fa-calendar-xmark" style="font-size: 28px; margin-bottom: 8px; display: block;"></i>
+                                Chưa có đơn đặt sân nào được chuyển tới cơ sở của bạn.
                             </td>
                         </tr>
                     </tbody>
@@ -233,6 +322,89 @@
             </div>
         </main>
     </div>
+
+    <!-- Modal Khóa Khung Giờ Thủ Công -->
+    <div id="lockModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">
+                <span><i class="fa-solid fa-lock" style="color: #0284c7;"></i> Khóa Giờ Sân Bận</span>
+                <button type="button" onclick="closeLockModal()" style="border: none; background: none; font-size: 18px; cursor: pointer; color: #64748b;">&times;</button>
+            </div>
+            <form th:action="@{/owner/courts/toggle-slot}" method="post">
+                <input type="hidden" id="modalSubCourtId" name="subCourtId" value="1">
+                
+                <div class="form-group">
+                    <label>Sân con</label>
+                    <input type="text" id="modalCourtName" class="form-control" readonly style="background: #f1f5f9;">
+                </div>
+
+                <div class="form-group">
+                    <label>Ngày khóa</label>
+                    <input type="date" name="date" class="form-control" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Khung giờ</label>
+                    <select name="timeSlot" class="form-control" required>
+                        <option value="16:00 - 17:00">16:00 - 17:00</option>
+                        <option value="17:00 - 18:00">17:00 - 18:00</option>
+                        <option value="18:00 - 19:30">18:00 - 19:30</option>
+                        <option value="19:30 - 21:00">19:30 - 21:00</option>
+                        <option value="21:00 - 22:30">21:00 - 22:30</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Lý do khóa</label>
+                    <input type="text" name="reason" class="form-control" placeholder="VD: Khách quen đặt ngoài, Bảo dưỡng mặt cỏ/lưới...">
+                </div>
+
+                <button type="submit" class="btn-modal-submit">Xác Nhận Khóa Khung Giờ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script điều khiển Modal & Bộ lọc Cụm Sân -->
+    <script>
+        function openLockModal(subCourtId, courtName) {
+            document.getElementById('modalSubCourtId').value = subCourtId;
+            document.getElementById('modalCourtName').value = courtName;
+            document.getElementById('lockModal').style.display = 'flex';
+        }
+
+        function closeLockModal() {
+            document.getElementById('lockModal').style.display = 'none';
+        }
+
+        window.onclick = function(e) {
+            const modal = document.getElementById('lockModal');
+            if (e.target === modal) {
+                closeLockModal();
+            }
+        };
+
+        // Hàm lọc danh sách sân con hiển thị theo cụm sân được chọn
+        function filterCourtSchedule(selectedCourtId) {
+            const rows = document.querySelectorAll('.court-schedule-row');
+            rows.forEach(el => {
+                const courtId = el.getAttribute('data-court-id');
+                if (selectedCourtId === 'all' || courtId === selectedCourtId) {
+                    el.style.display = 'flex';
+                } else {
+                    el.style.display = 'none';
+                }
+            });
+        }
+
+        // Tự động chọn cụm sân đầu tiên khi tải trang để giao diện gọn gàng
+        document.addEventListener("DOMContentLoaded", function() {
+            const selector = document.getElementById('courtSelector');
+            if (selector && selector.options.length > 1) {
+                selector.selectedIndex = 1;
+                filterCourtSchedule(selector.value);
+            }
+        });
+    </script>
 
 </body>
 </html>

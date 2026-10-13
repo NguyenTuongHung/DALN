@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
@@ -486,5 +487,142 @@
     }
   });
 </script>
+
+
+<!-- ================= KHỐI TRỢ LÝ AI SPORTHUB ================= -->
+    <!-- 1. Nút mở Chatbot -->
+    <div id="sporthubAiToggleBtn" 
+         onclick="window.toggleSportHubAiBox(event)"
+         style="position: fixed !important; bottom: 25px !important; right: 25px !important; width: 62px !important; height: 62px !important; border-radius: 50% !important; background: linear-gradient(135deg, #059669, #0284c7) !important; color: #ffffff !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; box-shadow: 0 10px 25px -3px rgba(2, 132, 199, 0.5) !important; z-index: 2147483647 !important; user-select: none !important;">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+            <circle cx="12" cy="5" r="2"></circle>
+            <path d="M12 7v4"></path>
+            <line x1="8" y1="16" x2="8" y2="16.01"></line>
+            <line x1="16" y1="16" x2="16.01"></line>
+        </svg>
+    </div>
+
+    <!-- 2. Hộp thoại Chatbox AI -->
+    <div id="sporthubAiChatBox" 
+         style="display: none; position: fixed !important; bottom: 98px !important; right: 25px !important; width: 380px !important; max-width: calc(100vw - 40px) !important; height: 530px !important; max-height: calc(100vh - 120px) !important; background: #ffffff !important; border-radius: 18px !important; box-shadow: 0 20px 45px -5px rgba(0,0,0,0.3) !important; border: 1px solid #cbd5e1 !important; z-index: 2147483647 !important; flex-direction: column !important; overflow: hidden !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;">
+        
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #064e3b, #0284c7); color: #fff; padding: 15px 18px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: #fff;">SportHub AI Assistant</h4>
+                    <span style="color: #a7f3d0; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                        <span style="display: inline-block; width: 7px; height: 7px; background: #34d399; border-radius: 50%;"></span>
+                        Trực tuyến • Tư vấn tìm sân
+                    </span>
+                </div>
+            </div>
+            <button onclick="window.toggleSportHubAiBox(event)" style="background: none; border: none; color: #ffffff; font-size: 26px; cursor: pointer; line-height: 1; padding: 0 4px;">&times;</button>
+        </div>
+
+        <!-- Khung tin nhắn -->
+        <div id="sporthubAiMessages" style="flex: 1; padding: 16px; background: #f8fafc; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 13.5px;">
+            <div style="align-self: flex-start; background: #e2e8f0; color: #1e293b; padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 2px; max-width: 85%; line-height: 1.5;">
+                Xin chào bạn! 👋 Mình là trợ lý AI của sàn SportHub. Bạn đang cần tìm sân bóng đá, cầu lông hay pickleball ở khu vực nào, tầm giá bao nhiêu cứ nhắn mình nhé!
+            </div>
+        </div>
+
+        <!-- Thanh nhập tin nhắn -->
+        <div style="padding: 12px 14px; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; flex-shrink: 0; align-items: center;">
+            <input type="text" id="sporthubAiInput" placeholder="VD: Tìm sân pickleball ở Thủ Đức..." 
+                   onkeydown="if(event.key === 'Enter'){ event.preventDefault(); window.sendSportHubAiQuery(); }"
+                   style="flex: 1; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 24px; font-size: 13px; outline: none; box-sizing: border-box;">
+            <button onclick="window.sendSportHubAiQuery()" 
+                    style="width: 38px; height: 38px; border-radius: 50%; background: #059669; color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. Script điều khiển gán thẳng vào window -->
+    <script>
+        window.toggleSportHubAiBox = function(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            const box = document.getElementById('sporthubAiChatBox');
+            const input = document.getElementById('sporthubAiInput');
+            if (!box) return;
+
+            const isVisible = (box.style.display === 'flex');
+            if (isVisible) {
+                box.style.display = 'none';
+            } else {
+                box.style.display = 'flex';
+                if (input) {
+                    setTimeout(() => input.focus(), 100);
+                }
+            }
+        };
+
+        window.sendSportHubAiQuery = function() {
+            const input = document.getElementById('sporthubAiInput');
+            const msgList = document.getElementById('sporthubAiMessages');
+            if (!input || !msgList) return;
+
+            const query = input.value.trim();
+            if (!query) return;
+
+            // Tin nhắn của User
+            const userDiv = document.createElement('div');
+            userDiv.style.cssText = 'align-self: flex-end; background: #0284c7; color: #ffffff; padding: 10px 14px; border-radius: 12px; border-bottom-right-radius: 2px; max-width: 85%; line-height: 1.5; word-wrap: break-word;';
+            userDiv.innerText = query;
+            msgList.appendChild(userDiv);
+            input.value = '';
+            msgList.scrollTop = msgList.scrollHeight;
+
+            // Tin nhắn chờ
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.cssText = 'align-self: flex-start; background: #ffffff; color: #1e293b; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 2px; max-width: 88%; line-height: 1.5;';
+            loadingDiv.innerText = '⏳ SportHub AI đang tìm sân phù hợp...';
+            msgList.appendChild(loadingDiv);
+            msgList.scrollTop = msgList.scrollHeight;
+
+            // Gọi API
+            fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: query })
+            })
+            .then(res => res.json())
+            .then(data => {
+                loadingDiv.remove();
+                const botDiv = document.createElement('div');
+                botDiv.style.cssText = 'align-self: flex-start; background: #ffffff; color: #1e293b; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 2px; max-width: 88%; line-height: 1.5; word-wrap: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.05);';
+                
+                const replyText = data.reply || 'Dạ bạn cần tìm thêm thông tin gì nữa không ạ?';
+                botDiv.innerHTML = replyText
+                    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #0284c7; font-weight: 700; text-decoration: underline;">$1 &rarr;</a>')
+                    .replace(/\n/g, '<br>');
+                    
+                msgList.appendChild(botDiv);
+                msgList.scrollTop = msgList.scrollHeight;
+            })
+            .catch(() => {
+                loadingDiv.remove();
+                const errDiv = document.createElement('div');
+                errDiv.style.cssText = 'align-self: flex-start; background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 2px; max-width: 88%; line-height: 1.5;';
+                errDiv.innerText = 'Dạ kết nối tạm thời bận, bạn vui lòng gửi lại câu hỏi nhé!';
+                msgList.appendChild(errDiv);
+                msgList.scrollTop = msgList.scrollHeight;
+            });
+        };
+    </script>
+    <!-- ================= KẾT THÚC KHỐI TRỢ LÝ AI ================= -->
 </body>
 </html>

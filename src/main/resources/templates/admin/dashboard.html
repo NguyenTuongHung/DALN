@@ -37,10 +37,13 @@
         .admin-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px; }
         .admin-table th { padding: 12px 16px; background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; }
         .admin-table td { padding: 15px 16px; border-bottom: 1px solid #f8fafc; color: #334155; vertical-align: middle; }
-        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        
+        /* Badges */
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
         .status-paid { background: #dcfce7; color: #15803d; }
+        .status-completed { background: #e0f2fe; color: #0284c7; }
+        .status-cancelled { background: #fee2e2; color: #b91c1c; }
         .status-pending { background: #fef3c7; color: #b45309; }
-        .btn-action { padding: 5px 14px; border-radius: 6px; font-size: 12px; border: 1px solid #cbd5e1; background: #f1f5f9; cursor: pointer; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -51,12 +54,36 @@
             <i class="fa-solid fa-shield-halved"></i> SportHub Admin
         </div>
         <ul class="sidebar-menu">
-            <li class="menu-item"><a th:href="@{/admin/dashboard}" class="menu-link active"><i class="fa-solid fa-chart-pie"></i> Tổng quan</a></li>
-            <li class="menu-item"><a th:href="@{/admin/courts}" class="menu-link"><i class="fa-solid fa-store"></i> Quản lý sân bãi</a></li>
-            <li class="menu-item"><a th:href="@{/admin/bookings}" class="menu-link"><i class="fa-solid fa-calendar-check"></i> Đơn đặt sân</a></li>
-            <li class="menu-item"><a th:href="@{/admin/users}" class="menu-link"><i class="fa-solid fa-users"></i> Khách hàng &amp; Chủ sân</a></li>
-            <li class="menu-item"><a th:href="@{/admin/reports}" class="menu-link"><i class="fa-solid fa-money-bill-trend-up"></i> Báo cáo doanh thu</a></li>
-            <li class="menu-item"><a th:href="@{/admin/settings}" class="menu-link"><i class="fa-solid fa-gear"></i> Cài đặt hệ thống</a></li>
+            <li class="menu-item">
+                <a th:href="@{/admin/dashboard}" class="menu-link" th:classappend="${activePage == 'dashboard'} ? 'active' : ''">
+                    <i class="fa-solid fa-chart-pie"></i> Tổng quan
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/admin/courts}" class="menu-link" th:classappend="${activePage == 'courts'} ? 'active' : ''">
+                    <i class="fa-solid fa-store"></i> Quản lý sân bãi
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/admin/bookings}" class="menu-link" th:classappend="${activePage == 'bookings'} ? 'active' : ''">
+                    <i class="fa-solid fa-calendar-check"></i> Đơn đặt sân
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/admin/users}" class="menu-link" th:classappend="${activePage == 'users'} ? 'active' : ''">
+                    <i class="fa-solid fa-users"></i> Khách hàng &amp; Chủ sân
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/admin/reports}" class="menu-link" th:classappend="${activePage == 'reports'} ? 'active' : ''">
+                    <i class="fa-solid fa-money-bill-trend-up"></i> Báo cáo doanh thu
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/admin/settings}" class="menu-link" th:classappend="${activePage == 'settings'} ? 'active' : ''">
+                    <i class="fa-solid fa-gear"></i> Cài đặt hệ thống
+                </a>
+            </li>
         </ul>
         <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.1);">
             <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
@@ -76,33 +103,36 @@
         </header>
 
         <main class="admin-content">
-            <!-- 4 Thẻ Thống Kê -->
+            <!-- 4 Thẻ Thống Kê Dữ Liệu Thực Tế -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div>
-                        <div class="stat-label">Tổng doanh thu tháng</div>
-                        <div class="stat-val">128.450.000đ</div>
+                        <div class="stat-label">Tổng giá trị đơn ghi nhận</div>
+                        <div class="stat-val" th:text="${totalRevenue != null ? #numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}">0đ</div>
                     </div>
                     <div class="stat-icon" style="background: #ecfdf5; color: #059669;"><i class="fa-solid fa-coins"></i></div>
                 </div>
+
                 <div class="stat-card">
                     <div>
                         <div class="stat-label">Lượt đặt hôm nay</div>
-                        <div class="stat-val">84 đơn</div>
+                        <div class="stat-val" th:text="(${todayBookingsCount != null ? todayBookingsCount : 0}) + ' đơn'">0 đơn</div>
                     </div>
                     <div class="stat-icon" style="background: #eff6ff; color: #2563eb;"><i class="fa-solid fa-calendar-day"></i></div>
                 </div>
+
                 <div class="stat-card">
                     <div>
                         <div class="stat-label">Tổng cơ sở sân</div>
-                        <div class="stat-val">445 cụm sân</div>
+                        <div class="stat-val" th:text="(${totalCourts != null ? totalCourts : 0}) + ' cụm sân'">0 cụm sân</div>
                     </div>
                     <div class="stat-icon" style="background: #fef3c7; color: #d97706;"><i class="fa-solid fa-store"></i></div>
                 </div>
+
                 <div class="stat-card">
                     <div>
                         <div class="stat-label">Người dùng đăng ký</div>
-                        <div class="stat-val" th:text="(${totalUsersCount} != null ? ${totalUsersCount} : '3.240') + ' user'">3.240 user</div>
+                        <div class="stat-val" th:text="(${totalUsers != null ? totalUsers : 0}) + ' user'">0 user</div>
                     </div>
                     <div class="stat-icon" style="background: #f3e8ff; color: #9333ea;"><i class="fa-solid fa-users"></i></div>
                 </div>
@@ -111,50 +141,67 @@
             <!-- Bảng Đơn Đặt Sân Mới Nhất -->
             <div class="data-panel">
                 <div class="panel-header">
-                    <h3 class="panel-title">Đơn đặt sân mới nhất (Thời gian thực)</h3>
-                    <button style="background: #059669; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-download"></i> Xuất Excel
-                    </button>
+                    <div>
+                        <h3 class="panel-title">Đơn đặt sân mới nhất (Thời gian thực)</h3>
+                        <small style="color: #64748b; font-size: 12.5px;">Cập nhật theo dữ liệu thực từ các cụm sân</small>
+                    </div>
+                    <a th:href="@{/admin/bookings}" style="background: #059669; color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-list-check"></i> Xem tất cả đơn
+                    </a>
                 </div>
+
                 <table class="admin-table">
                     <thead>
                         <tr>
                             <th>Mã Đơn</th>
                             <th>Khách Hàng</th>
                             <th>Sân Thể Thao</th>
-                            <th>Thời Gian Đá / Chơi</th>
+                            <th>Thời Gian Thi Đấu</th>
                             <th>Số Tiền</th>
                             <th>Trạng Thái</th>
-                            <th>Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td style="font-weight: 600;">#ORD-9021</td>
-                            <td><strong>Nguyễn Văn Hùng</strong><br><small style="color: #64748b;">0912.345.678</small></td>
-                            <td>002 PB Club - Sân 2</td>
-                            <td>18:00 - 20:00 (Hôm nay)</td>
-                            <td style="font-weight: 600;">360.000đ</td>
-                            <td><span class="status-badge status-paid">Đã thanh toán cọc</span></td>
-                            <td><button class="btn-action">Duyệt</button></td>
+                        <tr th:each="b : ${recentBookings}">
+                            <td style="font-weight: 700; color: #0284c7;" th:text="${b.bookingCode}">BK-1001</td>
+                            <td>
+                                <strong th:text="${b.customerName}">Nguyễn Văn Hùng</strong><br>
+                                <small style="color: #64748b;" th:text="${b.customerPhone}">0912.345.678</small>
+                            </td>
+                            <td>
+                                <span th:text="${b.court != null ? b.court.name : 'Sân'}">002 PB Club</span><br>
+                                <small style="color: #64748b;" th:text="${b.subCourt != null ? b.subCourt.name : ''}">Sân 1</small>
+                            </td>
+                            <td>
+                                <strong th:text="${b.timeSlot}">18:00 - 20:00</strong><br>
+                                <small style="color: #64748b;" th:text="${#temporals.format(b.bookingDate, 'dd/MM/yyyy')}">13/10/2026</small>
+                            </td>
+                            <td>
+                                <strong style="color: #059669;" th:text="${#numbers.formatDecimal(b.totalPrice, 0, 'COMMA', 0, 'POINT')} + 'đ'">360.000đ</strong><br>
+                                <small style="color: #64748b;">Cọc: <span th:text="${#numbers.formatDecimal(b.depositAmount, 0, 'COMMA', 0, 'POINT')} + 'đ'">108.000đ</span></small>
+                            </td>
+                            <td>
+                                <span th:if="${b.paymentStatus == 'PAID_DEPOSIT'}" class="status-badge status-paid">
+                                    <i class="fa-solid fa-circle-check"></i> Đã cọc 30%
+                                </span>
+                                <span th:if="${b.paymentStatus == 'COMPLETED'}" class="status-badge status-completed">
+                                    <i class="fa-solid fa-check-double"></i> Đã hoàn thành
+                                </span>
+                                <span th:if="${#strings.startsWith(b.paymentStatus, 'CANCELLED')}" class="status-badge status-cancelled">
+                                    <i class="fa-solid fa-ban"></i> Đã hủy
+                                </span>
+                                <span th:if="${b.paymentStatus == 'PENDING'}" class="status-badge status-pending">
+                                    <i class="fa-solid fa-clock"></i> Chờ thanh toán
+                                </span>
+                            </td>
                         </tr>
-                        <tr>
-                            <td style="font-weight: 600;">#ORD-9020</td>
-                            <td><strong>Trần Minh Tuấn</strong><br><small style="color: #64748b;">0988.111.222</small></td>
-                            <td>Arsenal Center - Sân 7A</td>
-                            <td>19:30 - 21:00 (Hôm nay)</td>
-                            <td style="font-weight: 600;">525.000đ</td>
-                            <td><span class="status-badge status-pending">Chờ chuyển khoản</span></td>
-                            <td><button class="btn-action">Chi tiết</button></td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight: 600;">#ORD-9019</td>
-                            <td><strong>Lê Thị Thảo</strong><br><small style="color: #64748b;">0904.555.666</small></td>
-                            <td>CLB Cầu Lông ACE - Sân 1</td>
-                            <td>20:00 - 21:30 (Ngày mai)</td>
-                            <td style="font-weight: 600;">180.000đ</td>
-                            <td><span class="status-badge status-paid">Đã thanh toán cọc</span></td>
-                            <td><button class="btn-action">Duyệt</button></td>
+
+                        <!-- Thông báo nếu chưa có đơn nào -->
+                        <tr th:if="${recentBookings == null or recentBookings.isEmpty()}">
+                            <td colspan="6" style="text-align: center; padding: 36px; color: #94a3b8;">
+                                <i class="fa-regular fa-folder-open" style="font-size: 28px; margin-bottom: 8px; display: block;"></i>
+                                Chưa có đơn đặt sân nào được ghi nhận trên hệ thống.
+                            </td>
                         </tr>
                     </tbody>
                 </table>

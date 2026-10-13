@@ -468,9 +468,10 @@
                     <div class="court-price">350.000đ <small>/giờ</small></div>
                     <span style="font-size: 12px; color: #059669; font-weight: 600;">Còn 1 sân trống tối nay</span>
                     <div class="card-actions">
-                        <a th:href="@{/san-bong/2}" class="btn-outline">Chi tiết</a>
-                        <a th:href="@{/san-bong/2}" class="btn-solid">Đặt ngay</a>
-                    </div>
+    <!-- Phải truyền đúng id=${court.id} thay vì số 1 hay số 2 cố định -->
+    <a th:href="@{/san-bong/{id}(id=${court.id})}" class="btn-outline">Chi tiết</a>
+    <a th:href="@{/san-bong/{id}(id=${court.id})}" class="btn-solid">Đặt ngay</a>
+</div>
                 </div>
             </div>
 
