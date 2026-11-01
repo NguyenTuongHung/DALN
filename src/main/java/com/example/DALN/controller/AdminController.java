@@ -48,16 +48,19 @@ public class AdminController {
         long totalUsers = userRepository.count();
         List<Booking> allBookings = bookingRepository.findAll();
 
-        // Tính tổng doanh thu giao dịch (loại trừ đơn hủy hoàn cọc)
+        // Tính tổng doanh thu giao dịch thực tế (Chỉ lấy các đơn đã COMPLETED hoặc hợp lệ, loại trừ đơn khóa sân và đơn hủy)
         double totalRevenue = allBookings.stream()
                 .filter(b -> !"CANCELLED_REFUND".equalsIgnoreCase(b.getPaymentStatus()))
+                .filter(b -> !"LOCKED_BY_OWNER".equalsIgnoreCase(b.getPaymentStatus()))
+                .filter(b -> "COMPLETED".equalsIgnoreCase(b.getPaymentStatus()) || "PAID_DEPOSIT".equalsIgnoreCase(b.getPaymentStatus()))
                 .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice() : 0.0)
                 .sum();
 
         // Lọc số đơn đặt trong ngày hôm nay
         LocalDate today = LocalDate.now();
         long todayBookingsCount = allBookings.stream()
-                .filter(b -> today.equals(b.getBookingDate()))
+                .filter(b -> b.getBookingDate() != null && today.equals(b.getBookingDate()))
+                .filter(b -> !"LOCKED_BY_OWNER".equalsIgnoreCase(b.getPaymentStatus()))
                 .count();
 
         // Đẩy số liệu vào Model cho 4 thẻ thống kê
@@ -170,6 +173,8 @@ public class AdminController {
 
         double grossTotal = allBookings.stream()
                 .filter(b -> !"CANCELLED_REFUND".equalsIgnoreCase(b.getPaymentStatus()))
+                .filter(b -> !"LOCKED_BY_OWNER".equalsIgnoreCase(b.getPaymentStatus()))
+                .filter(b -> "COMPLETED".equalsIgnoreCase(b.getPaymentStatus()) || "PAID_DEPOSIT".equalsIgnoreCase(b.getPaymentStatus()))
                 .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice() : 0.0)
                 .sum();
 
@@ -192,7 +197,6 @@ public class AdminController {
     }
 
     // 7. KÊNH HỖ TRỢ & CHAT VỚI CHỦ SÂN
-    // Mở phòng chat với một Chủ Sân cụ thể khi bấm nút "Nhắn tin"
     @GetMapping("/support/chat/{ownerId}")
     public String adminChatWithOwner(@PathVariable Long ownerId, Model model) {
         model.addAttribute("activePage", "users");
@@ -208,7 +212,6 @@ public class AdminController {
         return "admin/chat";
     }
 
-    // Tiếp nhận tin nhắn Admin gửi phản hồi cho Chủ Sân
     @PostMapping("/support/chat/{ownerId}/send")
     @ResponseBody
     public String adminSendMessage(@PathVariable Long ownerId,
@@ -237,7 +240,6 @@ public class AdminController {
         return "success";
     }
 
-    // API lấy dữ liệu tin nhắn dạng JSON phục vụ Polling cập nhật tự động
     @GetMapping("/support/chat/{ownerId}/messages")
     @ResponseBody
     public List<OwnerController.SupportMessageDTO> getAdminChatMessages(@PathVariable Long ownerId) {

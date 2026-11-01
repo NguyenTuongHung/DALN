@@ -1,26 +1,41 @@
 package com.example.DALN.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import com.example.DALN.model.Booking;
 import com.example.DALN.model.Court;
+import com.example.DALN.model.PayoutRequest;
 import com.example.DALN.model.SubCourt;
 import com.example.DALN.model.SupportMessage;
 import com.example.DALN.model.User;
 import com.example.DALN.repository.BookingRepository;
 import com.example.DALN.repository.CourtRepository;
+import com.example.DALN.repository.PayoutRequestRepository;
 import com.example.DALN.repository.SubCourtRepository;
 import com.example.DALN.repository.SupportMessageRepository;
 import com.example.DALN.repository.UserRepository;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/owner")
@@ -31,17 +46,23 @@ public class OwnerController {
     private final SubCourtRepository subCourtRepository;
     private final BookingRepository bookingRepository;
     private final SupportMessageRepository supportMessageRepository;
+    private final PayoutRequestRepository payoutRequestRepository;
+
+    // Thư mục lưu trữ ảnh upload của cụm sân
+    private static final String UPLOAD_DIR = "uploads/courts/";
 
     public OwnerController(UserRepository userRepository,
                            CourtRepository courtRepository,
                            SubCourtRepository subCourtRepository,
                            BookingRepository bookingRepository,
-                           SupportMessageRepository supportMessageRepository) {
+                           SupportMessageRepository supportMessageRepository,
+                           PayoutRequestRepository payoutRequestRepository) {
         this.userRepository = userRepository;
         this.courtRepository = courtRepository;
         this.subCourtRepository = subCourtRepository;
         this.bookingRepository = bookingRepository;
         this.supportMessageRepository = supportMessageRepository;
+        this.payoutRequestRepository = payoutRequestRepository;
     }
 
     private User getAuthenticatedOwner(UserDetails userDetails) {
@@ -90,11 +111,10 @@ public class OwnerController {
 
         model.addAttribute("todayBookings", myBookings);
 
-        // Tính doanh thu hôm nay
-        LocalDate today = LocalDate.now();
+        // Tính doanh thu từ tổng các đơn hàng hợp lệ (Bỏ qua đơn hủy và đơn chủ sân tự khóa)
         double todayGross = myBookings.stream()
-                .filter(b -> today.equals(b.getBookingDate()))
                 .filter(b -> !"CANCELLED_REFUND".equalsIgnoreCase(b.getPaymentStatus()))
+                .filter(b -> !"LOCKED_BY_OWNER".equalsIgnoreCase(b.getPaymentStatus()))
                 .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice() : 0.0)
                 .sum();
 
@@ -140,16 +160,36 @@ public class OwnerController {
 
     @PostMapping("/courts/connect")
     public String handleRegisterNewCourt(@RequestParam String courtName,
-                                         @RequestParam String sportType,
-                                         @RequestParam String address,
-                                         @RequestParam String openHours,
-                                         @RequestParam Double pricePerHour,
-                                         @RequestParam(required = false) String description,
-                                         @RequestParam int numberOfSubCourts,
-                                         @AuthenticationPrincipal UserDetails userDetails,
-                                         RedirectAttributes redirectAttributes) {
+                                       @RequestParam String sportType,
+                                       @RequestParam String address,
+                                       @RequestParam String openHours,
+                                       @RequestParam Double pricePerHour,
+                                       @RequestParam(required = false) String description,
+                                       @RequestParam int numberOfSubCourts,
+                                       @RequestParam("imageFile") MultipartFile imageFile,
+                                       @AuthenticationPrincipal UserDetails userDetails,
+                                       RedirectAttributes redirectAttributes) {
         User owner = getAuthenticatedOwner(userDetails);
         if (owner == null) return "redirect:/login";
+
+        // Xử lý lưu file ảnh tải lên
+        String imageUrl = "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&auto=format&fit=crop&q=80"; // Ảnh mặc định phòng hờ
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                File uploadDir = new File(UPLOAD_DIR);
+                if (!uploadDir.exists()) {
+                    uploadDir.mkdirs();
+                }
+                String fileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
+                Path filePath = Paths.get(UPLOAD_DIR + fileName);
+                Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                
+                // Đường dẫn URL để truy cập ảnh từ trình duyệt thông qua ResourceHandler
+                imageUrl = "/uploads/courts/" + fileName;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         // Tạo cụm sân mới với trạng thái PENDING để Admin sàn kiểm duyệt
         Court newCourt = Court.builder()
@@ -164,7 +204,7 @@ public class OwnerController {
                 .longitude(106.7321)
                 .rating(5.0)
                 .reviewCount(0)
-                .imageUrl("https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&auto=format&fit=crop&q=80")
+                .imageUrl(imageUrl)
                 .owner(owner)
                 .build();
         Court savedCourt = courtRepository.save(newCourt);
@@ -186,10 +226,10 @@ public class OwnerController {
     // 4. KHÓA GIỜ THỦ CÔNG
     @PostMapping("/courts/toggle-slot")
     public String toggleSlot(@RequestParam Long subCourtId,
-                             @RequestParam String date,
-                             @RequestParam String timeSlot,
-                             @RequestParam(required = false, defaultValue = "Khóa bảo trì") String reason,
-                             @AuthenticationPrincipal UserDetails userDetails) {
+                           @RequestParam String date,
+                           @RequestParam String timeSlot,
+                           @RequestParam(required = false, defaultValue = "Khóa bảo trì") String reason,
+                           @AuthenticationPrincipal UserDetails userDetails) {
         User owner = getAuthenticatedOwner(userDetails);
         SubCourt subCourt = subCourtRepository.findById(subCourtId).orElse(null);
 
@@ -215,7 +255,7 @@ public class OwnerController {
         return "redirect:/owner/dashboard";
     }
 
-    // 5. CÀI ĐẶT GIÁ SÂN
+    // 5. CÀI ĐẶT GIÁ SÂN (HIỂN THỊ TRANG)
     @GetMapping("/pricing")
     public String pricingPage(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User owner = getAuthenticatedOwner(userDetails);
@@ -230,6 +270,31 @@ public class OwnerController {
         model.addAttribute("myCourts", myCourts);
 
         return "owner/pricing";
+    }
+
+    // 5.1. XỬ LÝ LƯU CẬP NHẬT BẢNG GIÁ THEO KHUNG GIỜ
+    @PostMapping("/pricing/update")
+    public String updateCourtPricing(@RequestParam Long courtId,
+                                     @RequestParam Double normalPrice,
+                                     @RequestParam Double peakPrice,
+                                     @RequestParam Double weekendPrice,
+                                     @AuthenticationPrincipal UserDetails userDetails,
+                                     RedirectAttributes redirectAttributes) {
+        User owner = getAuthenticatedOwner(userDetails);
+        if (owner == null) return "redirect:/login";
+
+        Court court = courtRepository.findById(courtId).orElse(null);
+        if (court != null && court.getOwner() != null && court.getOwner().getId().equals(owner.getId())) {
+            court.setPricePerHour(normalPrice);
+            courtRepository.save(court);
+
+            redirectAttributes.addFlashAttribute("successMessage", 
+                "Đã cập nhật bảng giá thành công cho cụm sân '" + court.getName() + "'!");
+        } else {
+            redirectAttributes.addFlashAttribute("successMessage", "Không tìm thấy cụm sân hoặc bạn không có quyền chỉnh sửa!");
+        }
+
+        return "redirect:/owner/pricing";
     }
 
     // 6. QUYẾT TOÁN & VÍ TIỀN
@@ -264,9 +329,53 @@ public class OwnerController {
 
         model.addAttribute("walletBalance", availableBalance);
         model.addAttribute("pendingHold", pendingHold);
-        model.addAttribute("totalWithdrawn", 168000000.0);
+
+        // Lấy lịch sử các yêu cầu rút tiền của chủ sân này từ database
+        List<PayoutRequest> payoutHistory = payoutRequestRepository.findByOwnerIdOrderByRequestedAtDesc(owner.getId());
+        model.addAttribute("payoutHistory", payoutHistory);
 
         return "owner/payout";
+    }
+
+    // 6.1. XỬ LÝ GỬI YÊU CẦU RÚT TIỀN (CHUYỂN KHOẢN)
+    @PostMapping("/payout/request")
+    public String requestPayout(@AuthenticationPrincipal UserDetails userDetails, 
+                                RedirectAttributes redirectAttributes) {
+        User owner = getAuthenticatedOwner(userDetails);
+        if (owner == null) return "redirect:/login";
+
+        List<Court> myCourts = courtRepository.findAll().stream()
+                .filter(c -> c.getOwner() != null && c.getOwner().getId().equals(owner.getId()))
+                .collect(Collectors.toList());
+        List<Long> myCourtIds = myCourts.stream().map(Court::getId).collect(Collectors.toList());
+
+        double completedGross = bookingRepository.findAll().stream()
+                .filter(b -> b.getCourt() != null && myCourtIds.contains(b.getCourt().getId()))
+                .filter(b -> "COMPLETED".equalsIgnoreCase(b.getPaymentStatus()))
+                .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice() : 0.0)
+                .sum();
+
+        double commissionRate = (owner.getCommissionRate() != null) ? owner.getCommissionRate() : 8.0;
+        double availableBalance = completedGross * (1.0 - (commissionRate / 100.0));
+
+        if (availableBalance <= 0) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Số dư khả dụng của bạn không đủ để tạo yêu cầu rút tiền!");
+            return "redirect:/owner/payout";
+        }
+
+        PayoutRequest request = PayoutRequest.builder()
+                .transactionCode("#PAY-" + (int)(Math.random() * 9000 + 1000))
+                .amount(availableBalance)
+                .bankInfo((owner.getBankName() != null ? owner.getBankName() : "VCB") + " - " + (owner.getBankAccountNumber() != null ? owner.getBankAccountNumber() : "1029384756"))
+                .status("PENDING")
+                .requestedAt(LocalDateTime.now())
+                .owner(owner)
+                .build();
+
+        payoutRequestRepository.save(request);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Đã gửi yêu cầu rút tiền thành công! Admin sàn sẽ xử lý và chuyển khoản trong 24h tới.");
+        return "redirect:/owner/payout";
     }
 
     // 7. HỖ TRỢ TỪ ADMIN (KẾT NỐI CHAT THẬT)
@@ -278,7 +387,6 @@ public class OwnerController {
         model.addAttribute("owner", owner);
         model.addAttribute("activeMenu", "support");
 
-        // Lấy toàn bộ lịch sử tin nhắn của chủ sân này theo trình tự thời gian
         List<SupportMessage> messages = supportMessageRepository.findByOwnerIdOrderBySentAtAsc(owner.getId());
         model.addAttribute("messages", messages);
         return "owner/support";
@@ -318,6 +426,5 @@ public class OwnerController {
                 .collect(Collectors.toList());
     }
 
-    // Record DTO định dạng JSON gửi về cho giao diện
     public record SupportMessageDTO(Long id, String senderRole, String content, String sentAt) {}
 }

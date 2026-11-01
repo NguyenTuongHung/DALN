@@ -16,12 +16,21 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig {
+public class SecurityConfig implements WebMvcConfigurer {
+
+    // Cấu hình để Spring Boot hiểu và cho phép truy cập các file ảnh đã upload trong thư mục uploads/
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:uploads/");
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -54,7 +63,7 @@ public class SecurityConfig {
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/owner/**").hasRole("OWNER")
                 .requestMatchers("/profile/**", "/lich-su-dat-san", "/doi-mat-khau", "/bookings/**").authenticated()
-                .requestMatchers("/", "/tim-san", "/san-bong/**", "/dat-san/**", "/ban-do", "/api/**", "/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/", "/tim-san", "/san-bong/**", "/dat-san/**", "/ban-do", "/api/**", "/login", "/register", "/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(login -> login
@@ -86,9 +95,9 @@ public class SecurityConfig {
 
     @Bean
     public CommandLineRunner initData(UserRepository userRepository, 
-                                      CourtRepository courtRepository, 
-                                      SubCourtRepository subCourtRepository, 
-                                      PasswordEncoder passwordEncoder) {
+                                        CourtRepository courtRepository, 
+                                        SubCourtRepository subCourtRepository, 
+                                        PasswordEncoder passwordEncoder) {
         return args -> {
             // 1. Tạo tài khoản Admin mặc định
             if (!userRepository.existsByUsername("admin")) {
@@ -190,7 +199,6 @@ public class SecurityConfig {
                 subCourtRepository.save(SubCourt.builder().name("Sân Cầu Lông 1").court(c3).status("ACTIVE").build());
                 subCourtRepository.save(SubCourt.builder().name("Sân Cầu Lông 2").court(c3).status("ACTIVE").build());
             } else {
-                // 5. NẾU ĐÃ CÓ SÂN: CẬP NHẬT TRỰC TIẾP CÁC BẢN GHI BỊ THIẾU DỮ LIỆU (KHÔNG DÙNG DELETEALL ĐỂ TRÁNH LỖI KHÓA NGOẠI BOOKINGS)
                 List<Court> existingCourts = courtRepository.findAll();
                 for (Court c : existingCourts) {
                     boolean changed = false;
