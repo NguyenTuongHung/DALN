@@ -45,6 +45,8 @@
         .badge-rejected { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
         
         .badge-sport { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600; text-transform: capitalize; background: #f1f5f9; color: #475569; }
+        
+        .court-thumb { width: 50px; height: 35px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; }
     </style>
 </head>
 <body>
@@ -81,26 +83,28 @@
                 <i class="fa-solid fa-circle-check"></i> <span th:text="${successMessage}">Thao tác thành công!</span>
             </div>
 
-            <!-- Form đăng ký đưa cơ sở sân lên sàn -->
+            <!-- Form đăng ký đưa cơ sở sân lên sàn (Đã thêm enctype để upload ảnh) -->
             <div class="card">
                 <div class="card-title">
                     <i class="fa-solid fa-plus-circle" style="color: #0284c7;"></i> Đăng Ký Đưa Cụm Sân Mới Lên Sàn SportHub
                 </div>
-                <form th:action="@{/owner/courts/connect}" method="post">
+                <form th:action="@{/owner/courts/connect}" method="post" enctype="multipart/form-data">
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Tên cụm sân *</label>
                             <input type="text" name="courtName" class="form-control" placeholder="VD: Sân Pickleball Thảo Điền" required>
                         </div>
                         <div class="form-group">
-                            <label>Bộ môn thể thao *</label>
-                            <select name="sportType" class="form-control" required>
-                                <option value="pickleball">Pickleball</option>
-                                <option value="football">Bóng đá</option>
-                                <option value="badminton">Cầu lông</option>
-                                <option value="tennis">Tennis</option>
-                                <option value="basketball">Bóng rổ</option>
-                            </select>
+                            <label>Bộ môn thể thao * (Có thể chọn hoặc tự gõ)</label>
+                            <!-- Dùng input type="text" kết hợp list datalist để vừa chọn sẵn vừa gõ tay tự do -->
+                            <input type="text" name="sportType" class="form-control" list="sportOptions" placeholder="Chọn hoặc nhập môn thể thao..." required>
+                            <datalist id="sportOptions">
+                                <option value="Pickleball">
+                                <option value="Bóng đá">
+                                <option value="Cầu lông">
+                                <option value="Tennis">
+                                <option value="Bóng rổ">
+                            </datalist>
                         </div>
                     </div>
 
@@ -126,12 +130,19 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Mô tả tiện ích cơ sở</label>
-                        <input type="text" name="description" class="form-control" placeholder="Mặt thảm cao cấp, có đèn đêm, bãi đỗ xe ô tô...">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Mô tả tiện ích cơ sở</label>
+                            <input type="text" name="description" class="form-control" placeholder="Mặt thảm cao cấp, có đèn đêm, bãi đỗ xe ô tô...">
+                        </div>
+                        <div class="form-group">
+                            <label>Hình ảnh cụm sân *</label>
+                            <!-- Thêm trường input chọn file ảnh -->
+                            <input type="file" name="imageFile" class="form-control" accept="image/*" required style="padding: 7px 14px;">
+                        </div>
                     </div>
 
-                    <div style="display: flex; justify-content: flex-end;">
+                    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
                         <button type="submit" class="btn-submit">
                             <i class="fa-solid fa-paper-plane"></i> Gửi Hồ Sơ Kết Nối Tới Admin
                         </button>
@@ -147,6 +158,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th style="width: 70px;">Ảnh</th>
                             <th>Tên Cụm Sân</th>
                             <th>Môn Thể Thao</th>
                             <th>Địa Chỉ</th>
@@ -156,6 +168,10 @@
                     </thead>
                     <tbody>
                         <tr th:each="c : ${myCourts}">
+                            <td>
+                                <!-- Hiển thị ảnh nếu có, nếu chưa có hiển thị ảnh mặc định -->
+                                <img th:src="${c.imageUrl != null ? c.imageUrl : 'https://via.placeholder.com/50x35'}" alt="Ảnh sân" class="court-thumb">
+                            </td>
                             <td><strong th:text="${c.name}">002 PB Club</strong></td>
                             <td>
                                 <span class="badge-sport" th:text="${c.sportType}">pickleball</span>
@@ -165,24 +181,19 @@
                                 <b style="color: #059669;" th:text="${#numbers.formatDecimal(c.pricePerHour, 0, 'COMMA', 0, 'POINT')} + 'đ'">180.000đ</b>
                             </td>
                             <td>
-                                <!-- 1. Đang hoạt động (Đã được Admin duyệt) -->
                                 <span th:if="${c.status == 'ACTIVE' or c.status == null}" class="badge-status badge-verified">
                                     <i class="fa-solid fa-circle-check"></i> Đang hoạt động (Verified)
                                 </span>
-
-                                <!-- 2. Đang chờ Admin duyệt -->
                                 <span th:if="${c.status == 'PENDING'}" class="badge-status badge-pending">
                                     <i class="fa-solid fa-clock"></i> Đang chờ duyệt (Pending)
                                 </span>
-
-                                <!-- 3. Bị Admin từ chối -->
                                 <span th:if="${c.status == 'REJECTED'}" class="badge-status badge-rejected">
                                     <i class="fa-solid fa-circle-xmark"></i> Từ chối (Cần sửa thông tin)
                                 </span>
                             </td>
                         </tr>
                         <tr th:if="${myCourts == null or myCourts.isEmpty()}">
-                            <td colspan="5" style="text-align: center; padding: 36px; color: #94a3b8;">
+                            <td colspan="6" style="text-align: center; padding: 36px; color: #94a3b8;">
                                 Bạn chưa đăng ký cụm sân nào. Hãy điền form bên trên để gửi hồ sơ tới Admin.
                             </td>
                         </tr>
