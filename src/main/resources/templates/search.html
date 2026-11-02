@@ -211,30 +211,6 @@
         }
         .btn-solid:hover { background: #047857; }
 
-        /* Pagination */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            margin: 30px 0 10px;
-        }
-        .page-item {
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            background: #fff;
-            color: #334155;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .page-item:hover { border-color: #059669; color: #059669; }
-        .page-item.active { background: #059669; color: #fff; border-color: #059669; }
-
         /* Footer */
         .main-footer {
             background-color: #064e3b;
@@ -275,7 +251,7 @@
                 <a th:href="@{/}">Trang chủ</a> &gt; <span>Tìm sân thể thao</span>
             </div>
             <h1 class="header-title"><i class="fa-solid fa-magnifying-glass"></i> Tìm sân thể thao</h1>
-            <p class="match-count">Tìm thấy 445 cơ sở sẵn sàng đón khách</p>
+            <p class="match-count">Tìm thấy <span th:text="${courts != null ? courts.size() : 0}">0</span> cơ sở sẵn sàng đón khách</p>
 
             <form class="search-bar" th:action="@{/tim-san}" method="get">
                 <!-- Tên sân hoặc vị trí -->
@@ -289,10 +265,10 @@
                     <i class="fa-solid fa-city"></i>
                     <select name="city">
                         <option value="">Tất cả tỉnh thành</option>
-                        <option value="HN">Hà Nội</option>
-                        <option value="HCM">Hồ Chí Minh</option>
-                        <option value="DN">Đà Nẵng</option>
-                        <option value="BD">Bình Dương</option>
+                        <option value="HN" th:selected="${selectedCity == 'HN'}">Hà Nội</option>
+                        <option value="HCM" th:selected="${selectedCity == 'HCM'}">Hồ Chí Minh</option>
+                        <option value="DN" th:selected="${selectedCity == 'DN'}">Đà Nẵng</option>
+                        <option value="BD" th:selected="${selectedCity == 'BD'}">Bình Dương</option>
                     </select>
                 </div>
 
@@ -301,11 +277,11 @@
                     <i class="fa-solid fa-map-location-dot"></i>
                     <select name="district">
                         <option value="">Tất cả quận / huyện</option>
-                        <option value="cầu giấy">Cầu Giấy</option>
-                        <option value="đống đa">Đống Đa</option>
-                        <option value="thủ đức">Thủ Đức</option>
-                        <option value="quận 1">Quận 1</option>
-                        <option value="quận 7">Quận 7</option>
+                        <option value="Cầu Giấy" th:selected="${selectedDistrict == 'Cầu Giấy'}">Cầu Giấy</option>
+                        <option value="Đống Đa" th:selected="${selectedDistrict == 'Đống Đa'}">Đống Đa</option>
+                        <option value="Thủ Đức" th:selected="${selectedDistrict == 'Thủ Đức'}">Thủ Đức</option>
+                        <option value="Quận 1" th:selected="${selectedDistrict == 'Quận 1'}">Quận 1</option>
+                        <option value="Quận 7" th:selected="${selectedDistrict == 'Quận 7'}">Quận 7</option>
                     </select>
                 </div>
 
@@ -343,172 +319,78 @@
                 <ul class="category-nav">
                     <li>
                         <a th:href="@{/tim-san}" class="category-btn" th:classappend="${selectedType == null or selectedType == 'all'} ? 'active' : ''">
-                            <span><i class="fa-solid fa-border-all"></i> Tất cả</span><span class="category-badge">445</span>
+                            <span><i class="fa-solid fa-border-all"></i> Tất cả</span>
                         </a>
                     </li>
                     <li>
                         <a th:href="@{/tim-san(type='football')}" class="category-btn" th:classappend="${selectedType == 'football'} ? 'active' : ''">
-                            <span><i class="fa-solid fa-futbol"></i> Bóng đá</span><span class="category-badge">120</span>
+                            <span><i class="fa-solid fa-futbol"></i> Bóng đá</span>
                         </a>
                     </li>
                     <li>
                         <a th:href="@{/tim-san(type='pickleball')}" class="category-btn" th:classappend="${selectedType == 'pickleball'} ? 'active' : ''">
-                            <span><i class="fa-solid fa-table-tennis-paddle-ball"></i> Pickleball</span><span class="category-badge">185</span>
+                            <span><i class="fa-solid fa-table-tennis-paddle-ball"></i> Pickleball</span>
                         </a>
                     </li>
                     <li>
                         <a th:href="@{/tim-san(type='badminton')}" class="category-btn" th:classappend="${selectedType == 'badminton'} ? 'active' : ''">
-                            <span><i class="fa-solid fa-feather"></i> Cầu lông</span><span class="category-badge">75</span>
+                            <span><i class="fa-solid fa-feather"></i> Cầu lông</span>
                         </a>
                     </li>
                     <li>
                         <a th:href="@{/tim-san(type='tennis')}" class="category-btn" th:classappend="${selectedType == 'tennis'} ? 'active' : ''">
-                            <span><i class="fa-solid fa-baseball-bat-ball"></i> Tennis</span><span class="category-badge">38</span>
+                            <span><i class="fa-solid fa-baseball-bat-ball"></i> Tennis</span>
                         </a>
                     </li>
                     <li>
                         <a th:href="@{/tim-san(type='basketball')}" class="category-btn" th:classappend="${selectedType == 'basketball'} ? 'active' : ''">
-                            <span><i class="fa-solid fa-basketball"></i> Bóng rổ</span><span class="category-badge">27</span>
+                            <span><i class="fa-solid fa-basketball"></i> Bóng rổ</span>
                         </a>
                     </li>
                 </ul>
-            </div>
-
-            <!-- Lọc theo giá & tiện ích -->
-            <div class="filter-panel">
-                <div class="filter-heading">
-                    <span>Mức giá mỗi giờ</span>
-                </div>
-                <div class="filter-group-item">
-                    <label class="custom-checkbox"><input type="checkbox"> Dưới 150.000đ</label>
-                    <label class="custom-checkbox"><input type="checkbox"> 150.000đ - 300.000đ</label>
-                    <label class="custom-checkbox"><input type="checkbox"> 300.000đ - 500.000đ</label>
-                    <label class="custom-checkbox"><input type="checkbox"> Trên 500.000đ</label>
-                </div>
-
-                <div class="filter-heading" style="margin-top: 20px;">
-                    <span>Tiện ích sân</span>
-                </div>
-                <div class="filter-group-item">
-                    <label class="custom-checkbox"><input type="checkbox" checked> Bãi đỗ xe ô tô</label>
-                    <label class="custom-checkbox"><input type="checkbox"> Đèn chiếu sáng đêm</label>
-                    <label class="custom-checkbox"><input type="checkbox"> Phòng thay đồ &amp; Tắm</label>
-                    <label class="custom-checkbox"><input type="checkbox"> Căng tin nước uống</label>
-                    <label class="custom-checkbox"><input type="checkbox"> Cho thuê dụng cụ</label>
-                </div>
             </div>
         </aside>
 
         <!-- Danh sách sân bên phải -->
         <main class="content">
             <div class="toolbar">
-                <span>Hiển thị <strong>1 - 10</strong> trong số <strong>445</strong> cơ sở</span>
-                <div>
-                    <label for="sort" style="margin-right: 6px;">Sắp xếp theo:</label>
-                    <select id="sort" class="sort-select">
-                        <option value="az">Tên A-Z</option>
-                        <option value="za">Tên Z-A</option>
-                        <option value="price_asc">Giá tăng dần</option>
-                        <option value="price_desc">Giá giảm dần</option>
-                        <option value="rating">Đánh giá cao nhất</option>
-                    </select>
-                </div>
+                <span>Hiển thị <strong th:text="${courts != null ? courts.size() : 0}">0</strong> cơ sở phù hợp</span>
             </div>
 
-            <!-- Court 1: 002 Pickleball Club (ID = 1) -->
             <!-- DANH SÁCH SÂN ĐƯỢC LOAD ĐỘNG TỪ DATABASE -->
-<div th:each="court : ${courts}" class="court-card" th:attr="data-sport=${court.sportType}">
-    <img th:src="${court.imageUrl}" class="court-thumb" th:alt="${court.name}">
-    <div class="court-body">
-        <h3 class="court-name">
-            <span class="status-dot"></span> 
-            <span th:text="${court.name}">002 Pickleball Club</span>
-        </h3>
-        <div class="court-meta">
-            <span><i class="fa-solid fa-location-dot" style="color: #ef4444;"></i> <span th:text="${court.address}">Địa chỉ</span></span>
-        </div>
-        <div class="court-meta">
-            <span><i class="fa-solid fa-clock"></i> <span th:text="${court.openHours}">06:00 - 22:30</span></span>
-            <span><i class="fa-solid fa-star" style="color: #f59e0b;"></i> <span th:text="${court.rating}">4.9</span> (<span th:text="${court.reviewCount}">56</span> đánh giá)</span>
-        </div>
-        <span class="badge-type" th:text="${court.sportType}">Pickleball</span>
-    </div>
-    <div class="court-end">
-        <div class="court-price">
-            <span th:text="${#numbers.formatDecimal(court.pricePerHour, 0, 'COMMA', 0, 'POINT')}">180.000</span>đ <small>/giờ</small>
-        </div>
-        <span style="font-size: 12px; color: #059669; font-weight: 600;">Sẵn sàng đón khách</span>
-        <div class="card-actions">
-            <a th:href="@{/san-bong/{id}(id=${court.id})}" class="btn-outline">Chi tiết</a>
-            <a th:href="@{/san-bong/{id}(id=${court.id})}" class="btn-solid">Đặt ngay</a>
-        </div>
-    </div>
-</div>
-
-<div th:if="${courts == null or courts.isEmpty()}" style="text-align: center; padding: 40px; background: #fff; border-radius: 12px; color: #64748b;">
-    <i class="fa-solid fa-store-slash" style="font-size: 32px; margin-bottom: 10px; color: #cbd5e1;"></i>
-    <p>Không tìm thấy sân nào phù hợp với bộ lọc hiện tại.</p>
-</div>
-
-            <!-- Court 2: Trung Tâm Sân Bóng Arsenal (ID = 2) -->
-            <div class="court-card" data-sport="football">
-                <img src="https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=200&auto=format&fit=crop" class="court-thumb" alt="Arsenal Football">
+            <div th:each="court : ${courts}" class="court-card">
+                <img th:src="${court.imageUrl != null ? court.imageUrl : 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=200&auto=format&fit=crop'}" class="court-thumb" th:alt="${court.name}">
                 <div class="court-body">
-                    <h3 class="court-name"><span class="status-dot"></span> Trung Tâm Sân Bóng Arsenal</h3>
+                    <h3 class="court-name">
+                        <span class="status-dot"></span> 
+                        <span th:text="${court.name}">002 Pickleball Club</span>
+                    </h3>
                     <div class="court-meta">
-                        <span><i class="fa-solid fa-location-dot" style="color: #ef4444;"></i> Số 18 Hoàng Diệu, Quận 3, TP. Hồ Chí Minh</span>
+                        <span><i class="fa-solid fa-location-dot" style="color: #ef4444;"></i> <span th:text="${court.address}">Địa chỉ</span></span>
                     </div>
                     <div class="court-meta">
-                        <span><i class="fa-solid fa-clock"></i> 05:00 - 23:00</span>
-                        <span><i class="fa-solid fa-star" style="color: #f59e0b;"></i> 4.8 (112 đánh giá)</span>
+                        <span><i class="fa-solid fa-clock"></i> <span th:text="${court.openHours != null ? court.openHours : '06:00 - 22:00'}">06:00 - 22:30</span></span>
+                        <span><i class="fa-solid fa-star" style="color: #f59e0b;"></i> <span th:text="${court.rating != null ? court.rating : '5.0'}">5.0</span> (<span th:text="${court.reviewCount != null ? court.reviewCount : 0}">0</span> đánh giá)</span>
                     </div>
-                    <span class="badge-type" style="background: #fee2e2; color: #b91c1c;">Bóng đá</span>
+                    <span class="badge-type" th:text="${court.sportType}">Pickleball</span>
                 </div>
                 <div class="court-end">
-                    <div class="court-price">350.000đ <small>/giờ</small></div>
-                    <span style="font-size: 12px; color: #059669; font-weight: 600;">Còn 1 sân trống tối nay</span>
-                    <div class="card-actions">
-    <!-- Phải truyền đúng id=${court.id} thay vì số 1 hay số 2 cố định -->
-    <a th:href="@{/san-bong/{id}(id=${court.id})}" class="btn-outline">Chi tiết</a>
-    <a th:href="@{/san-bong/{id}(id=${court.id})}" class="btn-solid">Đặt ngay</a>
-</div>
-                </div>
-            </div>
-
-            <!-- Court 3: CLB Cầu Lông ACE Cầu Giấy (ID = 3) -->
-            <div class="court-card" data-sport="badminton">
-                <img src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=200&auto=format&fit=crop" class="court-thumb" alt="ACE Badminton">
-                <div class="court-body">
-                    <h3 class="court-name"><span class="status-dot"></span> CLB Cầu Lông ACE Cầu Giấy</h3>
-                    <div class="court-meta">
-                        <span><i class="fa-solid fa-location-dot" style="color: #ef4444;"></i> Đường Trần Thái Tông, Cầu Giấy, Hà Nội</span>
+                    <div class="court-price">
+                        <span th:text="${court.pricePerHour != null ? #numbers.formatDecimal(court.pricePerHour, 0, 'COMMA', 0, 'POINT') : '0'}">180.000</span>đ <small>/giờ</small>
                     </div>
-                    <div class="court-meta">
-                        <span><i class="fa-solid fa-clock"></i> 06:00 - 23:00</span>
-                        <span><i class="fa-solid fa-star" style="color: #f59e0b;"></i> 4.7 (40 đánh giá)</span>
-                    </div>
-                    <span class="badge-type" style="background: #fef3c7; color: #b45309;">Cầu lông</span>
-                </div>
-                <div class="court-end">
-                    <div class="court-price">120.000đ <small>/giờ</small></div>
-                    <span style="font-size: 12px; color: #059669; font-weight: 600;">Còn 4 sân trống</span>
+                    <span style="font-size: 12px; color: #059669; font-weight: 600;">Sẵn sàng đón khách</span>
                     <div class="card-actions">
-                        <a th:href="@{/san-bong/3}" class="btn-outline">Chi tiết</a>
-                        <a th:href="@{/san-bong/3}" class="btn-solid">Đặt ngay</a>
+                        <a th:href="@{/courts/{id}(id=${court.id})}" class="btn-outline">Chi tiết</a>
+                        <a th:href="@{/courts/{id}(id=${court.id})}" class="btn-solid">Đặt ngay</a>
                     </div>
                 </div>
             </div>
 
-            <!-- Pagination Điều hướng trang -->
-            <div class="pagination">
-                <a href="#" class="page-item"><i class="fa-solid fa-chevron-left"></i></a>
-                <a href="#" class="page-item active">1</a>
-                <a href="#" class="page-item">2</a>
-                <a href="#" class="page-item">3</a>
-                <a href="#" class="page-item">4</a>
-                <a href="#" class="page-item">...</a>
-                <a href="#" class="page-item">23</a>
-                <a href="#" class="page-item"><i class="fa-solid fa-chevron-right"></i></a>
+            <!-- Trường hợp không có dữ liệu phù hợp -->
+            <div th:if="${courts == null or courts.isEmpty()}" style="text-align: center; padding: 40px; background: #fff; border-radius: 12px; color: #64748b; border: 1px solid #e2e8f0;">
+                <i class="fa-solid fa-store-slash" style="font-size: 36px; margin-bottom: 12px; color: #cbd5e1;"></i>
+                <p style="font-weight: 600;">Không tìm thấy cụm sân nào phù hợp với bộ lọc hiện tại.</p>
+                <a th:href="@{/tim-san}" style="color: #059669; font-size: 13.5px; font-weight: 700; margin-top: 8px; display: inline-block;">Xóa bộ lọc để xem tất cả sân</a>
             </div>
         </main>
     </div>
@@ -519,94 +401,34 @@
             <div class="footer-col">
                 <h4 style="font-size: 20px; color: #34d399;"><i class="fa-solid fa-futbol"></i> SportHub</h4>
                 <p>Nền tảng tìm kiếm và đặt lịch sân thể thao hàng đầu toàn quốc. Đem lại trải nghiệm đặt sân nhanh chóng, cập nhật lịch trống và bảng giá chuẩn xác nhất theo thời gian thực.</p>
-                <div style="display: flex; gap: 12px;">
-                    <a href="#" style="color: #cbd5e1; font-size: 18px;"><i class="fa-brands fa-facebook"></i></a>
-                    <a href="#" style="color: #cbd5e1; font-size: 18px;"><i class="fa-brands fa-youtube"></i></a>
-                    <a href="#" style="color: #cbd5e1; font-size: 18px;"><i class="fa-brands fa-tiktok"></i></a>
-                </div>
             </div>
-
             <div class="footer-col">
                 <h4>Về chúng tôi</h4>
                 <ul>
                     <li><a href="#">Giới thiệu nền tảng</a></li>
                     <li><a href="#">Bảng giá dịch vụ</a></li>
                     <li><a href="#">Dành cho chủ sân</a></li>
-                    <li><a href="#">Chính sách &amp; Điều khoản</a></li>
                 </ul>
             </div>
-
             <div class="footer-col">
                 <h4>Hỗ trợ khách hàng</h4>
                 <ul>
                     <li><a href="#">Hướng dẫn đặt sân</a></li>
                     <li><a href="#">Chính sách hoàn tiền/hủy sân</a></li>
-                    <li><a href="#">Quy định đặt lịch cọc</a></li>
-                    <li><a href="#">Câu hỏi thường gặp (FAQ)</a></li>
                 </ul>
             </div>
-
             <div class="footer-col">
                 <h4>Liên hệ</h4>
                 <ul class="footer-contact">
                     <li><i class="fa-solid fa-location-dot"></i> Hà Nội &amp; TP. Hồ Chí Minh</li>
                     <li><i class="fa-solid fa-phone"></i> Hotline: 1900 xxxx (8:00 - 22:00)</li>
-                    <li><i class="fa-solid fa-envelope"></i> Email: support@sporthub.vn</li>
                 </ul>
             </div>
         </div>
-
         <div class="footer-bottom">
             <p>&copy; 2026 SportHub Platform. Dự án Đồ án liên ngành. All rights reserved.</p>
         </div>
     </footer>
-
-    <script th:inline="javascript">
-        /* Nhận giá trị loại sân từ Spring Boot Model */
-        const currentType = /*[[${selectedType}]]*/ 'all';
-
-        document.addEventListener("DOMContentLoaded", function() {
-            if (!currentType || currentType === 'all') return;
-
-            // Bảng đối chiếu mã loại sang tên hiển thị tiếng Việt
-            const typeNames = {
-                'football': 'Bóng đá',
-                'pickleball': 'Pickleball',
-                'badminton': 'Cầu lông',
-                'tennis': 'Tennis',
-                'basketball': 'Bóng rổ'
-            };
-
-            const currentName = typeNames[currentType];
-
-            // 1. Cập nhật lại tiêu đề trang
-            if (currentName) {
-                const pageTitle = document.querySelector('.header-title');
-                if (pageTitle) {
-                    pageTitle.innerHTML = `<i class="fa-solid fa-trophy"></i> Danh sách sân ${currentName}`;
-                }
-            }
-
-            // 2. Dropdown chọn đúng giá trị
-            const typeSelect = document.querySelector('select[name="type"]');
-            if (typeSelect) {
-                typeSelect.value = currentType;
-            }
-
-            // 3. Lọc ẩn/hiện các sân trong danh sách theo thuộc tính data-sport
-            const cards = document.querySelectorAll('.court-card');
-            cards.forEach(card => {
-                const sport = card.getAttribute('data-sport');
-                if (sport) {
-                    if (sport.toLowerCase() === currentType.toLowerCase()) {
-                        card.style.display = 'flex';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                }
-            });
-        });
-    </script>
 
 </body>
 </html>

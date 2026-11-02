@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhắn tin với Chủ sân — SportHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f1f5f9; height: 100vh; display: flex; flex-direction: column; }
+
+        .chat-header { background: #064e3b; color: #fff; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .chat-header h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .back-link { color: #a7f3d0; text-decoration: none; font-size: 13.5px; font-weight: 600; }
+        .back-link:hover { text-decoration: underline; }
+
+        .chat-container { max-width: 900px; width: 100%; margin: 20px auto; background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; height: calc(100vh - 100px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); overflow: hidden; }
+        
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: #f8fafc; }
+        .message { max-width: 70%; padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.5; word-break: break-word; }
+        .message.user { background: #059669; color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .message.owner { background: #fff; color: #1e293b; align-self: flex-start; border: 1px solid #e2e8f0; border-bottom-left-radius: 2px; }
+        .message-time { font-size: 10px; margin-top: 4px; opacity: 0.8; text-align: right; }
+
+        .chat-input-box { padding: 16px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; gap: 12px; }
+        .chat-input { flex: 1; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+        .chat-input:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
+        .btn-send { background: #059669; color: #fff; border: none; padding: 0 24px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .btn-send:hover { background: #047857; }
+    </style>
+</head>
+<body>
+
+    <header class="chat-header">
+        <h2>
+            <i class="fa-solid fa-store"></i> Đang trò chuyện với chủ sân: 
+            <span th:text="${owner != null and owner.fullName != null ? owner.fullName : (owner != null ? owner.username : 'Chủ Sân')}">Chủ Sân</span> 
+            (<span th:text="${court != null ? court.name : 'Sân'}">Sân</span>)
+        </h2>
+        <a th:href="@{/courts/{id}(id=${court != null ? court.id : 1})}" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Quay lại trang sân
+        </a>
+    </header>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="messageBox">
+            <div th:each="m : ${messages}" th:class="${m.senderRole == 'USER'} ? 'message user' : 'message owner'">
+                <div th:text="${m.content}">Nội dung tin nhắn</div>
+                <div class="message-time" th:text="${m.sentAt != null ? #temporals.format(m.sentAt, 'HH:mm dd/MM') : ''}">12:00</div>
+            </div>
+        </div>
+
+        <form class="chat-input-box" onsubmit="sendMessage(event)">
+            <input type="text" id="chatContent" class="chat-input" placeholder="Nhập tin nhắn trao đổi với chủ sân..." autocomplete="off" required>
+            <button type="submit" class="btn-send"><i class="fa-solid fa-paper-plane"></i> Gửi</button>
+        </form>
+    </div>
+
+    <script th:inline="javascript">
+        const courtId = /*[[${court != null ? court.id : 1}]]*/ 1;
+        const messageBox = document.getElementById('messageBox');
+
+        // Cuộn xuống tin nhắn mới nhất
+        function scrollToBottom() {
+            messageBox.scrollTop = messageBox.scrollHeight;
+        }
+        scrollToBottom();
+
+        // Gửi tin nhắn qua Ajax
+        function sendMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('chatContent');
+            const content = input.value.trim();
+            if (!content) return;
+
+            fetch(`/chat/court/${courtId}/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `content=${encodeURIComponent(content)}`
+            }).then(res => {
+                if (res.ok) {
+                    input.value = '';
+                    loadMessages();
+                }
+            });
+        }
+
+        // Tự động làm mới tin nhắn mỗi 3 giây (Polling)
+        function loadMessages() {
+            fetch(`/chat/court/${courtId}/messages`)
+                .then(res => res.json())
+                .then(data => {
+                    let html = '';
+                    if (Array.isArray(data)) {
+                        data.forEach(m => {
+                            const isUser = m.senderRole === 'USER';
+                            html += `
+                                <div class="message ${isUser ? 'user' : 'owner'}">
+                                    <div>${m.content}</div>
+                                    <div class="message-time">${m.sentAt ? m.sentAt.substring(11, 16) : ''}</div>
+                                </div>
+                            `;
+                        });
+                        messageBox.innerHTML = html;
+                        scrollToBottom();
+                    }
+                })
+                .catch(err => console.log("Lỗi tải tin nhắn:", err));
+        }
+
+        setInterval(loadMessages, 3000);
+    </script>
+</body>
+</html>

@@ -55,11 +55,36 @@
     <aside class="owner-sidebar">
         <div class="sidebar-brand"><i class="fa-solid fa-store"></i> SportHub Partner</div>
         <ul class="sidebar-menu">
-            <li class="menu-item"><a th:href="@{/owner/dashboard}"><i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách</a></li>
-            <li class="menu-item"><a th:href="@{/owner/courts/connect}" class="active"><i class="fa-solid fa-handshake"></i> Kết nối sân với Sàn</a></li>
-            <li class="menu-item"><a th:href="@{/owner/pricing}"><i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng</a></li>
-            <li class="menu-item"><a th:href="@{/owner/payout}"><i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền</a></li>
-            <li class="menu-item"><a th:href="@{/owner/support}"><i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin</a></li>
+            <li class="menu-item">
+                <a th:href="@{/owner/dashboard}">
+                    <i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/chat}">
+                    <i class="fa-solid fa-comments"></i> Tin nhắn khách hàng
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/courts/connect}" class="active">
+                    <i class="fa-solid fa-handshake"></i> Kết nối sân với Sàn
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/pricing}">
+                    <i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/payout}">
+                    <i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/support}">
+                    <i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin
+                </a>
+            </li>
         </ul>
         <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.08);">
             <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
@@ -74,7 +99,12 @@
                 <strong style="color: #0f172a;" th:text="${owner != null and owner.businessName != null ? owner.businessName : 'Cụm Sân Thể Thao Hưng Phát'}">Cụm Sân Hưng Phát</strong>
                 <small style="color: #64748b; margin-left: 8px;"><i class="fa-solid fa-circle-check" style="color: #059669;"></i> Đối tác đã xác thực</small>
             </div>
-            <a th:href="@{/}" target="_blank" style="font-size: 13px; color: #0284c7; text-decoration: none; font-weight: 600;">Xem Trang Đặt Sân &rarr;</a>
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <span style="font-size: 13.5px; font-weight: 600; color: #475569;">
+                    <i class="fa-solid fa-user-tie"></i> Chủ sân: <span th:text="${owner != null ? owner.fullName : 'Nguyễn Tường Hưng'}">Hưng</span>
+                </span>
+                <a th:href="@{/}" target="_blank" style="font-size: 13px; color: #0284c7; text-decoration: none; font-weight: 600;">Xem Trang Đặt Sân &rarr;</a>
+            </div>
         </header>
 
         <main class="owner-content">
@@ -83,7 +113,7 @@
                 <i class="fa-solid fa-circle-check"></i> <span th:text="${successMessage}">Thao tác thành công!</span>
             </div>
 
-            <!-- Form đăng ký đưa cơ sở sân lên sàn (Đã thêm enctype để upload ảnh) -->
+            <!-- Form đăng ký đưa cơ sở sân lên sàn -->
             <div class="card">
                 <div class="card-title">
                     <i class="fa-solid fa-plus-circle" style="color: #0284c7;"></i> Đăng Ký Đưa Cụm Sân Mới Lên Sàn SportHub
@@ -96,7 +126,6 @@
                         </div>
                         <div class="form-group">
                             <label>Bộ môn thể thao * (Có thể chọn hoặc tự gõ)</label>
-                            <!-- Dùng input type="text" kết hợp list datalist để vừa chọn sẵn vừa gõ tay tự do -->
                             <input type="text" name="sportType" class="form-control" list="sportOptions" placeholder="Chọn hoặc nhập môn thể thao..." required>
                             <datalist id="sportOptions">
                                 <option value="Pickleball">
@@ -137,7 +166,6 @@
                         </div>
                         <div class="form-group">
                             <label>Hình ảnh cụm sân *</label>
-                            <!-- Thêm trường input chọn file ảnh -->
                             <input type="file" name="imageFile" class="form-control" accept="image/*" required style="padding: 7px 14px;">
                         </div>
                     </div>
@@ -169,7 +197,6 @@
                     <tbody>
                         <tr th:each="c : ${myCourts}">
                             <td>
-                                <!-- Hiển thị ảnh nếu có, nếu chưa có hiển thị ảnh mặc định -->
                                 <img th:src="${c.imageUrl != null ? c.imageUrl : 'https://via.placeholder.com/50x35'}" alt="Ảnh sân" class="court-thumb">
                             </td>
                             <td><strong th:text="${c.name}">002 PB Club</strong></td>
