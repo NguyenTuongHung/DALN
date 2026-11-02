@@ -11,7 +11,7 @@
 
         .owner-sidebar { width: 250px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
         .sidebar-brand { padding: 22px 20px; font-size: 19px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; color: #38bdf8; }
-        .sidebar-menu { list-style: none; padding: 14px 0; flex: 1; }
+        .sidebar-menu { list-style: none; padding: 14px 0; flex: 1; overflow-y: auto; }
         .menu-item a { display: flex; align-items: center; gap: 12px; padding: 13px 22px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
         .menu-item a:hover { background: rgba(255,255,255,0.06); color: #fff; }
         .menu-item a.active { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-left: 4px solid #38bdf8; }
@@ -45,11 +45,36 @@
     <aside class="owner-sidebar">
         <div class="sidebar-brand"><i class="fa-solid fa-store"></i> SportHub Partner</div>
         <ul class="sidebar-menu">
-            <li class="menu-item"><a th:href="@{/owner/dashboard}"><i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách</a></li>
-            <li class="menu-item"><a th:href="@{/owner/courts/connect}"><i class="fa-solid fa-handshake"></i> Kết nối sân với Sàn</a></li>
-            <li class="menu-item"><a th:href="@{/owner/pricing}"><i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng</a></li>
-            <li class="menu-item"><a th:href="@{/owner/payout}" class="active"><i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền</a></li>
-            <li class="menu-item"><a th:href="@{/owner/support}"><i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin</a></li>
+            <li class="menu-item">
+                <a th:href="@{/owner/dashboard}">
+                    <i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/chat}">
+                    <i class="fa-solid fa-comments"></i> Tin nhắn khách hàng
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/courts/connect}">
+                    <i class="fa-solid fa-handshake"></i> Kết nối sân với Sàn
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/pricing}">
+                    <i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/payout}" class="active">
+                    <i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/support}">
+                    <i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin
+                </a>
+            </li>
         </ul>
         <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.08);">
             <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
