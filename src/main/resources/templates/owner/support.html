@@ -9,18 +9,19 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f8fafc; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
 
-        .owner-sidebar { width: 250px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .owner-sidebar { width: 250px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; }
         .sidebar-brand { padding: 22px 20px; font-size: 19px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; color: #38bdf8; }
-        .sidebar-menu { list-style: none; padding: 14px 0; flex: 1; overflow-y: auto; }
-        .menu-item a { display: flex; align-items: center; gap: 12px; padding: 13px 22px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
-        .menu-item a:hover { background: rgba(255,255,255,0.06); color: #fff; }
-        .menu-item a.active { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-left: 4px solid #38bdf8; }
+        .sidebar-menu { list-style: none; padding: 12px 0; flex: 1; overflow-y: auto; }
+        .menu-item { margin-bottom: 2px; }
+        .menu-link { display: flex; align-items: center; gap: 12px; padding: 12px 22px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .menu-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .menu-link.active { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-left: 4px solid #38bdf8; }
 
         .owner-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
         .owner-nav { height: 62px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
         .owner-content { padding: 28px 32px; max-width: 950px; }
 
-        /* Khung Chat Trực Tuyến */
+        /* Khung Chat Trực Tuyến - Đã fix lỗi cú pháp calc */
         .chat-container { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); display: flex; flex-direction: column; height: calc(100vh - 130px); }
         .chat-header { background: #0f172a; color: #fff; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; }
         .chat-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
@@ -43,41 +44,49 @@
 </head>
 <body>
 
+    <!-- Sidebar Chủ Sân -->
     <aside class="owner-sidebar">
-        <div class="sidebar-brand"><i class="fa-solid fa-store"></i> SportHub Partner</div>
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-futbol"></i> SportHub Partner
+        </div>
         <ul class="sidebar-menu">
             <li class="menu-item">
-                <a th:href="@{/owner/dashboard}">
+                <a th:href="@{/owner/dashboard}" class="menu-link" th:classappend="${activeMenu == 'dashboard'} ? 'active'">
                     <i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách
                 </a>
             </li>
             <li class="menu-item">
-                <a th:href="@{/owner/chat}">
+                <a th:href="@{/owner/messages}" class="menu-link" th:classappend="${activeMenu == 'messages'} ? 'active'">
                     <i class="fa-solid fa-comments"></i> Tin nhắn khách hàng
                 </a>
             </li>
             <li class="menu-item">
-                <a th:href="@{/owner/courts/connect}">
-                    <i class="fa-solid fa-handshake"></i> Kết nối sân với Sàn
+                <a th:href="@{/owner/courts/connect}" class="menu-link" th:classappend="${activeMenu == 'connect'} ? 'active'">
+                    <i class="fa-solid fa-store"></i> Kết nối sân với Sàn
                 </a>
             </li>
             <li class="menu-item">
-                <a th:href="@{/owner/pricing}">
+                <a th:href="@{/owner/pricing}" class="menu-link" th:classappend="${activeMenu == 'pricing'} ? 'active'">
                     <i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng
                 </a>
             </li>
             <li class="menu-item">
-                <a th:href="@{/owner/payout}">
+                <a th:href="@{/owner/payout}" class="menu-link" th:classappend="${activeMenu == 'payout'} ? 'active'">
                     <i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền
                 </a>
             </li>
             <li class="menu-item">
-                <a th:href="@{/owner/support}" class="active">
+                <a th:href="@{/owner/settings}" class="menu-link" th:classappend="${activeMenu == 'settings'} ? 'active'">
+                    <i class="fa-solid fa-gear"></i> Cài đặt tài khoản
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/support}" class="menu-link" th:classappend="${activeMenu == 'support'} ? 'active'">
                     <i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin
                 </a>
             </li>
         </ul>
-        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto;">
             <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
                 <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
             </a>

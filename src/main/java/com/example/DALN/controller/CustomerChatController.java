@@ -27,47 +27,53 @@ public class CustomerChatController {
         this.userRepository = userRepository;
     }
 
-    // 1. Hiển thị trang chat của khách hàng
     @GetMapping("/chat")
     public String customerChatPage(Model model, @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) return "redirect:/login";
-        return "customer/chat"; // Trỏ đến templates/customer/chat.html
+        return "customer/chat";
     }
 
-    // 2. API lấy danh sách các chủ sân mà khách hàng này đã từng nhắn tin
     @GetMapping("/api/conversations")
     @ResponseBody
-    public List<OwnerConversationDTO> getConversations(@AuthenticationPrincipal UserDetails userDetails) {
+    public List<OwnerConversationDTO> getOwnerConversations(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) return Collections.emptyList();
 
         User customer = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
         if (customer == null) return Collections.emptyList();
 
         try {
-            // Lấy tất cả tin nhắn mà khách hàng này tham gia (gửi đi hoặc nhận về)
-            List<SupportMessage> allMessages = supportMessageRepository.findAll().stream()
-                    .filter(m -> m != null && m.getSender() != null && 
-                                 (m.getSender().getId().equals(customer.getId()) || 
-                                  (m.getOwner() != null && m.getOwner().getId().equals(customer.getId()))))
-                    .collect(Collectors.toList());
+            List<SupportMessage> allMessages = supportMessageRepository.findAll();
+            if (allMessages == null) return Collections.emptyList();
 
-            // Nhóm theo Chủ sân (Owner)
-            Map<User, List<SupportMessage>> grouped = allMessages.stream()
-                    .filter(m -> m.getOwner() != null && !m.getOwner().getId().equals(customer.getId()))
-                    .collect(Collectors.groupingBy(SupportMessage::getOwner));
+            Map<User, List<SupportMessage>> mapByOwner = new HashMap<>();
+            for (SupportMessage m : allMessages) {
+                if (m == null) continue;
+                // Chấp nhận cả CUSTOMER_CHAT hoặc tin nhắn cũ chưa set chatType
+                String type = m.getChatType();
+                if (type != null && !"CUSTOMER_CHAT".equalsIgnoreCase(type)) continue;
+                if (m.getOwner() == null) continue;
+
+                boolean isSentByCustomer = m.getSender() != null && m.getSender().getId().equals(customer.getId());
+                boolean isOwnerReply = "OWNER".equalsIgnoreCase(m.getSenderRole());
+
+                if (isSentByCustomer || isOwnerReply) {
+                    mapByOwner.computeIfAbsent(m.getOwner(), k -> new ArrayList<>()).add(m);
+                }
+            }
 
             List<OwnerConversationDTO> result = new ArrayList<>();
-            for (Map.Entry<User, List<SupportMessage>> entry : grouped.entrySet()) {
+            for (Map.Entry<User, List<SupportMessage>> entry : mapByOwner.entrySet()) {
                 User owner = entry.getKey();
                 List<SupportMessage> msgs = entry.getValue();
+                if (owner == null) continue;
+
                 msgs.sort(Comparator.comparing(SupportMessage::getSentAt, Comparator.nullsLast(Comparator.naturalOrder())));
-                
                 SupportMessage lastMsg = msgs.isEmpty() ? null : msgs.get(msgs.size() - 1);
 
                 result.add(new OwnerConversationDTO(
                         owner.getId(),
-                        owner.getBusinessName() != null ? owner.getBusinessName() : owner.getFullName(),
-                        lastMsg != null ? lastMsg.getContent() : "Bắt đầu trò chuyện"
+                        owner.getFullName() != null ? owner.getFullName() : owner.getUsername(),
+                        lastMsg != null ? lastMsg.getContent() : "Đã kết nối"
                 ));
             }
             return result;
@@ -77,11 +83,10 @@ public class CustomerChatController {
         }
     }
 
-    // 3. API lấy toàn bộ tin nhắn giữa Khách hàng và 1 Chủ sân cụ thể
     @GetMapping("/api/messages")
     @ResponseBody
-    public List<ChatMessageDTO> getMessagesWithOwner(@RequestParam Long ownerId,
-                                                     @AuthenticationPrincipal UserDetails userDetails) {
+    public List<CustomerChatMessageDTO> getMessagesWithParameters(@RequestParam Long ownerId,
+                                                                  @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) return Collections.emptyList();
 
         User customer = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
@@ -92,15 +97,21 @@ public class CustomerChatController {
             if (allMessages == null) return Collections.emptyList();
 
             return allMessages.stream()
-                    .filter(m -> m != null && m.getSender() != null && 
-                                 (m.getSender().getId().equals(customer.getId()) || 
-                                  (m.getOwner() != null && m.getOwner().getId().equals(ownerId))))
-                    .map(m -> new ChatMessageDTO(
+                    .filter(m -> {
+                        if (m == null) return false;
+                        String type = m.getChatType();
+                        if (type != null && !"CUSTOMER_CHAT".equalsIgnoreCase(type)) return false;
+
+                        boolean isFromCustomer = m.getSender() != null && m.getSender().getId().equals(customer.getId());
+                        boolean isOwnerReply = "OWNER".equalsIgnoreCase(m.getSenderRole());
+                        return isFromCustomer || isOwnerReply;
+                    })
+                    .map(m -> new CustomerChatMessageDTO(
                             m.getId(),
                             m.getContent(),
                             m.getSentAt() != null ? m.getSentAt().toString() : "",
                             m.getSenderRole(),
-                            m.getSender().getId()
+                            m.getSender() != null ? m.getSender().getId() : null
                     ))
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -109,7 +120,6 @@ public class CustomerChatController {
         }
     }
 
-    // 4. API Khách hàng gửi tin nhắn cho Chủ sân
     @PostMapping("/api/send")
     @ResponseBody
     public String customerSendMessage(@RequestParam Long ownerId,
@@ -129,7 +139,8 @@ public class CustomerChatController {
             SupportMessage message = SupportMessage.builder()
                     .owner(owner)
                     .sender(customer)
-                    .senderRole("CUSTOMER") // Đánh dấu tin nhắn do khách gửi
+                    .senderRole("CUSTOMER")
+                    .chatType("CUSTOMER_CHAT")
                     .content(content.trim())
                     .sentAt(LocalDateTime.now())
                     .build();
@@ -158,14 +169,14 @@ public class CustomerChatController {
         public String getLastMessage() { return lastMessage; }
     }
 
-    public static class ChatMessageDTO {
+    public static class CustomerChatMessageDTO {
         private Long id;
         private String content;
         private String sentAt;
         private String senderRole;
         private Long senderId;
 
-        public ChatMessageDTO(Long id, String content, String sentAt, String senderRole, Long senderId) {
+        public CustomerChatMessageDTO(Long id, String content, String sentAt, String senderRole, Long senderId) {
             this.id = id;
             this.content = content;
             this.sentAt = sentAt;

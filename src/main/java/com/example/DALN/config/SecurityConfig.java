@@ -25,7 +25,7 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig implements WebMvcConfigurer {
 
-    // Cấu hình để Spring Boot hiểu và cho phép truy cập các file ảnh đã upload trong thư mục uploads/
+    // Cấu hình cho phép truy cập các file ảnh đã upload trong thư mục uploads/
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**")
@@ -34,7 +34,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(); // Mã hóa mật khẩu bảo mật BCrypt
     }
 
     @Bean
@@ -55,49 +55,90 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy user: " + username));
     }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/owner/**").hasRole("OWNER")
-                .requestMatchers("/profile/**", "/lich-su-dat-san", "/doi-mat-khau", "/bookings/**").authenticated()
-                .requestMatchers("/", "/tim-san", "/san-bong/**", "/dat-san/**", "/ban-do", "/api/**", "/login", "/register", "/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin(login -> login
-                .loginPage("/login")
-                .loginProcessingUrl("/perform_login")
-                .successHandler((request, response, authentication) -> {
-                    var roles = authentication.getAuthorities();
-                    if (roles.stream().anyMatch(r -> r.getAuthority().equals("ROLE_ADMIN"))) {
-                        response.sendRedirect("/admin/dashboard");
-                    } else if (roles.stream().anyMatch(r -> r.getAuthority().equals("ROLE_OWNER"))) {
-                        response.sendRedirect("/owner/dashboard");
-                    } else {
-                        response.sendRedirect("/");
-                    }
-                })
-                .failureUrl("/login?error=true")
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout=true")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-                .permitAll()
-            );
+    
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        // Hiện tại dự án demo đang tắt CSRF
+        .csrf(csrf -> csrf.disable())
 
-        return http.build();
-    }
+        .authorizeHttpRequests(auth -> auth
+
+            // Phân quyền quản trị viên
+            .requestMatchers("/admin/**").hasRole("ADMIN")
+
+            // Phân quyền chủ sân
+            .requestMatchers("/owner/**").hasRole("OWNER")
+
+            // Phân quyền khách hàng
+            .requestMatchers("/customer/**").hasRole("USER")
+
+            // Các trang yêu cầu đăng nhập
+            .requestMatchers(
+                "/profile/**",
+                "/lich-su-dat-san",
+                "/doi-mat-khau",
+                "/bookings/**"
+            ).authenticated()
+
+            // Các trang công khai và tài nguyên tĩnh
+            .requestMatchers(
+                "/",
+                "/tim-san",
+                "/san-bong/**",
+                "/dat-san/**",
+                "/ban-do",
+                "/api/**",
+                "/login",
+                "/register",
+                "/css/**",
+                "/js/**",
+                "/images/**",
+                "/uploads/**"
+            ).permitAll()
+
+            .anyRequest().authenticated()
+        )
+
+        .formLogin(login -> login
+            .loginPage("/login")
+            .loginProcessingUrl("/perform_login")
+            .successHandler((request, response, authentication) -> {
+                var roles = authentication.getAuthorities();
+
+                if (roles.stream().anyMatch(
+                    r -> r.getAuthority().equals("ROLE_ADMIN"))) {
+                    response.sendRedirect("/admin/dashboard");
+
+                } else if (roles.stream().anyMatch(
+                    r -> r.getAuthority().equals("ROLE_OWNER"))) {
+                    response.sendRedirect("/owner/dashboard");
+
+                } else {
+                    response.sendRedirect("/");
+                }
+            })
+            .failureUrl("/login?error=true")
+            .permitAll()
+        )
+
+        .logout(logout -> logout
+            .logoutUrl("/logout")
+            .logoutSuccessUrl("/login?logout=true")
+            .invalidateHttpSession(true)
+            .deleteCookies("JSESSIONID")
+            .permitAll()
+        );
+
+    return http.build();
+}
+
 
     @Bean
     public CommandLineRunner initData(UserRepository userRepository, 
-                                        CourtRepository courtRepository, 
-                                        SubCourtRepository subCourtRepository, 
-                                        PasswordEncoder passwordEncoder) {
+                                       CourtRepository courtRepository, 
+                                       SubCourtRepository subCourtRepository, 
+                                       PasswordEncoder passwordEncoder) {
         return args -> {
             // 1. Tạo tài khoản Admin mặc định
             if (!userRepository.existsByUsername("admin")) {
@@ -140,7 +181,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .build());
             }
 
-            // 4. Nếu chưa có sân nào trong Database: Tạo mới 3 cụm sân chuẩn
+            // 4. Khởi tạo dữ liệu sân bãi nếu chưa có
             if (courtRepository.count() == 0) {
                 Court c1 = courtRepository.save(Court.builder()
                         .name("002 Pickleball Club")
@@ -198,45 +239,6 @@ public class SecurityConfig implements WebMvcConfigurer {
 
                 subCourtRepository.save(SubCourt.builder().name("Sân Cầu Lông 1").court(c3).status("ACTIVE").build());
                 subCourtRepository.save(SubCourt.builder().name("Sân Cầu Lông 2").court(c3).status("ACTIVE").build());
-            } else {
-                List<Court> existingCourts = courtRepository.findAll();
-                for (Court c : existingCourts) {
-                    boolean changed = false;
-
-                    if (c.getOwner() == null) {
-                        c.setOwner(owner);
-                        changed = true;
-                    }
-                    if (c.getPricePerHour() == null || c.getPricePerHour() <= 0) {
-                        c.setPricePerHour(180000.0);
-                        changed = true;
-                    }
-                    if (c.getAddress() == null || c.getAddress().isBlank()) {
-                        c.setAddress("28 Thảo Điền, TP. Thủ Đức, Hồ Chí Minh");
-                        changed = true;
-                    }
-                    if (c.getLatitude() == null || c.getLongitude() == null) {
-                        c.setLatitude(10.8032);
-                        c.setLongitude(106.7321);
-                        changed = true;
-                    }
-                    if (c.getImageUrl() == null || c.getImageUrl().isBlank()) {
-                        c.setImageUrl("https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800&auto=format&fit=crop&q=80");
-                        changed = true;
-                    }
-                    if (c.getOpenHours() == null || c.getOpenHours().isBlank()) {
-                        c.setOpenHours("06:00 - 22:30");
-                        changed = true;
-                    }
-                    if (c.getName() != null && c.getName().matches("^Sân \\d+.*")) {
-                        c.setName("Cụm Sân Thể Thao " + c.getName());
-                        changed = true;
-                    }
-
-                    if (changed) {
-                        courtRepository.save(c);
-                    }
-                }
             }
         };
     }
