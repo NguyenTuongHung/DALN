@@ -184,7 +184,6 @@ public class OwnerController {
                 Path filePath = Paths.get(UPLOAD_DIR + fileName);
                 Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
                 
-                // Đường dẫn URL để truy cập ảnh từ trình duyệt thông qua ResourceHandler
                 imageUrl = "/uploads/courts/" + fileName;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -272,14 +271,13 @@ public class OwnerController {
         return "owner/pricing";
     }
 
-    // 5.1. XỬ LÝ LƯU CẬP NHẬT BẢNG GIÁ THEO KHUNG GIỜ
     @PostMapping("/pricing/update")
     public String updateCourtPricing(@RequestParam Long courtId,
-                                     @RequestParam Double normalPrice,
-                                     @RequestParam Double peakPrice,
-                                     @RequestParam Double weekendPrice,
-                                     @AuthenticationPrincipal UserDetails userDetails,
-                                     RedirectAttributes redirectAttributes) {
+                                   @RequestParam Double normalPrice,
+                                   @RequestParam Double peakPrice,
+                                   @RequestParam Double weekendPrice,
+                                   @AuthenticationPrincipal UserDetails userDetails,
+                                   RedirectAttributes redirectAttributes) {
         User owner = getAuthenticatedOwner(userDetails);
         if (owner == null) return "redirect:/login";
 
@@ -295,6 +293,42 @@ public class OwnerController {
         }
 
         return "redirect:/owner/pricing";
+    }
+
+    // 5.2. CÀI ĐẶT TÀI KHOẢN & NGÂN HÀNG THỤ HƯỞNG
+    @GetMapping("/settings")
+    public String ownerSettingsPage(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        User owner = getAuthenticatedOwner(userDetails);
+        if (owner == null) return "redirect:/login";
+
+        model.addAttribute("owner", owner);
+        model.addAttribute("activeMenu", "settings");
+        return "owner/settings";
+    }
+
+    @PostMapping("/settings/update")
+    public String updateOwnerSettings(@RequestParam String fullName,
+                                      @RequestParam String phone,
+                                      @RequestParam String businessName,
+                                      @RequestParam String bankName,
+                                      @RequestParam String bankAccountNumber,
+                                      @RequestParam String bankAccountName,
+                                      @AuthenticationPrincipal UserDetails userDetails,
+                                      RedirectAttributes redirectAttributes) {
+        User owner = getAuthenticatedOwner(userDetails);
+        if (owner == null) return "redirect:/login";
+
+        owner.setFullName(fullName);
+        owner.setPhone(phone);
+        owner.setBusinessName(businessName);
+        owner.setBankName(bankName);
+        owner.setBankAccountNumber(bankAccountNumber);
+        owner.setBankAccountName(bankAccountName);
+
+        userRepository.save(owner);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Cập nhật thông tin tài khoản và ngân hàng thành công!");
+        return "redirect:/owner/settings";
     }
 
     // 6. QUYẾT TOÁN & VÍ TIỀN
@@ -330,14 +364,12 @@ public class OwnerController {
         model.addAttribute("walletBalance", availableBalance);
         model.addAttribute("pendingHold", pendingHold);
 
-        // Lấy lịch sử các yêu cầu rút tiền của chủ sân này từ database
         List<PayoutRequest> payoutHistory = payoutRequestRepository.findByOwnerIdOrderByRequestedAtDesc(owner.getId());
         model.addAttribute("payoutHistory", payoutHistory);
 
         return "owner/payout";
     }
 
-    // 6.1. XỬ LÝ GỬI YÊU CẦU RÚT TIỀN (CHUYỂN KHOẢN)
     @PostMapping("/payout/request")
     public String requestPayout(@AuthenticationPrincipal UserDetails userDetails, 
                                 RedirectAttributes redirectAttributes) {
@@ -378,21 +410,37 @@ public class OwnerController {
         return "redirect:/owner/payout";
     }
 
-    // 7. HỖ TRỢ TỪ ADMIN (KẾT NỐI CHAT THẬT)
+    // =====================================================
+    // 7.1. TRANG TIN NHẮN VỚI KHÁCH HÀNG (LUỒNG CUSTOMER_CHAT)
+    // =====================================================
+    @GetMapping("/messages")
+    public String ownerMessagesPage(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        User owner = getAuthenticatedOwner(userDetails);
+        if (owner == null) return "redirect:/login";
+
+        model.addAttribute("owner", owner);
+        model.addAttribute("activeMenu", "messages"); 
+        return "owner/chat"; 
+    }
+
+    // =====================================================
+    // 7.2. TRANG HỖ TRỢ TỪ SÀN ADMIN (LUỒNG ADMIN_SUPPORT)
+    // =====================================================
     @GetMapping("/support")
     public String supportPage(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User owner = getAuthenticatedOwner(userDetails);
         if (owner == null) return "redirect:/login";
 
         model.addAttribute("owner", owner);
-        model.addAttribute("activeMenu", "support");
+        model.addAttribute("activeMenu", "support"); 
 
-        List<SupportMessage> messages = supportMessageRepository.findByOwnerIdOrderBySentAtAsc(owner.getId());
+        // BẮT BUỘC: Chỉ lấy tin nhắn hỗ trợ Admin thuộc luồng ADMIN_SUPPORT
+        List<SupportMessage> messages = supportMessageRepository.findByOwnerIdAndChatTypeOrderBySentAtAsc(owner.getId(), "ADMIN_SUPPORT");
         model.addAttribute("messages", messages);
-        return "owner/support";
+        
+        return "owner/support"; 
     }
 
-    // API gửi tin nhắn từ Chủ Sân
     @PostMapping("/support/send")
     @ResponseBody
     public String sendMessageFromOwner(@RequestParam String content,
@@ -406,6 +454,7 @@ public class OwnerController {
                 .owner(owner)
                 .sender(owner)
                 .senderRole("OWNER")
+                .chatType("ADMIN_SUPPORT") // BẮT BUỘC: Đánh dấu định danh rõ ràng là chat với Admin
                 .content(content.trim())
                 .sentAt(LocalDateTime.now())
                 .build();
@@ -414,15 +463,16 @@ public class OwnerController {
         return "success";
     }
 
-    // API lấy danh sách tin nhắn để JavaScript tự động cập nhật thời gian thực
     @GetMapping("/support/messages")
     @ResponseBody
     public List<SupportMessageDTO> getOwnerMessages(@AuthenticationPrincipal UserDetails userDetails) {
         User owner = getAuthenticatedOwner(userDetails);
         if (owner == null) return List.of();
 
-        return supportMessageRepository.findByOwnerIdOrderBySentAtAsc(owner.getId()).stream()
-                .map(m -> new SupportMessageDTO(m.getId(), m.getSenderRole(), m.getContent(), m.getSentAt().toString()))
+        // BẮT BUỘC: Chỉ lấy danh sách tin nhắn thuộc luồng ADMIN_SUPPORT để không bị rò rỉ tin nhắn khách
+        return supportMessageRepository.findByOwnerIdAndChatTypeOrderBySentAtAsc(owner.getId(), "ADMIN_SUPPORT").stream()
+                .filter(m -> m != null)
+                .map(m -> new SupportMessageDTO(m.getId(), m.getSenderRole(), m.getContent(), m.getSentAt() != null ? m.getSentAt().toString() : ""))
                 .collect(Collectors.toList());
     }
 

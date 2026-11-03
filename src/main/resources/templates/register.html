@@ -2,7 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Đăng ký tài khoản</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký tài khoản — SportHub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -14,11 +15,12 @@
         .form-group label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
         .input-wrap { position: relative; }
         .input-wrap i { position: absolute; left: 14px; top: 12px; color: #9ca3af; }
-        .input-wrap input { width: 100%; padding: 10px 14px 10px 38px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none; }
-        .input-wrap input:focus { border-color: #059669; }
-        .btn-auth { width: 100%; background: #059669; color: #fff; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .input-wrap input, .input-wrap select { width: 100%; padding: 10px 14px 10px 38px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
+        .input-wrap input:focus, .input-wrap select:focus { border-color: #059669; }
+        .btn-auth { width: 100%; background: #059669; color: #fff; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
         .btn-auth:hover { background: #047857; }
-        .alert-error { background: #fee2e2; color: #b91c1c; padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
+        .alert-error { background: #fee2e2; color: #b91c1c; padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; font-weight: 600; text-align: center; }
+        .alert-success { background: #dcfce7; color: #15803d; padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; font-weight: 600; text-align: center; }
         .auth-footer { text-align: center; margin-top: 20px; font-size: 13px; color: #6b7280; }
         .auth-footer a { color: #059669; text-decoration: none; font-weight: 600; }
     </style>
@@ -31,7 +33,12 @@
             <p style="font-size: 13px; color: #6b7280;">Trải nghiệm đặt sân thể thao nhanh chóng</p>
         </div>
 
+        <!-- Hiển thị thông báo lỗi từ Controller -->
         <div th:if="${error}" class="alert-error" th:text="${error}"></div>
+        <div th:if="${errorMessage}" class="alert-error" th:text="${errorMessage}"></div>
+        
+        <!-- Hiển thị thông báo thành công (nếu có) -->
+        <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
 
         <form th:action="@{/register}" th:object="${user}" method="post">
             <div class="form-group">
@@ -46,7 +53,7 @@
                 <label>Tên đăng nhập / Email</label>
                 <div class="input-wrap">
                     <i class="fa-solid fa-user"></i>
-                    <input type="text" th:field="*{username}" placeholder="Nhập username" required>
+                    <input type="text" th:field="*{username}" placeholder="Nhập email đăng nhập" required>
                 </div>
             </div>
 
@@ -62,7 +69,19 @@
                 <label>Mật khẩu</label>
                 <div class="input-wrap">
                     <i class="fa-solid fa-lock"></i>
-                    <input type="password" th:field="*{password}" placeholder="Tối thiểu 6 ký tự" required>
+                    <input type="password" th:field="*{password}" placeholder="Tối thiểu 6 ký tự" required minlength="6">
+                </div>
+            </div>
+
+            <!-- Thêm tùy chọn đăng ký làm Khách hàng hoặc Chủ sân -->
+            <div class="form-group">
+                <label>Bạn đăng ký với tư cách</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-user-tag"></i>
+                    <select th:field="*{role}">
+                        <option value="ROLE_USER">Khách hàng đặt sân</option>
+                        <option value="ROLE_OWNER">Chủ sân thể thao (Partner)</option>
+                    </select>
                 </div>
             </div>
 
@@ -70,7 +89,7 @@
         </form>
 
         <div class="auth-footer">
-            Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a>
+            Đã có tài khoản? <a th:href="@{/login}">Đăng nhập ngay</a>
         </div>
     </div>
 </body>
