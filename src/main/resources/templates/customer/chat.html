@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tin nhắn với Chủ sân — SportHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .chat-layout {
+            width: 100%;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .owner-list-panel {
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 700;
+            font-size: 15px;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .owners-scroll {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .owner-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.15s;
+        }
+
+        .owner-item:hover {
+            background: #f8fafc;
+        }
+
+        .owner-item.active {
+            background: #f0fdf4;
+            border-left: 4px solid #059669;
+        }
+
+        .owner-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #0284c7;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .owner-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .owner-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 2px;
+        }
+
+        .owner-name {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Style cho dấu chấm đỏ thông báo */
+        .unread-dot {
+            width: 9px;
+            height: 9px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .owner-last-msg {
+            font-size: 12px;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-room {
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+            height: 100%;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .chat-header {
+            padding: 12px 20px;
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            gap: 10px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 16px 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 65%;
+            padding: 9px 13px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message.customer {
+            background: #059669;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.owner {
+            background: #fff;
+            color: #1e293b;
+            align-self: flex-start;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 2px;
+        }
+
+        .message-time {
+            font-size: 9.5px;
+            margin-top: 3px;
+            opacity: 0.8;
+            text-align: right;
+        }
+
+        .chat-form {
+            padding: 12px 20px;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .chat-input {
+            flex: 1;
+            min-width: 0;
+            padding: 9px 12px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+        }
+
+        .btn-send {
+            background: #059669;
+            color: #fff;
+            border: none;
+            padding: 0 18px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-send:hover {
+            background: #047857;
+        }
+
+        .btn-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #94a3b8;
+            margin: auto;
+            padding: 20px;
+            font-size: 13px;
+        }
+
+        .status-message {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: #dc2626;
+            background: #fef2f2;
+            display: none;
+        }
+
+        @media (max-width: 650px) {
+            .chat-layout {
+                grid-template-columns: 115px 1fr;
+            }
+
+            .panel-header {
+                font-size: 12px;
+                padding: 12px 8px;
+            }
+
+            .owner-item {
+                padding: 10px 6px;
+                flex-direction: column;
+                text-align: center;
+                gap: 5px;
+            }
+
+            .owner-info {
+                width: 100%;
+            }
+
+            .owner-name {
+                font-size: 11px;
+            }
+
+            .owner-last-msg {
+                font-size: 10px;
+            }
+
+            .chat-header {
+                padding: 10px;
+                font-size: 12px;
+            }
+
+            .chat-messages {
+                padding: 10px;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .chat-form {
+                padding: 8px;
+            }
+
+            .btn-send {
+                padding: 0 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="chat-layout">
+
+    <div class="owner-list-panel">
+        <div class="panel-header">
+            <i class="fa-solid fa-comments" style="color:#059669;"></i>
+            Tin Nhắn Với Chủ Sân
+        </div>
+
+        <div class="owners-scroll" id="ownerListContainer">
+            <div class="empty-message">Đang tải danh sách...</div>
+        </div>
+    </div>
+
+    <div class="chat-room">
+
+        <div class="chat-header">
+            <div style="font-size:14.5px;font-weight:700;color:#0f172a;"
+                 id="activeOwnerName">
+                Chọn một chủ sân để bắt đầu trò chuyện
+            </div>
+
+            <a th:href="@{/}"
+               style="font-size:12.5px;color:#059669;text-decoration:none;font-weight:600;">
+                <i class="fa-solid fa-arrow-left"></i> Về Trang chủ
+            </a>
+        </div>
+
+        <div class="chat-messages" id="activeChatMessages">
+            <div class="empty-message">
+                <i class="fa-regular fa-comments"
+                   style="font-size:32px;margin-bottom:8px;display:block;"></i>
+                Vui lòng chọn chủ sân ở danh sách bên trái.
+            </div>
+        </div>
+
+        <div class="status-message" id="chatStatus"></div>
+
+        <form class="chat-form" id="chatForm">
+            <input type="text"
+                   id="replyContent"
+                   class="chat-input"
+                   placeholder="Nhập tin nhắn gửi chủ sân..."
+                   autocomplete="off"
+                   maxlength="5000"
+                   required>
+
+            <button type="submit" class="btn-send" id="sendButton">
+                <i class="fa-solid fa-paper-plane"></i> Gửi
+            </button>
+        </form>
+
+    </div>
+</div>
+
+<script>
+    let selectedOwnerId = null;
+    let chatInterval = null;
+    let conversationInterval = null;
+    let cachedOwners = [];
+    let messageRequestVersion = 0;
+    let isSending = false;
+
+    const ownerListContainer = document.getElementById('ownerListContainer');
+    const activeChatMessages = document.getElementById('activeChatMessages');
+    const activeOwnerName = document.getElementById('activeOwnerName');
+    const chatForm = document.getElementById('chatForm');
+    const replyContent = document.getElementById('replyContent');
+    const sendButton = document.getElementById('sendButton');
+    const chatStatus = document.getElementById('chatStatus');
+
+    function showStatus(message) {
+        chatStatus.textContent = message;
+        chatStatus.style.display = message ? 'block' : 'none';
+    }
+
+    function showEmptyMessage(message) {
+        activeChatMessages.replaceChildren();
+
+        const div = document.createElement('div');
+        div.className = 'empty-message';
+        div.textContent = message;
+
+        activeChatMessages.appendChild(div);
+    }
+
+    function getOwnerName(owner) {
+        return owner.ownerName || 'Chủ sân';
+    }
+
+    // ==========================================
+    // TẢI DANH SÁCH CUỘC TRÒ CHUYỆN
+    // ==========================================
+
+    async function fetchConversations(autoSelectFirst = false) {
+        try {
+            const response = await fetch('/customer/api/conversations');
+
+            if (!response.ok) {
+                throw new Error('Không thể tải danh sách chủ sân.');
+            }
+
+            const owners = await response.json();
+            cachedOwners = Array.isArray(owners) ? owners : [];
+
+            renderOwnerList();
+
+            if (autoSelectFirst
+                    && !selectedOwnerId
+                    && cachedOwners.length > 0) {
+
+                const firstOwner = cachedOwners[0];
+                selectOwner(firstOwner.ownerId, getOwnerName(firstOwner));
+            }
+
+            if (selectedOwnerId
+                    && !cachedOwners.some(
+                        o => Number(o.ownerId) === Number(selectedOwnerId))) {
+
+                selectedOwnerId = null;
+
+                if (chatInterval) {
+                    clearInterval(chatInterval);
+                    chatInterval = null;
+                }
+
+                activeOwnerName.textContent =
+                    'Chọn một chủ sân để bắt đầu trò chuyện';
+
+                showEmptyMessage('Không tìm thấy cuộc trò chuyện này.');
+            }
+
+        } catch (error) {
+            console.error('Lỗi tải danh sách:', error);
+            ownerListContainer.textContent =
+                'Không thể tải danh sách. Vui lòng thử lại.';
+        }
+    }
+
+    // ==========================================
+    // HIỂN THỊ DANH SÁCH CHỦ SÂN (CÓ CHẤM ĐỎ)
+    // ==========================================
+
+    function renderOwnerList() {
+        ownerListContainer.replaceChildren();
+
+        if (cachedOwners.length === 0) {
+            const div = document.createElement('div');
+            div.className = 'empty-message';
+            div.textContent = 'Chưa có cuộc trò chuyện nào.';
+            ownerListContainer.appendChild(div);
+            return;
+        }
+
+        cachedOwners.forEach(owner => {
+            const ownerId = Number(owner.ownerId);
+            const ownerName = getOwnerName(owner);
+
+            const item = document.createElement('div');
+            item.className = 'owner-item';
+
+            if (ownerId === Number(selectedOwnerId)) {
+                item.classList.add('active');
+            }
+
+            const avatar = document.createElement('div');
+            avatar.className = 'owner-avatar';
+            avatar.textContent = ownerName.charAt(0).toUpperCase();
+
+            const info = document.createElement('div');
+            info.className = 'owner-info';
+
+            // Dòng chứa Tên chủ sân và Chấm đỏ thông báo
+            const nameRow = document.createElement('div');
+            nameRow.className = 'owner-item-header';
+
+            const name = document.createElement('div');
+            name.className = 'owner-name';
+            name.textContent = ownerName;
+            nameRow.appendChild(name);
+
+            // HIỂN THỊ DẤU CHẤM ĐỎ NẾU CÓ TIN NHẮN CHƯA ĐỌC
+            if (owner.hasUnread) {
+                const dot = document.createElement('span');
+                dot.className = 'unread-dot';
+                nameRow.appendChild(dot);
+            }
+
+            const lastMessage = document.createElement('div');
+            lastMessage.className = 'owner-last-msg';
+            lastMessage.textContent =
+                owner.lastMessage || 'Đã gửi tin nhắn';
+
+            info.append(nameRow, lastMessage);
+            item.append(avatar, info);
+
+            item.addEventListener('click', () => {
+                selectOwner(ownerId, ownerName);
+                // Ẩn chấm đỏ ngay lập tức khi click vào chủ sân này
+                owner.hasUnread = false;
+                renderOwnerList();
+            });
+
+            ownerListContainer.appendChild(item);
+        });
+    }
+
+    // ==========================================
+    // CHỌN CHỦ SÂN
+    // ==========================================
+
+    function selectOwner(ownerId, ownerName) {
+        if (!ownerId) return;
+
+        selectedOwnerId = Number(ownerId);
+        messageRequestVersion++;
+
+        activeOwnerName.textContent = `Đang chat với: ${ownerName}`;
+
+        renderOwnerList();
+        showStatus('');
+        showEmptyMessage('Đang tải tin nhắn...');
+
+        if (chatInterval) {
+            clearInterval(chatInterval);
+        }
+
+        loadMessages();
+
+        chatInterval = setInterval(() => {
+            loadMessages();
+        }, 3000);
+    }
+
+    // ==========================================
+    // TẢI TIN NHẮN
+    // ==========================================
+
+    async function loadMessages() {
+        if (!selectedOwnerId) return;
+
+        const ownerId = selectedOwnerId;
+        const requestVersion = ++messageRequestVersion;
+
+        try {
+            const response = await fetch(
+                `/customer/api/messages?ownerId=${encodeURIComponent(ownerId)}`
+            );
+
+            if (!response.ok) {
+                throw new Error('Không thể tải tin nhắn.');
+            }
+
+            const messages = await response.json();
+
+            // Không hiển thị kết quả của cuộc trò chuyện cũ
+            if (selectedOwnerId !== ownerId
+                    || requestVersion !== messageRequestVersion) {
+                return;
+            }
+
+            renderMessages(Array.isArray(messages) ? messages : []);
+
+        } catch (error) {
+            console.error('Lỗi tải tin nhắn:', error);
+
+            if (selectedOwnerId === ownerId
+                    && requestVersion === messageRequestVersion) {
+                showStatus('Không thể tải tin nhắn. Vui lòng thử lại.');
+            }
+        }
+    }
+
+    // ==========================================
+    // HIỂN THỊ TIN NHẮN AN TOÀN
+    // ==========================================
+
+    function renderMessages(messages) {
+        activeChatMessages.replaceChildren();
+
+        if (messages.length === 0) {
+            showEmptyMessage(
+                'Chưa có tin nhắn nào. Hãy gửi lời chào đầu tiên!'
+            );
+            return;
+        }
+
+        messages.forEach(message => {
+            const isCustomer = message.senderRole === 'CUSTOMER';
+
+            const messageElement = document.createElement('div');
+            messageElement.className =
+                `message ${isCustomer ? 'customer' : 'owner'}`;
+
+            const content = document.createElement('div');
+            content.textContent = message.content || '';
+
+            const time = document.createElement('div');
+            time.className = 'message-time';
+
+            time.textContent = message.sentAt
+                ? message.sentAt.substring(11, 16)
+                : '';
+
+            messageElement.append(content, time);
+            activeChatMessages.appendChild(messageElement);
+        });
+
+        activeChatMessages.scrollTop =
+            activeChatMessages.scrollHeight;
+    }
+
+    // ==========================================
+    // GỬI TIN NHẮN
+    // ==========================================
+
+    async function sendCustomerMessage(event) {
+        event.preventDefault();
+
+        if (!selectedOwnerId || isSending) {
+            return;
+        }
+
+        const ownerId = selectedOwnerId;
+        const content = replyContent.value.trim();
+
+        if (!content) return;
+
+        if (content.length > 5000) {
+            showStatus('Tin nhắn không được vượt quá 5000 ký tự.');
+            return;
+        }
+
+        isSending = true;
+        sendButton.disabled = true;
+        showStatus('');
+
+        const formData = new URLSearchParams();
+        formData.append('ownerId', ownerId);
+        formData.append('content', content);
+
+        try {
+            const response = await fetch('/customer/api/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData.toString()
+            });
+
+            const result = await response.text();
+
+            if (!response.ok || result.trim() !== 'success') {
+                throw new Error(result || 'Gửi tin nhắn thất bại.');
+            }
+
+            if (selectedOwnerId === ownerId) {
+                replyContent.value = '';
+                await loadMessages();
+                await fetchConversations(false);
+            }
+
+        } catch (error) {
+            console.error('Lỗi gửi tin nhắn:', error);
+            showStatus('Gửi tin nhắn thất bại. Vui lòng thử lại.');
+        } finally {
+            isSending = false;
+            sendButton.disabled = false;
+            replyContent.focus();
+        }
+    }
+
+    // ==========================================
+    // KHỞI TẠO
+    // ==========================================
+
+    chatForm.addEventListener('submit', sendCustomerMessage);
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchConversations(true);
+
+        conversationInterval = setInterval(() => {
+            fetchConversations(false);
+        }, 5000);
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Quyết toán — SportHub Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f1f5f9; display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar Admin (Đồng bộ với các trang khác) */
+        .admin-sidebar { width: 250px; background: #064e3b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-brand { padding: 22px 20px; font-size: 20px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; color: #34d399; }
+        .sidebar-menu { list-style: none; padding: 12px 0; flex: 1; overflow-y: auto; }
+        .menu-item { margin-bottom: 2px; }
+        .menu-link { display: flex; align-items: center; gap: 12px; padding: 12px 22px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .menu-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .menu-link.active { background: rgba(255,255,255,0.14); color: #fff; border-left: 4px solid #34d399; }
+
+        /* Main Workspace */
+        .admin-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .admin-nav { height: 62px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .admin-content { padding: 28px 32px; }
+
+        /* Data Panel & Table */
+        .data-panel { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .panel-title { font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
+        
+        .admin-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px; }
+        .admin-table th { padding: 12px 16px; background: #f8fafc; color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .admin-table td { padding: 14px 16px; border-bottom: 1px solid #f8fafc; color: #334155; vertical-align: middle; }
+        .admin-table tbody tr:hover { background: #fafafa; }
+
+        /* Badges & Buttons */
+        .badge-pending { background: #fef3c7; color: #b45309; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+        .badge-completed { background: #dcfce7; color: #15803d; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-approve { background: #059669; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+        .btn-approve:hover { background: #047857; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Admin (Cố định đầy đủ các mục menu) -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-shield-halved"></i> SportHub Admin
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-item">
+                <a th:href="@{/admin/dashboard}" class="menu-link">
+                    <i class="fa-solid fa-chart-pie"></i> Tổng quan
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/admin/courts}" class="menu-link">
+                    <i class="fa-solid fa-store"></i> Quản lý sân bãi
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/admin/bookings}" class="menu-link">
+                    <i class="fa-solid fa-calendar-check"></i> Đơn đặt sân
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/admin/payouts}" class="menu-link active">
+                    <i class="fa-solid fa-wallet"></i> Duyệt Quyết Toán
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/admin/users}" class="menu-link">
+                    <i class="fa-solid fa-users"></i> Khách hàng &amp; Chủ sân
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/admin/reports}" class="menu-link">
+                    <i class="fa-solid fa-money-bill-trend-up"></i> Báo cáo doanh thu
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/admin/settings}" class="menu-link">
+                    <i class="fa-solid fa-gear"></i> Cài đặt hệ thống
+                </a>
+            </li>
+        </ul>
+        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="admin-main">
+        <header class="admin-nav">
+            <div style="font-weight: 700; color: #1e293b; font-size: 15px;">Hệ Thống Quản Trị Trung Tâm</div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span style="font-size: 13.5px; font-weight: 700; color: #064e3b;"><i class="fa-solid fa-circle-user"></i> Xin chào, Admin!</span>
+                <a th:href="@{/}" target="_blank" style="font-size: 13px; color: #059669; text-decoration: none; font-weight: 600;">Xem Web Khách &rarr;</a>
+            </div>
+        </header>
+
+        <main class="admin-content">
+            <div class="data-panel">
+                <div class="panel-title">
+                    <i class="fa-solid fa-wallet" style="color: #059669;"></i> Quản Lý Yêu Cầu Rút Tiền Của Chủ Sân
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Mã GD</th>
+                            <th>Chủ Sân</th>
+                            <th>Số Tiền</th>
+                            <th>Ngân Hàng Nhận</th>
+                            <th>Thời Gian Gửi</th>
+                            <th>Trạng Thái</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="r : ${payoutRequests}">
+                            <td style="font-weight: 700; color: #0284c7;" th:text="${r.transactionCode}">#PAY-0000</td>
+                            <td th:text="${r.owner != null ? (r.owner.fullName != null ? r.owner.fullName : r.owner.username) : 'Chủ sân'}">Tên</td>
+                            <td style="font-weight: 700; color: #059669;" th:text="${#numbers.formatDecimal(r.amount, 0, 'COMMA', 0, 'POINT') + 'đ'}">0đ</td>
+                            <td th:text="${r.bankInfo}">Ngân hàng</td>
+                            <td th:text="${r.requestedAt != null ? #temporals.format(r.requestedAt, 'dd/MM/yyyy HH:mm') : ''}">Thời gian</td>
+                            <td>
+                                <span th:if="${r.status == 'PENDING'}" class="badge-pending"><i class="fa-solid fa-clock"></i> Đang chờ duyệt</span>
+                                <span th:if="${r.status == 'COMPLETED'}" class="badge-completed"><i class="fa-solid fa-circle-check"></i> Đã chuyển khoản</span>
+                            </td>
+                            <td>
+                                <form th:if="${r.status == 'PENDING'}" th:action="@{'/admin/payouts/approve/' + ${r.id}}" method="post">
+                                    <button type="submit" class="btn-approve"><i class="fa-solid fa-check"></i> Duyệt tiền</button>
+                                </form>
+                                <span th:if="${r.status == 'COMPLETED'}" style="color: #94a3b8; font-size: 13px; font-weight: 600;"><i class="fa-solid fa-circle-check" style="color: #059669;"></i> Hoàn tất</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${payoutRequests == null or payoutRequests.isEmpty()}">
+                            <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8;">
+                                <i class="fa-regular fa-folder-open" style="font-size: 32px; margin-bottom: 8px; display: block;"></i>
+                                Không có yêu cầu rút tiền nào đang chờ duyệt.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

@@ -9,12 +9,13 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f8fafc; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
 
-        .owner-sidebar { width: 250px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .owner-sidebar { width: 250px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; }
         .sidebar-brand { padding: 22px 20px; font-size: 19px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; color: #38bdf8; }
-        .sidebar-menu { list-style: none; padding: 14px 0; flex: 1; }
-        .menu-item a { display: flex; align-items: center; gap: 12px; padding: 13px 22px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
-        .menu-item a:hover { background: rgba(255,255,255,0.06); color: #fff; }
-        .menu-item a.active { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-left: 4px solid #38bdf8; }
+        .sidebar-menu { list-style: none; padding: 12px 0; flex: 1; overflow-y: auto; }
+        .menu-item { margin-bottom: 2px; }
+        .menu-link { display: flex; align-items: center; gap: 12px; padding: 12px 22px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .menu-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .menu-link.active { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-left: 4px solid #38bdf8; }
 
         .owner-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
         .owner-nav { height: 62px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
@@ -25,31 +26,65 @@
         .wallet-label { font-size: 13px; color: #64748b; font-weight: 600; margin-bottom: 6px; }
         .wallet-val { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
 
-        .btn-withdraw { background: #059669; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; }
+        .btn-withdraw { background: #059669; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-size: 13.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; transition: background 0.15s; }
         .btn-withdraw:hover { background: #047857; }
 
         .table-panel { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 24px; }
         table { width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: left; }
         th { padding: 12px 14px; background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; }
         td { padding: 14px; border-bottom: 1px solid #f1f5f9; color: #334155; }
-        .badge { padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+        .badge { padding: 5px 12px; border-radius: 9999px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
         .badge-done { background: #dcfce7; color: #15803d; }
         .badge-pending { background: #fef3c7; color: #b45309; }
-        .alert-success { background: #dcfce7; color: #15803d; padding: 12px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 600; margin-bottom: 20px; }
+        
+        .alert-success { background: #dcfce7; color: #15803d; padding: 12px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .alert-error { background: #fee2e2; color: #b91c1c; padding: 12px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
     </style>
 </head>
 <body>
 
     <aside class="owner-sidebar">
-        <div class="sidebar-brand"><i class="fa-solid fa-store"></i> SportHub Partner</div>
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-futbol"></i> SportHub Partner
+        </div>
         <ul class="sidebar-menu">
-    <li class="menu-item"><a th:href="@{/owner/dashboard}"><i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách</a></li>
-    <li class="menu-item"><a th:href="@{/owner/courts/connect}"><i class="fa-solid fa-handshake"></i> Kết nối sân với Sàn</a></li>
-    <li class="menu-item"><a th:href="@{/owner/pricing}"><i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng</a></li>
-    <li class="menu-item"><a th:href="@{/owner/payout}" class="active"><i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền</a></li>
-    <li class="menu-item"><a th:href="@{/owner/support}"><i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin</a></li>
-</ul>
-        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.08);">
+            <li class="menu-item">
+                <a th:href="@{/owner/dashboard}" class="menu-link" th:classappend="${activeMenu == 'dashboard'} ? 'active'">
+                    <i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/messages}" class="menu-link" th:classappend="${activeMenu == 'messages'} ? 'active'">
+                    <i class="fa-solid fa-comments"></i> Tin nhắn khách hàng
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/courts/connect}" class="menu-link" th:classappend="${activeMenu == 'connect'} ? 'active'">
+                    <i class="fa-solid fa-store"></i> Kết nối sân với Sàn
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/pricing}" class="menu-link" th:classappend="${activeMenu == 'pricing'} ? 'active'">
+                    <i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/payout}" class="menu-link" th:classappend="${activeMenu == 'payout'} ? 'active'">
+                    <i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/settings}" class="menu-link" th:classappend="${activeMenu == 'settings'} ? 'active'">
+                    <i class="fa-solid fa-gear"></i> Cài đặt tài khoản
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/support}" class="menu-link" th:classappend="${activeMenu == 'support'} ? 'active'">
+                    <i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin
+                </a>
+            </li>
+        </ul>
+        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto;">
             <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
                 <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
             </a>
@@ -71,63 +106,85 @@
         </header>
 
         <main class="owner-content">
-            <div th:if="${param.requested}" class="alert-success">
-                <i class="fa-solid fa-circle-check"></i> Đã gửi yêu cầu rút tiền thành công! Admin sàn sẽ giải ngân trong 24 giờ.
+            <!-- Thông báo thành công / lỗi từ Controller -->
+            <div th:if="${successMessage}" class="alert-success">
+                <i class="fa-solid fa-circle-check"></i> <span th:text="${successMessage}">Thành công</span>
+            </div>
+            <div th:if="${errorMessage}" class="alert-error">
+                <i class="fa-solid fa-circle-exclamation"></i> <span th:text="${errorMessage}">Lỗi</span>
             </div>
 
             <div class="wallet-grid">
+                <!-- Thẻ Số Dư Khả Dụng -->
                 <div class="wallet-card">
                     <div class="wallet-label">Số Dư Khả Dụng (Sẵn Sàng Rút)</div>
-                    <div class="wallet-val" style="color: #059669;">41.400.000đ</div>
+                    <div class="wallet-val" style="color: #059669;" 
+                         th:text="${walletBalance != null ? #numbers.formatDecimal(walletBalance, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}">0đ</div>
                     <small style="color: #64748b;">Đã khấu trừ 8% phí sàn nền tảng</small><br>
                     <form th:action="@{/owner/payout/request}" method="post">
-                        <button type="submit" class="btn-withdraw"><i class="fa-solid fa-hand-holding-dollar"></i> Yêu Cầu Chuyển Khoản</button>
+                        <button type="submit" class="btn-withdraw">
+                            <i class="fa-solid fa-hand-holding-dollar"></i> Yêu Cầu Chuyển Khoản
+                        </button>
                     </form>
                 </div>
 
+                <!-- Thẻ Tiền Cọc Đang Giữ -->
                 <div class="wallet-card">
                     <div class="wallet-label">Tiền Cọc Đang Giữ Tạm (Chưa Đá)</div>
-                    <div class="wallet-val" style="color: #d97706;">3.250.000đ</div>
+                    <div class="wallet-val" style="color: #d97706;"
+                         th:text="${pendingHold != null ? #numbers.formatDecimal(pendingHold, 0, 'COMMA', 0, 'POINT') + 'đ' : '0đ'}">0đ</div>
                     <small style="color: #64748b;">Sẽ cộng vào số dư khi bạn xác nhận Check-in</small>
                 </div>
 
+                <!-- Thẻ Thông Tin Ngân Hàng -->
                 <div class="wallet-card">
                     <div class="wallet-label">Thông Tin Ngân Hàng Nhận Tiền</div>
-                    <div style="font-weight: 700; font-size: 15px; color: #0f172a; margin-top: 4px;">Vietcombank (VCB)</div>
-                    <div style="font-size: 14px; font-weight: 600; color: #334155; margin-top: 2px;">STK: 1029384756</div>
-                    <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Chủ TK: NGUYEN TUONG HUNG</div>
+                    <div style="font-weight: 700; font-size: 15px; color: #0f172a; margin-top: 4px;"
+                         th:text="${owner != null and owner.bankName != null ? owner.bankName : 'Vietcombank (VCB)'}">Vietcombank (VCB)</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #334155; margin-top: 2px;"
+                         th:text="'STK: ' + (${owner != null and owner.bankAccountNumber != null ? owner.bankAccountNumber : '1029384756'})">STK: 1029384756</div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 2px;"
+                         th:text="'Chủ TK: ' + (${owner != null and owner.fullName != null ? owner.fullName.toUpperCase() : 'NGUYEN TUONG HUNG'})">Chủ TK: NGUYEN TUONG HUNG</div>
                 </div>
             </div>
 
+            <!-- Bảng Lịch Sử Quyết Toán Động từ Database -->
             <div class="table-panel">
                 <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 16px;">Lịch Sử Các Đợt Quyết Toán Từ Sàn Admin</h3>
                 <table>
                     <thead>
                         <tr>
                             <th>Mã Giao Dịch</th>
-                            <th>Kỳ Quyết Toán</th>
+                            <th>Kỳ Quyết Toán / Loại</th>
                             <th>Số Tiền Thực Nhận</th>
                             <th>Tài Khoản Thụ Hưởng</th>
-                            <th>Thời Gian Giải Ngân</th>
+                            <th>Thời Gian Gửi Yêu Cầu</th>
                             <th>Trạng Thái</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><strong>#PAY-9921</strong></td>
-                            <td>Kỳ 2 (Tháng trước)</td>
-                            <td><strong style="color: #059669;">38.500.000đ</strong></td>
-                            <td>Vietcombank - 1029384756</td>
-                            <td>30/09/2026 15:30</td>
-                            <td><span class="badge badge-done">Đã chuyển khoản</span></td>
+                        <tr th:each="p : ${payoutHistory}">
+                            <td><strong style="color: #0284c7;" th:text="${p.transactionCode}">#PAY-9921</strong></td>
+                            <td>Yêu cầu rút tiền ví đối tác</td>
+                            <td><strong style="color: #059669;" th:text="${#numbers.formatDecimal(p.amount, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</strong></td>
+                            <td th:text="${p.bankInfo}">Vietcombank - 1029384756</td>
+                            <td th:text="${#temporals.format(p.requestedAt, 'dd/MM/yyyy HH:mm')}">30/09/2026 15:30</td>
+                            <td>
+                                <span th:if="${p.status == 'PENDING'}" class="badge badge-pending">
+                                    <i class="fa-solid fa-clock"></i> Đang chờ duyệt
+                                </span>
+                                <span th:if="${p.status == 'COMPLETED'}" class="badge badge-done">
+                                    <i class="fa-solid fa-circle-check"></i> Đã chuyển khoản
+                                </span>
+                            </td>
                         </tr>
-                        <tr>
-                            <td><strong>#PAY-9810</strong></td>
-                            <td>Kỳ 1 (Tháng trước)</td>
-                            <td><strong style="color: #059669;">42.100.000đ</strong></td>
-                            <td>Vietcombank - 1029384756</td>
-                            <td>15/09/2026 10:15</td>
-                            <td><span class="badge badge-done">Đã chuyển khoản</span></td>
+
+                        <!-- Hiển thị dòng trống nếu chưa có lịch sử rút tiền nào -->
+                        <tr th:if="${payoutHistory == null or payoutHistory.isEmpty()}">
+                            <td colspan="6" style="text-align: center; padding: 30px; color: #94a3b8;">
+                                <i class="fa-regular fa-folder-open" style="font-size: 24px; margin-bottom: 6px; display: block;"></i>
+                                Chưa có lịch sử yêu cầu rút tiền nào.
+                            </td>
                         </tr>
                     </tbody>
                 </table>

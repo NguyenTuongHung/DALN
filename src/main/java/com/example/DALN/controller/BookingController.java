@@ -17,7 +17,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -67,7 +66,6 @@ public class BookingController {
             return "redirect:/tim-san";
         }
 
-        // Nếu sân đang PENDING hoặc REJECTED thì không cho khách truy cập trực tiếp bằng URL
         if (court.getStatus() != null && !"ACTIVE".equalsIgnoreCase(court.getStatus())) {
             return "redirect:/tim-san";
         }
@@ -79,7 +77,7 @@ public class BookingController {
         return "court-detail";
     }
 
-    // 3. API TRẢ VỀ CÁC KHUNG GIỜ ĐÃ BỊ ĐẶT (ĐỂ BÔI XÁM / DISABLE TRÊN GIAO DIỆN)
+    // 3. API TRẢ VỀ CÁC KHUNG GIỜ ĐÃ BỊ ĐẶT
     @GetMapping("/api/bookings/booked-slots")
     @ResponseBody
     public List<String> getBookedSlots(@RequestParam Long subCourtId, 
@@ -128,19 +126,19 @@ public class BookingController {
         return "checkout";
     }
 
-    // 5. LƯU ĐƠN ĐẶT SÂN VÀO DATABASE (KIỂM TRA CHỐNG TRÙNG LỊCH)
+    // 5. LƯU ĐƠN ĐẶT SÂN VÀO DATABASE
     @PostMapping("/dat-san/confirm")
     public String confirmBooking(@RequestParam Long courtId,
-                                 @RequestParam(required = false, defaultValue = "1") Long subCourtId,
-                                 @RequestParam(required = false) String bookingDate,
-                                 @RequestParam(required = false, defaultValue = "08:00 - 09:00") String timeSlot,
-                                 @RequestParam(required = false, defaultValue = "100000") Double totalPrice,
-                                 @RequestParam(required = false, defaultValue = "30000") Double depositAmount,
-                                 @RequestParam String customerName,
-                                 @RequestParam String customerPhone,
-                                 @RequestParam(required = false) String customerNote,
-                                 @AuthenticationPrincipal UserDetails userDetails,
-                                 RedirectAttributes redirectAttributes) {
+                               @RequestParam(required = false, defaultValue = "1") Long subCourtId,
+                               @RequestParam(required = false) String bookingDate,
+                               @RequestParam(required = false, defaultValue = "08:00 - 09:00") String timeSlot,
+                               @RequestParam(required = false, defaultValue = "100000") Double totalPrice,
+                               @RequestParam(required = false, defaultValue = "30000") Double depositAmount,
+                               @RequestParam String customerName,
+                               @RequestParam String customerPhone,
+                               @RequestParam(required = false) String customerNote,
+                               @AuthenticationPrincipal UserDetails userDetails,
+                               RedirectAttributes redirectAttributes) {
 
         Court court = courtRepository.findById(courtId).orElse(null);
         SubCourt subCourt = subCourtRepository.findById(subCourtId).orElse(null);
@@ -148,7 +146,6 @@ public class BookingController {
 
         LocalDate date = (bookingDate != null && !bookingDate.isBlank()) ? LocalDate.parse(bookingDate) : LocalDate.now();
 
-        // 1. Kiểm tra chống trùng giờ: Khung giờ đã có người giữ cọc hoặc khóa chưa?
         boolean isAlreadyBooked = bookingRepository.findAll().stream()
                 .filter(b -> b.getSubCourt() != null && b.getSubCourt().getId().equals(subCourtId))
                 .filter(b -> date.equals(b.getBookingDate()))
@@ -162,7 +159,6 @@ public class BookingController {
             return "redirect:/san-bong/" + courtId;
         }
 
-        // 2. Tạo mã đơn ngẫu nhiên và lưu
         String bookingCode = "BK-" + (1000 + new Random().nextInt(9000));
 
         Booking booking = Booking.builder()

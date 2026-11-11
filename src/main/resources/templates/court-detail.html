@@ -48,7 +48,7 @@
         .slot-btn.selected { background: #059669; color: #fff; border-color: #059669; }
         .slot-btn.booked { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; text-decoration: line-through; }
 
-        .btn-book-big { width: 100%; background: #15803d; color: #fff; border: none; padding: 13px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-book-big { width: 100%; background: #15803d; color: #fff; border: none; padding: 13px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
         .btn-book-big:hover { background: #166534; }
 
         /* Right sidebar */
@@ -59,6 +59,13 @@
 
         /* Bản đồ */
         #courtMap { width: 100%; height: 280px; border-radius: 12px; margin-top: 10px; border: 1px solid #e2e8f0; z-index: 1; }
+
+        /* Modal Chat Overlay Styles */
+        @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        #modalInput:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
     </style>
 </head>
 <body>
@@ -141,7 +148,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <small style="color: #94a3b8; font-size: 12px; margin-top: 10px; display: block;">* Giá đã bao gồm thuế sân và đèn chiếu sáng.</small>
+                <small style="color: #94a3b8; font-size: 12px; margin-top: 10px; display: block;">Giá đã bao gồm thuế sân và đèn chiếu sáng.</small>
             </div>
 
             <!-- 3. Lịch trống hôm nay & Chọn giờ (Nạp động từ DB) -->
@@ -233,13 +240,44 @@
                     <div><i class="fa-solid fa-location-dot" style="color: #16a34a;"></i> <span th:text="${court != null ? court.address : 'Hồ Chí Minh'}">Địa chỉ</span></div>
                     <div><i class="fa-regular fa-clock" style="color: #16a34a;"></i> <span th:text="${court != null ? court.openHours : '06:00 - 22:30'}">06:00 – 22:30</span> hàng ngày</div>
                 </div>
-                <a th:if="${court != null and court.owner != null and court.owner.phone != null}" 
-                   th:href="'https://zalo.me/' + ${#strings.replace(court.owner.phone, ' ', '')}" 
-                   target="_blank" class="btn-call" style="margin-top: 14px;">
-                    <i class="fa-regular fa-comment-dots"></i> Nhắn Zalo cho chủ sân
-                </a>
+                
+                <!-- NÚT MỞ MODAL CHAT TRỰC TIẾP Ở GIỮA MÀN HÌNH -->
+                <button th:if="${court != null and court.owner != null}" 
+                        onclick="toggleChatModal()" 
+                        class="btn-call" style="margin-top: 14px; background: #059669; color: #fff; text-decoration: none; border: none; width: 100%; cursor: pointer;">
+                    <i class="fa-solid fa-comments"></i> Nhắn tin trực tiếp với chủ sân
+                </button>
             </div>
         </aside>
+    </div>
+
+    <!-- ================= MODAL CHAT NỔI Ở GIỮA MÀN HÌNH (NỀN MỜ) ================= -->
+    <div id="chatModalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: #fff; width: 100%; max-width: 480px; height: 560px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); display: flex; flex-direction: column; overflow: hidden; animation: scaleIn 0.2s ease-out;">
+            
+            <!-- Modal Header -->
+            <div style="background: #064e3b; color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-comments" style="color: #34d399;"></i> Trò chuyện với Chủ sân (<span th:text="${court != null ? court.name : ''}">Sân</span>)
+                </div>
+                <button onclick="toggleChatModal()" style="background: rgba(255,255,255,0.1); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Messages Box -->
+            <div id="modalMessages" style="flex: 1; padding: 20px; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; font-size: 13.5px;">
+                <!-- Dữ liệu tin nhắn sẽ được nạp ở đây -->
+            </div>
+
+            <!-- Modal Input Form -->
+            <form onsubmit="sendModalMessage(event)" style="padding: 14px 16px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; gap: 10px;">
+                <input type="text" id="modalInput" placeholder="Nhập tin nhắn trao đổi với chủ sân..." autocomplete="off" style="flex: 1; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none;">
+                <button type="submit" style="background: #059669; color: #fff; border: none; padding: 0 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-paper-plane"></i> Gửi
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Leaflet Map Script -->
@@ -304,6 +342,74 @@
                         .catch(err => console.log("Không tải được lịch đặt:", err));
                 }
             });
+        });
+
+        // ================= LOGIC MODAL CHAT TRỰC TUYẾN =================
+        let modalChatInterval = null;
+
+        function toggleChatModal() {
+            const overlay = document.getElementById('chatModalOverlay');
+            if (overlay.style.display === 'flex') {
+                overlay.style.display = 'none';
+                if (modalChatInterval) clearInterval(modalChatInterval);
+            } else {
+                overlay.style.display = 'flex';
+                loadModalMessages();
+                modalChatInterval = setInterval(loadModalMessages, 3000); // Polling 3 giây cập nhật tin nhắn
+            }
+        }
+
+        function scrollModalToBottom() {
+            const box = document.getElementById('modalMessages');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function loadModalMessages() {
+            fetch(`/chat/court/${courtId}/messages`)
+                .then(res => res.json())
+                .then(data => {
+                    let html = '';
+                    if (!data || data.length === 0) {
+                        html = '<div style="text-align: center; color: #94a3b8; margin-top: 60px;"><i class="fa-regular fa-comment-dots" style="font-size: 32px; margin-bottom: 8px; display: block;"></i>Hãy bắt đầu cuộc trò chuyện với chủ sân cơ sở này nhé!</div>';
+                    } else {
+                        data.forEach(m => {
+                            const isUser = m.senderRole === 'USER';
+                            html += `
+                                <div style="max-width: 75%; padding: 10px 14px; border-radius: 10px; word-break: break-word; align-self: ${isUser ? 'flex-end' : 'flex-start'}; background: ${isUser ? '#059669' : '#fff'}; color: ${isUser ? '#fff' : '#1e293b'}; border: ${isUser ? 'none' : '1px solid #e2e8f0'}; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                                    <div style="line-height: 1.4;">${m.content}</div>
+                                    <div style="font-size: 10px; opacity: 0.8; margin-top: 4px; text-align: right;">${m.sentAt ? m.sentAt.substring(11, 16) : ''}</div>
+                                </div>
+                            `;
+                        });
+                    }
+                    document.getElementById('modalMessages').innerHTML = html;
+                    scrollModalToBottom();
+                }).catch(err => console.log("Lỗi tải tin nhắn:", err));
+        }
+
+        function sendModalMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('modalInput');
+            const content = input.value.trim();
+            if (!content) return;
+
+            fetch(`/chat/court/${courtId}/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `content=${encodeURIComponent(content)}`
+            }).then(res => {
+                if (res.ok) {
+                    input.value = '';
+                    loadModalMessages();
+                }
+            });
+        }
+
+        // Đóng modal khi bấm ra vùng nền mờ tối bên ngoài
+        document.getElementById('chatModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                toggleChatModal();
+            }
         });
     </script>
 </body>

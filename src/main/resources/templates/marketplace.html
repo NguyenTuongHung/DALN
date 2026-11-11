@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SânThảo.vn — Chợ Mua Bán Dụng Cụ Thể Thao</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #059669;
+            --primary-dark: #064e3b;
+            --accent: #ea580c;
+            --bg-light: #f8fafc;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header phong cách Sân Thảo */
+        header {
+            background: var(--primary-dark);
+            color: #fff;
+            padding: 15px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .market-header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .market-logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .market-logo span {
+            color: #34d399;
+        }
+
+        /* Banner Chợ */
+        .market-banner {
+            background: linear-gradient(135deg, #064e3b, #0284c7);
+            color: #fff;
+            padding: 50px 20px;
+            text-align: center;
+            border-radius: 0 0 24px 24px;
+            margin-bottom: 30px;
+        }
+
+        .market-banner h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .market-banner p {
+            font-size: 16px;
+            color: #e2e8f0;
+            max-width: 600px;
+            margin: 0 auto 25px auto;
+        }
+
+        /* Thanh tìm kiếm và bộ lọc */
+        .filter-container {
+            max-width: 1200px;
+            margin: -35px auto 30px auto;
+            padding: 0 20px;
+        }
+
+        .filter-box {
+            background: #fff;
+            padding: 15px 25px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-input-group {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            align-items: center;
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 8px 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .search-input-group input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+
+        .category-pills {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .pill-btn {
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            color: var(--text-sub);
+            text-decoration: none;
+        }
+
+        .pill-btn.active, .pill-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        /* Lưới sản phẩm */
+        .product-grid-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 50px 20px;
+        }
+
+        .section-title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title-bar h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .btn-post-item {
+            background: var(--accent);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3);
+            transition: background 0.2s;
+        }
+
+        .btn-post-item:hover {
+            background: #c2410c;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.1);
+        }
+
+        .product-img-wrap {
+            position: relative;
+            height: 180px;
+            background: #e2e8f0;
+            overflow: hidden;
+        }
+
+        .product-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+
+        .product-body {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .product-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-title:hover {
+            color: var(--primary);
+        }
+
+        .product-price {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .product-location {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .product-footer {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 12px;
+        }
+
+        .seller-info {
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .btn-detail {
+            background: #f0fdf4;
+            color: var(--primary);
+            border: 1px solid #bbf7d0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .btn-detail:hover {
+            background: #dcfce7;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text-main);
+            color: #fff;
+            padding: 25px 0;
+            text-align: center;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="market-header-inner">
+            <a th:href="@{/}" class="market-logo">
+                <span style="width: 10px; height: 10px; background: #34d399; border-radius: 50%; display: inline-block;"></span>
+                SÂN THẢO <span>MARKETPLACE</span>
+            </a>
+            <div>
+                <a th:href="@{/}" style="color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; background: rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px;">
+                    <i class="fa-solid fa-house"></i> Về trang chủ
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Banner -->
+    <div class="market-banner">
+        <h1>Chợ Đồ Thể Thao Cũ & Mới</h1>
+        <p>Nơi mua bán, thanh lý vợt tennis, giày bóng đá, phụ kiện cầu lông và dụng cụ tập luyện chính hãng.</p>
+    </div>
+
+    <!-- Thanh tìm kiếm & lọc -->
+    <div class="filter-container">
+        <div class="filter-box">
+            <div class="search-input-group">
+                <i class="fa-solid fa-magnifying-glass" style="color: var(--text-sub);"></i>
+                <input type="text" placeholder="Tìm kiếm vợt, giày, bóng, phụ kiện...">
+            </div>
+            <div class="category-pills">
+                <a href="#" class="pill-btn active">Tất cả</a>
+                <a href="#" class="pill-btn">⚽ Bóng đá</a>
+                <a href="#" class="pill-btn">🎾 Tennis</a>
+                <a href="#" class="pill-btn">🏸 Cầu lông</a>
+                <a href="#" class="pill-btn">🏓 Pickleball</a>
+                <a href="#" class="pill-btn">🏀 Khác</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lưới sản phẩm -->
+    <section class="product-grid-section">
+        <div class="section-title-bar">
+            <h2>Sản phẩm nổi bật mới đăng</h2>
+            <a th:href="@{/mua-ban/dang-ban}" class="btn-post-item">
+                <i class="fa-solid fa-plus"></i> Đăng bán sản phẩm
+            </a>
+        </div>
+
+        <div class="product-grid">
+            <!-- Sản phẩm 1: ID = 1 (Vợt Pickleball) -->
+            <div class="product-card">
+                <div class="product-img-wrap">
+                    <span class="product-badge">Like New 99%</span>
+                    <img src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=500&q=75" alt="Vợt Pickleball">
+                </div>
+                <div class="product-body">
+                    <a th:href="@{/mua-ban/chi-tiet(id=1)}" class="product-title">Vợt Pickleball Carbon chính hãng tiêu chuẩn thi đấu</a>
+                    <div class="product-price">1.250.000 đ</div>
+                    <div class="product-location"><i class="fa-solid fa-location-dot"></i> Thủ Đức, TP.HCM</div>
+                    <div class="product-footer">
+                        <span class="seller-info">Đăng bởi: Hoàng Nam</span>
+                        <a th:href="@{/mua-ban/chi-tiet(id=1)}" class="btn-detail">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sản phẩm 2: ID = 2 (Giày đá bóng) -->
+            <div class="product-card">
+                <div class="product-img-wrap">
+                    <span class="product-badge" style="background: #ea580c;">Đã dùng</span>
+                    <img src="https://images.unsplash.com/photo-1511886929437-0269f217ade6?w=500&q=75" alt="Giày đá bóng">
+                </div>
+                <div class="product-body">
+                    <a th:href="@{/mua-ban/chi-tiet(id=2)}" class="product-title">Giày đá bóng sân cỏ nhân tạo Nike Mercurial size 41</a>
+                    <div class="product-price">650.000 đ</div>
+                    <div class="product-location"><i class="fa-solid fa-location-dot"></i> Quận 7, TP.HCM</div>
+                    <div class="product-footer">
+                        <span class="seller-info">Đăng bởi: Minh Tuấn</span>
+                        <a th:href="@{/mua-ban/chi-tiet(id=2)}" class="btn-detail">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sản phẩm 3: ID = 3 (Vợt cầu lông) -->
+            <div class="product-card">
+                <div class="product-img-wrap">
+                    <span class="product-badge">Mới 100%</span>
+                    <img src="https://images.unsplash.com/photo-1613918431703-aa50889a9a2b?w=500&q=75" alt="Vợt Cầu Lông">
+                </div>
+                <div class="product-body">
+                    <a th:href="@{/mua-ban/chi-tiet(id=3)}" class="product-title">Vợt cầu lông Yonex Astrox 99 căng sẵn cước 10.5kg</a>
+                    <div class="product-price">1.890.000 đ</div>
+                    <div class="product-location"><i class="fa-solid fa-location-dot"></i> Đống Đa, Hà Nội</div>
+                    <div class="product-footer">
+                        <span class="seller-info">Đăng bởi: Thanh Hà</span>
+                        <a th:href="@{/mua-ban/chi-tiet(id=3)}" class="btn-detail">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sản phẩm 4: ID = 4 (Bóng Tennis) -->
+            <div class="product-card">
+                <div class="product-img-wrap">
+                    <span class="product-badge">Like New 95%</span>
+                    <img src="https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=500&q=75" alt="Bóng Tennis">
+                </div>
+                <div class="product-body">
+                    <a th:href="@{/mua-ban/chi-tiet(id=4)}" class="product-title">Hộp 4 quả bóng tennis Wilson Championship chính hãng</a>
+                    <div class="product-price">220.000 đ</div>
+                    <div class="product-location"><i class="fa-solid fa-location-dot"></i> Phú Nhuận, TP.HCM</div>
+                    <div class="product-footer">
+                        <span class="seller-info">Đăng bởi: Đức Khải</span>
+                        <a th:href="@{/mua-ban/chi-tiet(id=4)}" class="btn-detail">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p>© 2026 SânThảo.vn — Nền tảng kết nối thể thao và thương mại điện tử.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

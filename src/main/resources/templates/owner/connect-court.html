@@ -9,12 +9,13 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #f8fafc; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
 
-        .owner-sidebar { width: 250px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
+        .owner-sidebar { width: 250px; background: #0f172a; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; }
         .sidebar-brand { padding: 22px 20px; font-size: 19px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; color: #38bdf8; }
-        .sidebar-menu { list-style: none; padding: 14px 0; flex: 1; overflow-y: auto; }
-        .menu-item a { display: flex; align-items: center; gap: 12px; padding: 13px 22px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
-        .menu-item a:hover { background: rgba(255,255,255,0.06); color: #fff; }
-        .menu-item a.active { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-left: 4px solid #38bdf8; }
+        .sidebar-menu { list-style: none; padding: 12px 0; flex: 1; overflow-y: auto; }
+        .menu-item { margin-bottom: 2px; }
+        .menu-link { display: flex; align-items: center; gap: 12px; padding: 12px 22px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .menu-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .menu-link.active { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-left: 4px solid #38bdf8; }
 
         .owner-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
         .owner-nav { height: 62px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
@@ -45,21 +46,55 @@
         .badge-rejected { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
         
         .badge-sport { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600; text-transform: capitalize; background: #f1f5f9; color: #475569; }
+        
+        .court-thumb { width: 50px; height: 35px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; }
     </style>
 </head>
 <body>
 
     <!-- Sidebar Chủ Sân -->
     <aside class="owner-sidebar">
-        <div class="sidebar-brand"><i class="fa-solid fa-store"></i> SportHub Partner</div>
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-futbol"></i> SportHub Partner
+        </div>
         <ul class="sidebar-menu">
-            <li class="menu-item"><a th:href="@{/owner/dashboard}"><i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách</a></li>
-            <li class="menu-item"><a th:href="@{/owner/courts/connect}" class="active"><i class="fa-solid fa-handshake"></i> Kết nối sân với Sàn</a></li>
-            <li class="menu-item"><a th:href="@{/owner/pricing}"><i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng</a></li>
-            <li class="menu-item"><a th:href="@{/owner/payout}"><i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền</a></li>
-            <li class="menu-item"><a th:href="@{/owner/support}"><i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin</a></li>
+            <li class="menu-item">
+                <a th:href="@{/owner/dashboard}" class="menu-link" th:classappend="${activeMenu == 'dashboard'} ? 'active'">
+                    <i class="fa-solid fa-calendar-days"></i> Lịch sân &amp; Đón khách
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/messages}" class="menu-link" th:classappend="${activeMenu == 'messages'} ? 'active'">
+                    <i class="fa-solid fa-comments"></i> Tin nhắn khách hàng
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/courts/connect}" class="menu-link" th:classappend="${activeMenu == 'connect'} ? 'active'">
+                    <i class="fa-solid fa-store"></i> Kết nối sân với Sàn
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/pricing}" class="menu-link" th:classappend="${activeMenu == 'pricing'} ? 'active'">
+                    <i class="fa-solid fa-tags"></i> Cài đặt giá &amp; Giờ vàng
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/payout}" class="menu-link" th:classappend="${activeMenu == 'payout'} ? 'active'">
+                    <i class="fa-solid fa-wallet"></i> Quyết toán &amp; Ví tiền
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/settings}" class="menu-link" th:classappend="${activeMenu == 'settings'} ? 'active'">
+                    <i class="fa-solid fa-gear"></i> Cài đặt tài khoản
+                </a>
+            </li>
+            <li class="menu-item">
+                <a th:href="@{/owner/support}" class="menu-link" th:classappend="${activeMenu == 'support'} ? 'active'">
+                    <i class="fa-solid fa-headset"></i> Hỗ trợ từ Sàn Admin
+                </a>
+            </li>
         </ul>
-        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.08);">
+        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto;">
             <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
                 <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
             </a>
@@ -72,7 +107,12 @@
                 <strong style="color: #0f172a;" th:text="${owner != null and owner.businessName != null ? owner.businessName : 'Cụm Sân Thể Thao Hưng Phát'}">Cụm Sân Hưng Phát</strong>
                 <small style="color: #64748b; margin-left: 8px;"><i class="fa-solid fa-circle-check" style="color: #059669;"></i> Đối tác đã xác thực</small>
             </div>
-            <a th:href="@{/}" target="_blank" style="font-size: 13px; color: #0284c7; text-decoration: none; font-weight: 600;">Xem Trang Đặt Sân &rarr;</a>
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <span style="font-size: 13.5px; font-weight: 600; color: #475569;">
+                    <i class="fa-solid fa-user-tie"></i> Chủ sân: <span th:text="${owner != null ? owner.fullName : 'Nguyễn Tường Hưng'}">Hưng</span>
+                </span>
+                <a th:href="@{/}" target="_blank" style="font-size: 13px; color: #0284c7; text-decoration: none; font-weight: 600;">Xem Trang Đặt Sân &rarr;</a>
+            </div>
         </header>
 
         <main class="owner-content">
@@ -86,21 +126,22 @@
                 <div class="card-title">
                     <i class="fa-solid fa-plus-circle" style="color: #0284c7;"></i> Đăng Ký Đưa Cụm Sân Mới Lên Sàn SportHub
                 </div>
-                <form th:action="@{/owner/courts/connect}" method="post">
+                <form th:action="@{/owner/courts/connect}" method="post" enctype="multipart/form-data">
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Tên cụm sân *</label>
                             <input type="text" name="courtName" class="form-control" placeholder="VD: Sân Pickleball Thảo Điền" required>
                         </div>
                         <div class="form-group">
-                            <label>Bộ môn thể thao *</label>
-                            <select name="sportType" class="form-control" required>
-                                <option value="pickleball">Pickleball</option>
-                                <option value="football">Bóng đá</option>
-                                <option value="badminton">Cầu lông</option>
-                                <option value="tennis">Tennis</option>
-                                <option value="basketball">Bóng rổ</option>
-                            </select>
+                            <label>Bộ môn thể thao * (Có thể chọn hoặc tự gõ)</label>
+                            <input type="text" name="sportType" class="form-control" list="sportOptions" placeholder="Chọn hoặc nhập môn thể thao..." required>
+                            <datalist id="sportOptions">
+                                <option value="Pickleball">
+                                <option value="Bóng đá">
+                                <option value="Cầu lông">
+                                <option value="Tennis">
+                                <option value="Bóng rổ">
+                            </datalist>
                         </div>
                     </div>
 
@@ -126,12 +167,18 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Mô tả tiện ích cơ sở</label>
-                        <input type="text" name="description" class="form-control" placeholder="Mặt thảm cao cấp, có đèn đêm, bãi đỗ xe ô tô...">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Mô tả tiện ích cơ sở</label>
+                            <input type="text" name="description" class="form-control" placeholder="Mặt thảm cao cấp, có đèn đêm, bãi đỗ xe ô tô...">
+                        </div>
+                        <div class="form-group">
+                            <label>Hình ảnh cụm sân *</label>
+                            <input type="file" name="imageFile" class="form-control" accept="image/*" required style="padding: 7px 14px;">
+                        </div>
                     </div>
 
-                    <div style="display: flex; justify-content: flex-end;">
+                    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
                         <button type="submit" class="btn-submit">
                             <i class="fa-solid fa-paper-plane"></i> Gửi Hồ Sơ Kết Nối Tới Admin
                         </button>
@@ -147,6 +194,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th style="width: 70px;">Ảnh</th>
                             <th>Tên Cụm Sân</th>
                             <th>Môn Thể Thao</th>
                             <th>Địa Chỉ</th>
@@ -156,6 +204,9 @@
                     </thead>
                     <tbody>
                         <tr th:each="c : ${myCourts}">
+                            <td>
+                                <img th:src="${c.imageUrl != null ? c.imageUrl : 'https://via.placeholder.com/50x35'}" alt="Ảnh sân" class="court-thumb">
+                            </td>
                             <td><strong th:text="${c.name}">002 PB Club</strong></td>
                             <td>
                                 <span class="badge-sport" th:text="${c.sportType}">pickleball</span>
@@ -165,24 +216,19 @@
                                 <b style="color: #059669;" th:text="${#numbers.formatDecimal(c.pricePerHour, 0, 'COMMA', 0, 'POINT')} + 'đ'">180.000đ</b>
                             </td>
                             <td>
-                                <!-- 1. Đang hoạt động (Đã được Admin duyệt) -->
                                 <span th:if="${c.status == 'ACTIVE' or c.status == null}" class="badge-status badge-verified">
                                     <i class="fa-solid fa-circle-check"></i> Đang hoạt động (Verified)
                                 </span>
-
-                                <!-- 2. Đang chờ Admin duyệt -->
                                 <span th:if="${c.status == 'PENDING'}" class="badge-status badge-pending">
                                     <i class="fa-solid fa-clock"></i> Đang chờ duyệt (Pending)
                                 </span>
-
-                                <!-- 3. Bị Admin từ chối -->
                                 <span th:if="${c.status == 'REJECTED'}" class="badge-status badge-rejected">
                                     <i class="fa-solid fa-circle-xmark"></i> Từ chối (Cần sửa thông tin)
                                 </span>
                             </td>
                         </tr>
                         <tr th:if="${myCourts == null or myCourts.isEmpty()}">
-                            <td colspan="5" style="text-align: center; padding: 36px; color: #94a3b8;">
+                            <td colspan="6" style="text-align: center; padding: 36px; color: #94a3b8;">
                                 Bạn chưa đăng ký cụm sân nào. Hãy điền form bên trên để gửi hồ sơ tới Admin.
                             </td>
                         </tr>

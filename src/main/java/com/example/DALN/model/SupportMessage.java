@@ -18,22 +18,39 @@ public class SupportMessage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Chủ sân trong cuộc hội thoại này
+    // Chủ sân của cuộc trò chuyện
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-    // Người gửi tin nhắn này (User)
+    // Khách hàng thuộc cuộc trò chuyện
+    // Nullable để không ảnh hưởng đến ADMIN_SUPPORT cũ
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private User customer;
+
+    // Người thực sự gửi tin nhắn
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
 
-    // Vai trò người gửi: "OWNER" hoặc "ADMIN"
+    // CUSTOMER hoặc OWNER
     @Column(nullable = false)
     private String senderRole;
+
+    // CUSTOMER_CHAT hoặc ADMIN_SUPPORT
+    @Column(name = "chat_type", nullable = false)
+    @Builder.Default
+    private String chatType = "ADMIN_SUPPORT";
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
     private LocalDateTime sentAt;
+
+    // === BỔ SUNG TRƯỜNG ĐÁNH DẤU TRẠNG THÁI ĐÃ ĐỌC ===
+    // Mặc định là false (chưa đọc) khi tin nhắn vừa được gửi đi
+    @Column(name = "is_read", nullable = false)
+    @Builder.Default
+    private boolean isRead = false;
 }

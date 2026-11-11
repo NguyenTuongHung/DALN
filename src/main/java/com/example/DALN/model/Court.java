@@ -37,11 +37,13 @@ public class Court {
     @OneToMany(mappedBy = "court", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SubCourt> subCourts;  // Các sân nhỏ bên trong
 
-    
     private Double latitude;   // Vĩ độ bản đồ
     private Double longitude;  // Kinh độ bản đồ
 
-    // Thêm trường status nếu chưa có:
     @Builder.Default
     private String status = "ACTIVE"; // ACTIVE (Đang hoạt động), PENDING (Chờ duyệt), REJECTED (Từ chối)
+
+    private Double normalPricePerception; // Giá giờ thường
+    private Double peakPricePerHour;      // Giá giờ vàng (Cao điểm)
+    private Double weekendPricePerHour;   // Giá cuối tuần
 }

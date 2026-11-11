@@ -2,76 +2,168 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Cài đặt hệ thống — SportHub Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cài Đặt Hệ Thống — SportHub Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background: #f0f5f9; display: flex; height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f1f5f9; display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar Admin */
         .admin-sidebar { width: 250px; background: #064e3b; color: #fff; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-brand { padding: 24px 20px; font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #34d399; }
-        .sidebar-menu { list-style: none; padding: 10px 0; flex: 1; }
-        .menu-item a { display: flex; align-items: center; gap: 12px; padding: 14px 24px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 600; }
-        .menu-item a:hover { background: rgba(255,255,255,0.08); color: #fff; }
-        .menu-item a.active { background: rgba(255,255,255,0.14); color: #fff; border-left: 4px solid #34d399; }
+        .sidebar-brand { padding: 22px 20px; font-size: 20px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px; color: #34d399; }
+        .sidebar-menu { list-style: none; padding: 12px 0; flex: 1; overflow-y: auto; }
+        .menu-item { margin-bottom: 2px; }
+        .menu-link { display: flex; align-items: center; gap: 12px; padding: 12px 22px; color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .menu-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .menu-link.active { background: rgba(255,255,255,0.14); color: #fff; border-left: 4px solid #34d399; }
+
+        /* Workspace */
         .admin-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .top-navbar { height: 60px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; }
-        .dashboard-content { padding: 28px 32px; }
-        .settings-card { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; padding: 28px; max-width: 650px; }
+        .admin-nav { height: 62px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .admin-content { padding: 28px 32px; max-width: 1200px; }
+
+        /* Settings Grid Layout */
+        .settings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .settings-card { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .settings-card.full-width { grid-column: span 2; }
+        
+        .card-header { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+        .card-desc { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+        
         .form-group { margin-bottom: 18px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px; }
-        .form-control { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
-        .btn-save { background: #059669; color: #fff; border: none; padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .form-label { display: block; font-size: 13.5px; font-weight: 700; color: #334155; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 9px; font-size: 14px; outline: none; transition: border-color 0.15s; color: #0f172a; background: #fff; }
+        .form-control:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
+        
+        .form-check-group { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .form-check-group input[type="checkbox"] { width: 18px; height: 18px; accent-color: #059669; cursor: pointer; }
+        .form-check-label { font-size: 13.5px; font-weight: 600; color: #1e293b; cursor: pointer; }
+
+        .btn-save { background: #059669; color: #fff; border: none; padding: 12px 24px; border-radius: 9px; font-weight: 700; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; transition: background 0.15s; }
+        .btn-save:hover { background: #047857; }
+
+        .alert-success-floating { background: #dcfce7; color: #15803d; border: 1px solid #86efac; padding: 12px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 600; margin-bottom: 20px; display: none; align-items: center; gap: 8px; }
     </style>
 </head>
 <body>
+
+    <!-- Sidebar Admin -->
     <aside class="admin-sidebar">
-        <div class="sidebar-brand"><i class="fa-solid fa-shield-halved"></i> SportHub Admin</div>
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-shield-halved"></i> SportHub Admin
+        </div>
         <ul class="sidebar-menu">
-            <li class="menu-item"><a th:href="@{/admin/dashboard}"><i class="fa-solid fa-chart-pie"></i> Tổng quan</a></li>
-            <li class="menu-item"><a th:href="@{/admin/courts}"><i class="fa-solid fa-store"></i> Quản lý sân bãi</a></li>
-            <li class="menu-item"><a th:href="@{/admin/bookings}"><i class="fa-solid fa-calendar-check"></i> Đơn đặt sân</a></li>
-            <li class="menu-item"><a th:href="@{/admin/users}"><i class="fa-solid fa-users"></i> Khách hàng &amp; Chủ sân</a></li>
-            <li class="menu-item"><a th:href="@{/admin/reports}"><i class="fa-solid fa-money-bill-trend-up"></i> Báo cáo doanh thu</a></li>
-            <li class="menu-item"><a th:href="@{/admin/settings}" class="active"><i class="fa-solid fa-gear"></i> Cài đặt hệ thống</a></li>
+            <li class="menu-item"><a th:href="@{/admin/dashboard}" class="menu-link"><i class="fa-solid fa-chart-pie"></i> Tổng quan</a></li>
+            <li class="menu-item"><a th:href="@{/admin/courts}" class="menu-link"><i class="fa-solid fa-store"></i> Quản lý sân bãi</a></li>
+            <li class="menu-item"><a th:href="@{/admin/bookings}" class="menu-link"><i class="fa-solid fa-calendar-check"></i> Đơn đặt sân</a></li>
+            <li class="menu-item">
+    <a th:href="@{/admin/payouts}" class="menu-link">
+        <i class="fa-solid fa-wallet"></i> Duyệt Quyết Toán
+    </a>
+</li>
+            <li class="menu-item"><a th:href="@{/admin/users}" class="menu-link"><i class="fa-solid fa-users"></i> Khách hàng &amp; Chủ sân</a></li>
+            <li class="menu-item"><a th:href="@{/admin/reports}" class="menu-link"><i class="fa-solid fa-money-bill-trend-up"></i> Báo cáo doanh thu</a></li>
+            <li class="menu-item"><a th:href="@{/admin/settings}" class="menu-link active"><i class="fa-solid fa-gear"></i> Cài đặt hệ thống</a></li>
         </ul>
-        <div style="padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08);">
-            <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; font-weight: 600;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+        <div style="padding: 18px 22px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a th:href="@{/logout}" style="color: #fca5a5; text-decoration: none; font-size: 13.5px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </a>
         </div>
     </aside>
 
+    <!-- Workspace -->
     <div class="admin-main">
-        <header class="top-navbar">
-            <span style="font-size: 15px; font-weight: 700;">Cấu Hình &amp; Cài Đặt Hệ Thống Sàn</span>
-            <span style="color: #064e3b; font-weight: 700; font-size: 13.5px;"><i class="fa-solid fa-circle-user"></i> Admin</span>
+        <header class="admin-nav">
+            <div style="font-weight: 700; color: #1e293b; font-size: 15px;">Cài Đặt Hệ Thống &amp; Cấu Hình Sàn</div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span style="font-size: 13.5px; font-weight: 700; color: #064e3b;"><i class="fa-solid fa-circle-user"></i> Xin chào, Admin!</span>
+                <a th:href="@{/}" target="_blank" style="font-size: 13px; color: #059669; text-decoration: none; font-weight: 600;">Xem Web Khách &rarr;</a>
+            </div>
         </header>
 
-        <main class="dashboard-content">
-            <div class="settings-card">
-                <h3 style="font-size: 17px; margin-bottom: 20px; color: #0f172a;"><i class="fa-solid fa-sliders" style="color: #059669;"></i> Tham Số Sàn Thể Thao</h3>
-                
-                <div class="form-group">
-                    <label>Tên Nền Tảng / Sàn</label>
-                    <input type="text" class="form-control" value="SportHub — Đặt sân thể thao toàn quốc">
-                </div>
-
-                <div class="form-group">
-                    <label>Tỷ Lệ Chiết Khấu / Hoa Hồng Mặc Định Thu Chủ Sân (%)</label>
-                    <input type="number" class="form-control" value="8.0" step="0.5">
-                </div>
-
-                <div class="form-group">
-                    <label>Số Tiền Cọc Tối Thiểu Khi Khách Đặt Giữ Sân (%)</label>
-                    <input type="number" class="form-control" value="30">
-                </div>
-
-                <div class="form-group">
-                    <label>Thời Gian Hủy Sân Cho Phép Hoàn Cọc (Giờ trước trận)</label>
-                    <input type="number" class="form-control" value="6">
-                </div>
-
-                <button class="btn-save"><i class="fa-solid fa-floppy-disk"></i> Lưu Cấu Hình Sàn</button>
+        <main class="admin-content">
+            <!-- Thông báo thành công giả lập -->
+            <div id="successAlert" class="alert-success-floating">
+                <i class="fa-solid fa-circle-check"></i> Đã cập nhật và lưu cấu hình hệ thống thành công!
             </div>
+
+            <form onsubmit="showSuccessMessage(event)">
+                <div class="settings-grid">
+                    <!-- Card 1: Cấu hình chung -->
+                    <div class="settings-card">
+                        <div class="card-header"><i class="fa-solid fa-globe" style="color: #059669;"></i> Thông Tin Nền Tảng Sàn</div>
+                        <div class="card-desc">Cấu hình tên thương hiệu và thông tin liên hệ hiển thị trên toàn hệ thống.</div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Tên Nền Tảng Sàn</label>
+                            <input type="text" class="form-control" value="SportHub - Nền tảng đặt sân thể thao trực tuyến" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Hỗ Trợ Khách Hàng</label>
+                            <input type="email" class="form-control" value="support@sporthub.vn" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Hotline Tổng Đài</label>
+                            <input type="text" class="form-control" value="1900 8888">
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Cấu hình tài chính -->
+                    <div class="settings-card">
+                        <div class="card-header"><i class="fa-solid fa-percent" style="color: #d97706;"></i> Tài Chính &amp; Hoa Hồng</div>
+                        <div class="card-desc">Thiết lập tỷ lệ chiết khấu phí sàn và các điều kiện thanh toán cho đối tác.</div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Tỷ Lệ Phí Hoa Hồng Sàn Mặc Định (%)</label>
+                            <input type="number" step="0.1" class="form-control" value="8.0" required>
+                            <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">Mức phí tự động khấu trừ khi chủ sân yêu cầu rút tiền ví.</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tỷ Lệ Tiền Cọc Trực Tuyến (%)</label>
+                            <input type="number" class="form-control" value="30" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Hạn Mức Rút Tiền Tối Thiểu (VNĐ)</label>
+                            <input type="text" class="form-control" value="500.000đ">
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Vận hành & Bảo trì (Full chiều rộng) -->
+                    <div class="settings-card full-width">
+                        <div class="card-header"><i class="fa-solid fa-sliders" style="color: #2563eb;"></i> Vận Hành &amp; Kiểm Duyệt Tự Động</div>
+                        <div class="card-desc">Quản lý các trạng thái duyệt sân và thông báo toàn hệ thống.</div>
+                        
+                        <div class="form-check-group">
+                            <input type="checkbox" id="autoApprove" checked>
+                            <label for="autoApprove" class="form-check-label">Tự động duyệt cụm sân mới đăng ký nếu đầy đủ thông tin giấy tờ</label>
+                        </div>
+                        <div class="form-check-group" style="margin-top: 12px;">
+                            <input type="checkbox" id="maintenanceMode">
+                            <label for="maintenanceMode" class="form-check-label" style="color: #b91c1c;">Kích hoạt chế độ bảo trì hệ thống (Tạm khóa tính năng đặt sân của khách)</label>
+                        </div>
+
+                        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end;">
+                            <button type="submit" class="btn-save">
+                                <i class="fa-solid fa-floppy-disk"></i> Lưu Tất Cả Thay Đổi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </main>
     </div>
+
+    <script>
+        function showSuccessMessage(event) {
+            event.preventDefault();
+            const alertBox = document.getElementById('successAlert');
+            alertBox.style.display = 'flex';
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 4000);
+        }
+    </script>
 </body>
 </html>

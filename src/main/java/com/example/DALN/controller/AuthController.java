@@ -31,13 +31,27 @@ public class AuthController {
 
     @PostMapping("/register")
     public String processRegister(@ModelAttribute User user, Model model) {
+        // 1. Kiểm tra xem tên đăng nhập / email đã tồn tại trong database chưa
         if (userRepository.existsByUsername(user.getUsername())) {
             model.addAttribute("error", "Tên đăng nhập hoặc Email đã tồn tại!");
             return "register";
         }
+
+        // 2. Mã hóa mật khẩu cực kỳ an toàn bằng BCrypt
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole("ROLE_USER");
+
+        // 3. Xử lý phân quyền linh hoạt theo lựa chọn từ giao diện (ROLE_USER hoặc ROLE_OWNER)
+        if (user.getRole() == null || user.getRole().trim().isEmpty()) {
+            user.setRole("ROLE_USER"); // Mặc định nếu không chọn gì
+        }
+
+        // 4. Gán trạng thái tài khoản kích hoạt mặc định
+        user.setStatus("ACTIVE");
+
+        // 5. Lưu vào Database
         userRepository.save(user);
+
+        // Chuyển hướng về trang login kèm thông báo đăng ký thành công
         return "redirect:/login?registered=true";
     }
 }
