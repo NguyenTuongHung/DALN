@@ -7,6 +7,7 @@ import com.example.DALN.repository.UserRepository;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,37 @@ public class CustomerChatController {
     public String customerChatPage(Model model, @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) return "redirect:/login";
         return "customer/chat";
+    }
+
+    // =========================================================================
+    // API MỚI: KIỂM TRA TRẠNG THÁI CÓ TIN NHẮN CHƯA ĐỌC HAY KHÔNG (CHO CHẤM ĐỎ MENU)
+    // =========================================================================
+    @GetMapping("/api/unread-status")
+    @ResponseBody
+    public Map<String, Object> getUnreadStatus(@AuthenticationPrincipal UserDetails userDetails) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("hasUnread", false);
+
+        if (userDetails == null) return response;
+
+        User customer = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
+        if (customer == null) return response;
+
+        try {
+            // Đếm số tin nhắn chưa đọc do OWNER gửi cho khách hàng này trong luồng CUSTOMER_CHAT
+            long unreadCount = supportMessageRepository.countByCustomerIdAndChatTypeAndSenderRoleAndIsReadFalse(
+                    customer.getId(), 
+                    "CUSTOMER_CHAT", 
+                    "OWNER"
+            );
+
+            response.put("hasUnread", unreadCount > 0);
+            response.put("count", unreadCount);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return response;
     }
 
     @GetMapping("/api/conversations")
@@ -85,6 +117,7 @@ public class CustomerChatController {
 
     @GetMapping("/api/messages")
     @ResponseBody
+    @Transactional // Cần thiết khi thực hiện câu lệnh update (markMessagesAsReadForCustomer)
     public List<CustomerChatMessageDTO> getMessagesWithParameters(@RequestParam Long ownerId,
                                                                   @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) return Collections.emptyList();
@@ -93,6 +126,9 @@ public class CustomerChatController {
         if (customer == null) return Collections.emptyList();
 
         try {
+            // TỰ ĐỘNG ĐÁNH DẤU LÀ ĐÃ ĐỌC KHI KHÁCH HÀNG MỞ HỘI THOẠI VỚI CHỦ SÂN NÀY
+            supportMessageRepository.markMessagesAsReadForCustomer(customer.getId(), ownerId, "CUSTOMER_CHAT");
+
             List<SupportMessage> allMessages = supportMessageRepository.findByOwnerIdOrderBySentAtAsc(ownerId);
             if (allMessages == null) return Collections.emptyList();
 
@@ -138,11 +174,13 @@ public class CustomerChatController {
         try {
             SupportMessage message = SupportMessage.builder()
                     .owner(owner)
+                    .customer(customer) // Đảm bảo gán customer vào để hàm count/mark hoạt động chính xác
                     .sender(customer)
                     .senderRole("CUSTOMER")
                     .chatType("CUSTOMER_CHAT")
                     .content(content.trim())
                     .sentAt(LocalDateTime.now())
+                    .isRead(false) // Tin nhắn do customer gửi mặc định là chưa đọc đối với owner (hoặc tùy logic)
                     .build();
 
             supportMessageRepository.save(message);

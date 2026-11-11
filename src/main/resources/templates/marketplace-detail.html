@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết sản phẩm — SânThảo Marketplace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #059669;
+            --primary-dark: #064e3b;
+            --accent: #ea580c;
+            --bg-light: #f8fafc;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body { background: var(--bg-light); font-family: 'Inter', sans-serif; color: var(--text-main); margin: 0; padding: 0; }
+        
+        /* Header */
+        header { background: var(--primary-dark); color: #fff; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        header a { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; transition: opacity 0.2s; }
+        header a:hover { opacity: 0.85; }
+
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+
+        /* Breadcrumb */
+        .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--text-sub); margin-bottom: 20px; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .breadcrumb span { color: #cbd5e1; }
+
+        /* Khung chính chi tiết sản phẩm */
+        .product-main-card {
+            background: #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border-color); display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; padding: 35px; margin-bottom: 30px;
+        }
+
+        /* Cột hình ảnh & Thumbnails */
+        .product-gallery { display: flex; flex-direction: column; gap: 15px; }
+        .main-img-wrap { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--border-color); height: 420px; background: #f1f5f9; }
+        .main-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .badge-tag { position: absolute; top: 15px; left: 15px; background: rgba(5, 150, 105, 0.95); color: #fff; padding: 6px 14px; border-radius: 30px; font-weight: 700; font-size: 12px; backdrop-filter: blur(4px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        
+        .thumbnail-list { display: flex; gap: 10px; }
+        .thumb-item { width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 2px solid var(--border-color); cursor: pointer; transition: all 0.2s; }
+        .thumb-item.active, .thumb-item:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .thumb-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Cột thông tin sản phẩm */
+        .product-details { display: flex; flex-direction: column; justify-content: space-between; }
+        .product-title { font-size: 24px; font-weight: 800; color: var(--text-main); line-height: 1.4; margin: 0 0 12px 0; }
+        .product-price { font-size: 32px; font-weight: 800; color: var(--accent); margin-bottom: 15px; }
+
+        /* Hộp thông tin giao dịch */
+        .info-box-grid { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 15px 18px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .info-item { font-size: 13.5px; color: var(--text-sub); display: flex; align-items: center; gap: 8px; }
+        .info-item i { color: var(--primary); width: 16px; text-align: center; }
+        .info-item strong { color: var(--text-main); }
+
+        /* Bảng thông số kỹ thuật thu nhỏ */
+        .specs-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13.5px; }
+        .specs-table tr td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; }
+        .specs-table tr td:first-child { color: var(--text-sub); width: 35%; font-weight: 500; }
+        .specs-table tr td:last-child { color: var(--text-main); font-weight: 600; }
+
+        /* Thẻ người bán */
+        .seller-card { background: linear-gradient(135deg, #f0fdf4, #e0f2fe); border: 1px solid #bbf7d0; border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .seller-avatar { width: 48px; height: 48px; background: var(--primary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+        .btn-chat { background: #0284c7; color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(2,132,199,0.2); }
+        .btn-chat:hover { background: #0369a1; }
+
+        /* Nhóm nút hành động mua hàng & giỏ hàng */
+        .action-button-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+        
+        .btn-add-cart {
+            background: #f0fdf4; color: var(--primary); border: 2px solid var(--primary); padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;
+        }
+        .btn-add-cart:hover { background: #dcfce7; transform: translateY(-2px); }
+
+        .btn-buy-now {
+            background: linear-gradient(135deg, #ea580c, #c2410c); color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 15px rgba(234, 88, 12, 0.3); transition: transform 0.1s;
+        }
+        .btn-buy-now:hover { transform: translateY(-2px); }
+
+        /* Phần mô tả chi tiết phía dưới */
+        .description-card { background: #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border-color); padding: 35px; margin-bottom: 30px; }
+        .description-card h3 { font-size: 18px; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+        .description-card p { font-size: 14.5px; color: #475569; line-height: 1.8; margin-bottom: 15px; }
+
+        /* Cam kết an toàn */
+        .security-box { background: #fefce8; border: 1px solid #fde047; border-radius: 12px; padding: 15px 20px; display: flex; gap: 15px; align-items: center; margin-top: 20px; font-size: 13.5px; color: #854d0e; }
+        .security-box i { font-size: 24px; color: #ca8a04; }
+
+        @media (max-width: 768px) {
+            .product-main-card { grid-template-columns: 1fr; padding: 20px; }
+            .info-box-grid { grid-template-columns: 1fr; }
+            .action-button-group { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a th:href="@{/mua-ban}"><i class="fa-solid fa-arrow-left"></i> Quay lại Chợ mua bán</a>
+        <span style="font-weight: 800; letter-spacing: 0.5px;">SÂN THẢO MARKETPLACE</span>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a th:href="@{/gio-hang}" style="position: relative; background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 20px;">
+                <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng 
+                <span id="headerCartCount" style="background: #ef4444; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 10px; font-weight: 800;">0</span>
+            </a>
+            <a th:href="@{/}"><i class="fa-solid fa-house"></i> Trang chủ</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <a th:href="@{/}">Trang chủ</a> <span>/</span>
+            <a th:href="@{/mua-ban}">Chợ mua bán</a> <span>/</span>
+            <span style="color: var(--text-main); font-weight: 600;">Chi tiết sản phẩm</span>
+        </div>
+
+        <!-- Khung chính sản phẩm -->
+        <div class="product-main-card">
+            
+            <!-- Cột Trái: Ảnh lớn + Thumbnail -->
+            <div class="product-gallery">
+                <div class="main-img-wrap">
+                    <span class="badge-tag" id="pBadge"><i class="fa-solid fa-shield-check"></i> Like New 99% - Chính hãng</span>
+                    <img id="mainImage" src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=900&q=80" alt="Sản phẩm">
+                </div>
+                <!-- Danh sách ảnh thu nhỏ -->
+                <div class="thumbnail-list" id="thumbList">
+                    <div class="thumb-item active" onclick="changeImage(this, document.getElementById('mainImage').src)">
+                        <img id="thumbImg1" src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=200&q=75" alt="Thumb 1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột Phải: Thông tin & Đặt mua -->
+            <div class="product-details">
+                <div>
+                    <h1 class="product-title" id="pTitle">Vợt Pickleball Carbon chính hãng tiêu chuẩn thi đấu</h1>
+                    <div class="product-price" id="pPrice">1.250.000 đ</div>
+
+                    <!-- Hộp thông tin nhanh -->
+                    <div class="info-box-grid">
+                        <div class="info-item"><i class="fa-solid fa-location-dot"></i> Khu vực: <strong id="pLocation">Thủ Đức, TP.HCM</strong></div>
+                        <div class="info-item"><i class="fa-solid fa-clock"></i> Đăng: <strong>2 giờ trước</strong></div>
+                        <div class="info-item"><i class="fa-solid fa-box"></i> Tình trạng: <strong id="pCond">Đã qua sử dụng</strong></div>
+                        <div class="info-item"><i class="fa-solid fa-shield-halved"></i> Bảo hành: <strong>Chính hãng</strong></div>
+                    </div>
+
+                    <!-- Bảng thông số kỹ thuật thu nhỏ -->
+                    <table class="specs-table">
+                        <tr>
+                            <td>Thương hiệu:</td>
+                            <td id="pBrand">Carbon Pro Standard</td>
+                        </tr>
+                        <tr>
+                            <td>Chất liệu / Loại:</td>
+                            <td id="pMaterial">Sợi Carbon nhám tăng độ xoáy</td>
+                        </tr>
+                        <tr>
+                            <td>Trọng lượng / Size:</td>
+                            <td id="pWeight">220g (Cân bằng tuyệt đối)</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div>
+                    <!-- Thẻ người bán -->
+                    <div class="seller-card">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="seller-avatar" id="sellerAvatar">HN</div>
+                            <div>
+                                <h4 style="margin: 0 0 2px 0; font-size: 15px; color: var(--primary-dark);" id="sellerName">Hoàng Nam</h4>
+                                <p style="margin: 0; font-size: 12px; color: var(--text-sub);">Thành viên tích cực • Phản hồi trong 5 phút</p>
+                            </div>
+                        </div>
+                        <a th:href="@{/customer/chat}" class="btn-chat">
+                            <i class="fa-solid fa-comments"></i> Nhắn tin
+                        </a>
+                    </div>
+
+                    <!-- Nhóm nút hành động mua hàng & giỏ hàng -->
+                    <div class="action-button-group">
+                        <button type="button" class="btn-add-cart" onclick="addToCart()">
+                            <i class="fa-solid fa-cart-plus"></i> Thêm giỏ hàng
+                        </button>
+                        <button type="button" class="btn-buy-now" onclick="buyNow()">
+                            <i class="fa-solid fa-bag-shopping"></i> Mua ngay
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Khung Mô tả chi tiết & Cam kết an toàn -->
+        <div class="description-card">
+            <h3>Chi tiết sản phẩm & Đánh giá từ người bán</h3>
+            <p id="pDesc">
+                Vợt mới đánh đúng 2 lần tại sân, mặt vợt phủ carbon nhám nguyên bản giúp tăng độ xoáy cực tốt khi thực hiện các cú dink và bỏ nhỏ. Khung vợt không trầy xước, không nứt gãy, lõi tổ ong polymer tiêu chuẩn thi đấu chuyên nghiệp.
+            </p>
+
+            <!-- Hộp cam kết an toàn -->
+            <div class="security-box">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div>
+                    <strong>Cam kết an toàn từ SânThảo Marketplace:</strong> Người mua được quyền kiểm tra hàng trực tiếp trước khi thanh toán. Tuyệt đối không chuyển khoản trước cho người bán khi chưa nhận hàng.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script xử lý dữ liệu động theo ID và Giỏ hàng -->
+    <script>
+        // 1. Kho dữ liệu mẫu cho từng sản phẩm
+        const productsData = {
+            '1': {
+                title: "Vợt Pickleball Carbon chính hãng tiêu chuẩn thi đấu",
+                price: "1.250.000 đ",
+                location: "Thủ Đức, TP.HCM",
+                cond: "Like New 99% - Chính hãng",
+                image: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=900&q=80",
+                seller: "Hoàng Nam",
+                avatar: "HN",
+                brand: "Carbon Pro Standard",
+                material: "Sợi Carbon nhám tăng độ xoáy",
+                weight: "220g (Cân bằng tuyệt đối)",
+                desc: "Vợt mới đánh đúng 2 lần tại sân, mặt vợt phủ carbon nhám nguyên bản giúp tăng độ xoáy cực tốt khi thực hiện các cú dink và bỏ nhỏ. Không trầy xước, không nứt gãy."
+            },
+            '2': {
+                title: "Giày đá bóng sân cỏ nhân tạo Nike Mercurial size 41",
+                price: "650.000 đ",
+                location: "Quận 7, TP.HCM",
+                cond: "Đã dùng - Độ mới 90%",
+                image: "https://images.unsplash.com/photo-1511886929437-0269f217ade6?w=900&q=80",
+                seller: "Minh Tuấn",
+                avatar: "MT",
+                brand: "Nike Mercurial",
+                material: "Da tổng hợp cao cấp, đinh dăm TF",
+                weight: "Size 41 (26cm)",
+                desc: "Giày đá bóng sân cỏ nhân tạo chính hãng Nike Mercurial, form ôm chân, bám sân cực tốt. Đế khâu chắc chắn, không bị bong tróc."
+            },
+            '3': {
+                title: "Vợt cầu lông Yonex Astrox 99 căng sẵn cước 10.5kg",
+                price: "1.890.000 đ",
+                location: "Đống Đa, Hà Nội",
+                cond: "Mới 100% - Fullbox",
+                image: "https://images.unsplash.com/photo-1613918431703-aa50889a9a2b?w=900&q=80",
+                seller: "Thanh Hà",
+                avatar: "TH",
+                brand: "Yonex Astrox 99",
+                material: "Full Carbon cao cấp trợ lực",
+                weight: "4U / G5",
+                desc: "Vợt cầu lông thiên công trợ lực cực tốt, đã được căng sẵn cước Yonex BG65 mức 10.5kg chuẩn thi đấu. Tặng kèm cuốn cán và bao đựng."
+            },
+            '4': {
+                title: "Hộp 4 quả bóng tennis Wilson Championship chính hãng",
+                price: "220.000 đ",
+                location: "Phú Nhuận, TP.HCM",
+                cond: "Like New 95%",
+                image: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=900&q=80",
+                seller: "Đức Khải",
+                avatar: "ĐK",
+                brand: "Wilson Championship",
+                material: "Nỉ cao cấp chuyên dụng",
+                weight: "Hộp 4 quả",
+                desc: "Bóng tennis chính hãng Wilson độ nảy chuẩn, phù hợp cho tập luyện và thi đấu phong trào. Hộp nguyên seal chưa qua sử dụng."
+            }
+        };
+
+        // 2. Lấy ID từ URL (VD: /mua-ban/chi-tiet?id=2) và nạp dữ liệu tương ứng
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id') || '1';
+        const currentProduct = productsData[productId] || productsData['1'];
+
+        document.getElementById('pTitle').innerText = currentProduct.title;
+        document.getElementById('pPrice').innerText = currentProduct.price;
+        document.getElementById('pLocation').innerText = currentProduct.location;
+        document.getElementById('pCond').innerText = currentProduct.cond;
+        document.getElementById('mainImage').src = currentProduct.image;
+        document.getElementById('thumbImg1').src = currentProduct.image;
+        document.getElementById('sellerName').innerText = currentProduct.seller;
+        document.getElementById('sellerAvatar').innerText = currentProduct.avatar;
+        document.getElementById('pBrand').innerText = currentProduct.brand;
+        document.getElementById('pMaterial').innerText = currentProduct.material;
+        document.getElementById('pWeight').innerText = currentProduct.weight;
+        document.getElementById('pDesc').innerText = currentProduct.desc;
+
+        function changeImage(element, src) {
+            document.getElementById('mainImage').src = src;
+            document.querySelectorAll('.thumb-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        // 3. Xử lý Giỏ hàng
+        function updateCartBadge() {
+            let cart = JSON.parse(localStorage.getItem('sporthub_cart') || '[]');
+            document.getElementById('headerCartCount').textContent = cart.length;
+        }
+
+        function addToCart() {
+            const product = {
+                id: productId,
+                title: currentProduct.title,
+                price: currentProduct.price,
+                image: currentProduct.image,
+                location: currentProduct.location
+            };
+
+            let cart = JSON.parse(localStorage.getItem('sporthub_cart') || '[]');
+            cart.push(product);
+            localStorage.setItem('sporthub_cart', JSON.stringify(cart));
+            
+            updateCartBadge();
+            alert('🎉 Đã thêm sản phẩm vào giỏ hàng thành công!');
+        }
+
+        function buyNow() {
+            addToCart();
+            window.location.href = '/gio-hang';
+        }
+
+        // Chạy khi tải trang
+        updateCartBadge();
+    </script>
+
+</body>
+</html>

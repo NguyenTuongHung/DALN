@@ -1,4 +1,3 @@
-
 package com.example.DALN.model;
 
 import jakarta.persistence.*;
@@ -48,4 +47,10 @@ public class SupportMessage {
     private String content;
 
     private LocalDateTime sentAt;
+
+    // === BỔ SUNG TRƯỜNG ĐÁNH DẤU TRẠNG THÁI ĐÃ ĐỌC ===
+    // Mặc định là false (chưa đọc) khi tin nhắn vừa được gửi đi
+    @Column(name = "is_read", nullable = false)
+    @Builder.Default
+    private boolean isRead = false;
 }

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch sử hoạt động — SânThảo.vn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #059669;
+            --primary-dark: #064e3b;
+            --accent: #ea580c;
+            --bg-light: #f8fafc;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body { background: var(--bg-light); font-family: 'Inter', sans-serif; color: var(--text-main); margin: 0; padding: 0; }
+        
+        header { background: var(--primary-dark); color: #fff; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        header a { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; }
+
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+        
+        .card-box { background: #fff; border-radius: 16px; padding: 35px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+        
+        /* Tabs */
+        .tab-menu { display: flex; gap: 15px; border-bottom: 2px solid #f1f5f9; margin-bottom: 25px; padding-bottom: 10px; }
+        .tab-btn { background: none; border: none; font-size: 16px; font-weight: 700; color: var(--text-sub); cursor: pointer; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+        .tab-btn.active { background: #f0fdf4; color: var(--primary); }
+        .tab-btn:hover { color: var(--primary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .history-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 15px; background: #fff; transition: box-shadow 0.2s; gap: 15px; }
+        .history-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .status-success { background: #dcfce7; color: #166534; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a th:href="@{/}"><i class="fa-solid fa-arrow-left"></i> Về trang chủ</a>
+        <span style="font-weight: 800; letter-spacing: 0.5px;">LỊCH SỬ HOẠT ĐỘNG CÁ NHÂN</span>
+        <a th:href="@{/mua-ban}">Chợ mua bán</a>
+    </header>
+
+    <div class="container">
+        <div class="card-box">
+            
+            <!-- Tabs Menu -->
+            <div class="tab-menu">
+                <button type="button" class="tab-btn active" onclick="switchTab('san')">
+                    <i class="fa-solid fa-calendar-days"></i> Lịch sử đặt sân
+                </button>
+                <button type="button" class="tab-btn" onclick="switchTab('mua')">
+                    <i class="fa-solid fa-bag-shopping"></i> Lịch sử mua hàng
+                </button>
+            </div>
+
+            <!-- TAB 1: LỊCH SỬ ĐẶT SÂN -->
+            <div id="tab-san" class="tab-content active">
+                <h3 style="margin-top: 0; color: var(--primary-dark); font-size: 18px; margin-bottom: 20px;">Danh sách sân đã đặt</h3>
+                
+                <div class="history-item">
+                    <div>
+                        <h4 style="margin: 0 0 5px 0; font-size: 15px;">Sân bóng đá nhân tạo số 3</h4>
+                        <div style="font-size: 13px; color: var(--text-sub);"><i class="fa-regular fa-clock"></i> 18:00 - 19:30 • Ngày 15/11/2026</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 800; color: var(--accent); margin-bottom: 4px;">350.000 đ</div>
+                        <span class="status-badge status-success">Đã xác nhận</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: LỊCH SỬ MUA HÀNG (Hiển thị dữ liệu thật từ giỏ hàng đã thanh toán) -->
+            <div id="tab-mua" class="tab-content">
+                <h3 style="margin-top: 0; color: var(--primary-dark); font-size: 18px; margin-bottom: 20px;">Đơn hàng dụng cụ thể thao đã mua</h3>
+                <div id="purchaseHistoryContainer">
+                    <!-- Dữ liệu được nạp tự động -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function switchTab(type) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (type === 'san') {
+                document.querySelector('.tab-menu button:nth-child(1)').classList.add('active');
+                document.getElementById('tab-san').classList.add('active');
+            } else {
+                document.querySelector('.tab-menu button:nth-child(2)').classList.add('active');
+                document.getElementById('tab-mua').classList.add('active');
+                loadPurchaseHistory(); // Tải dữ liệu lịch sử mua hàng thực tế
+            }
+        }
+
+        function loadPurchaseHistory() {
+            const container = document.getElementById('purchaseHistoryContainer');
+            let history = JSON.parse(localStorage.getItem('sporthub_purchase_history') || '[]');
+
+            container.innerHTML = '';
+
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 30px 0; color: var(--text-sub);">
+                        <i class="fa-solid fa-box-open" style="font-size: 40px; margin-bottom: 10px; color: #cbd5e1;"></i>
+                        <p style="font-size: 14px; font-weight: 500;">Bạn chưa có đơn hàng mua sắm nào gần đây.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            history.forEach(order => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'history-item';
+                itemDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <img src="${order.image}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);" alt="Product">
+                        <div>
+                            <h4 style="margin: 0 0 4px 0; font-size: 15px; color: var(--text-main);">${order.title}</h4>
+                            <div style="font-size: 12px; color: var(--text-sub);">
+                                <i class="fa-solid fa-location-dot"></i> ${order.location} &bull; <i class="fa-regular fa-clock"></i> ${order.time}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 800; color: var(--accent); margin-bottom: 4px; font-size: 15px;">${order.price}</div>
+                        <span class="status-badge status-pending">${order.status}</span>
+                    </div>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+
+        // Tự động nạp sẵn lịch sử mua hàng nếu người dùng vừa bấm thanh toán chuyển qua
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.get('tab') === 'mua') {
+            switchTab('mua');
+        } else {
+            loadPurchaseHistory();
+        }
+    </script>
+
+</body>
+</html>
