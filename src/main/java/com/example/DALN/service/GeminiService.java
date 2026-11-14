@@ -3,12 +3,17 @@ package com.example.DALN.service;
 import com.example.DALN.model.Court;
 import com.example.DALN.repository.CourtRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class GeminiService {
@@ -27,95 +32,97 @@ public class GeminiService {
     }
 
     public String askAssistant(String userMessage) {
-        // Fallback nếu chưa cấu hình key
-        if (apiKey == null || apiKey.isBlank() || "YOUR_GEMINI_API_KEY".equals(apiKey)) {
+        if (apiKey == null || apiKey.isBlank() || "YOUR_GEMINI_API_KEY".equals(apiKey) || apiKey.startsWith("YOUR_")) {
             return fallbackResponse(userMessage);
         }
 
         try {
-            // 1. Trích xuất dữ liệu các sân ACTIVE từ database
-            List<Court> activeCourts = courtRepository.findAll().stream()
-                    .filter(c -> "ACTIVE".equalsIgnoreCase(c.getStatus()) || c.getStatus() == null)
-                    .toList();
+            List<Court> activeCourts = courtRepository.findAll();
+            if (activeCourts == null) {
+                activeCourts = Collections.emptyList();
+            }
 
             StringBuilder courtsContext = new StringBuilder();
             for (Court c : activeCourts) {
-                courtsContext.append(String.format(
-                        "- Sân ID %d: '%s' | Môn: %s | Giá: %.0f đ/h | Địa chỉ: %s | Tiện ích: %s | Giờ mở: %s\n",
-                        c.getId(), c.getName(), c.getSportType(),
-                        c.getPricePerHour() != null ? c.getPricePerHour() : 0,
-                        c.getAddress() != null ? c.getAddress() : "",
-                        c.getAmenities() != null ? c.getAmenities() : "Tiêu chuẩn",
-                        c.getOpenHours() != null ? c.getOpenHours() : "06:00 - 22:30"
-                ));
+                courtsContext.append("- ID: ").append(c.getId())
+                        .append(" | Tên sân: '").append(c.getName() != null ? c.getName() : "Chưa cập nhật")
+                        .append("' | Địa chỉ: ").append(c.getAddress() != null ? c.getAddress() : "Đang cập nhật")
+                        .append("\n");
             }
 
-            // 2. Xây dựng System Instruction & Prompt
-            String promptText = """
-                Bạn là 'SportHub AI' - Trợ lý ảo tư vấn đặt sân thể thao thông minh của sàn SportHub.
-                Nhiệm vụ của bạn là giải đáp, tư vấn sân bãi phù hợp với nhu cầu người dùng (bộ môn, ngân sách, khu vực, tiện ích).
-                
-                QUY TẮC BẮT BUỘC:
-                1. Chỉ gợi ý các cụm sân có trong danh sách cơ sở dữ liệu dưới đây. Nếu không tìm thấy sân đúng yêu cầu, hãy báo lịch sự và gợi ý sân gần nhất.
-                2. Khi gợi ý sân, hãy cung cấp tên sân, địa chỉ, giá niêm yết và chèn link đặt sân dạng markdown: [Xem chi tiết & Đặt sân](/san-bong/{ID}).
-                3. Trả lời thân thiện, ngắn gọn, súc tích bằng tiếng Việt.
-                
-                DANH SÁCH SÂN HIỆN CÓ TRÊN HỆ THỐNG:
-                """ + courtsContext + """
-                
-                CÂU HỎI CỦA KHÁCH HÀNG:
-                """ + userMessage;
+            String promptText = "Bạn là 'SportHub AI' - Trợ lý ảo tư vấn đặt sân thể thao thông minh của sàn Sân Thảo.\n" +
+                    "Nhiệm vụ của bạn là giải đáp, tư vấn sân bãi phù hợp với nhu cầu người dùng.\n\n" +
+                    "QUY TẮC TRÌNH BÀY BẮT BUỘC:\n" +
+                    "1. Trả lời thân thiện, ngắn gọn, súc tích bằng tiếng Việt. Chia ý rõ ràng bằng gạch đầu dòng.\n" +
+                    "2. Chỉ gợi ý các cụm sân có thật trong danh sách cơ sở dữ liệu dưới đây.\n" +
+                    "3. Khi giới thiệu sân, hãy nêu rõ Tên sân, Địa chỉ và chèn link Markdown chính xác để người dùng bấm vào xem chi tiết: [Xem chi tiết & Đặt ngay](/san-bong/{ID}).\n\n" +
+                    "DANH SÁCH SÂN HIỆN CÓ TRÊN HỆ THỐNG:\n" + courtsContext.toString() + "\n" +
+                    "CÂU HỎI CỦA KHÁCH HÀNG:\n" + userMessage;
 
-            // 3. Chuẩn bị Request Body theo chuẩn Gemini API
-            Map<String, Object> textPart = Map.of("text", promptText);
-            Map<String, Object> contentPart = Map.of("parts", List.of(textPart));
-            Map<String, Object> requestBody = Map.of("contents", List.of(contentPart));
+            Map<String, Object> textPart = new HashMap<>();
+            textPart.put("text", promptText);
+
+            Map<String, Object> contentPart = new HashMap<>();
+            contentPart.put("parts", Collections.singletonList(textPart));
+
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("contents", Collections.singletonList(contentPart));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+            HttpEntity requestEntity = new HttpEntity(requestBody, headers);
             String targetUrl = apiUrl + "?key=" + apiKey;
 
-            ResponseEntity<Map> response = restTemplate.postForEntity(targetUrl, entity, Map.class);
+            ResponseEntity response = restTemplate.postForEntity(targetUrl, requestEntity, Map.class);
 
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                Map body = response.getBody();
-                List candidates = (List) body.get("candidates");
-                if (candidates != null && !candidates.isEmpty()) {
-                    Map firstCandidate = (Map) candidates.get(0);
-                    Map content = (Map) firstCandidate.get("content");
-                    List parts = (List) content.get("parts");
-                    if (parts != null && !parts.isEmpty()) {
-                        Map firstPart = (Map) parts.get(0);
-                        return (String) firstPart.get("text");
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                // Ép kiểu tường minh tránh lỗi type mismatch từ Object sang Map
+                Map body = (Map) response.getBody();
+                Object candidatesObj = body.get("candidates");
+
+                if (candidatesObj instanceof List) {
+                    List<?> candidates = (List<?>) candidatesObj;
+                    if (!candidates.isEmpty() && candidates.get(0) instanceof Map) {
+                        Map<?, ?> firstCandidate = (Map<?, ?>) candidates.get(0);
+                        Object contentObj = firstCandidate.get("content");
+
+                        if (contentObj instanceof Map) {
+                            Map<?, ?> content = (Map<?, ?>) contentObj;
+                            Object partsObj = content.get("parts");
+
+                            if (partsObj instanceof List) {
+                                List<?> parts = (List<?>) partsObj;
+                                if (!parts.isEmpty() && parts.get(0) instanceof Map) {
+                                    Map<?, ?> firstPart = (Map<?, ?>) parts.get(0);
+                                    Object textObj = firstPart.get("text");
+                                    if (textObj instanceof String) {
+                                        return (String) textObj;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         } catch (Exception e) {
-            // Xử lý khi lỗi mạng hoặc lỗi API key
+            e.printStackTrace();
             return fallbackResponse(userMessage);
         }
 
         return fallbackResponse(userMessage);
     }
 
-    // Phản hồi dự phòng bằng Rule-based nếu không kết nối được API bên ngoài
     private String fallbackResponse(String message) {
-        String lower = message.toLowerCase();
-        List<Court> activeCourts = courtRepository.findAll().stream()
-                .filter(c -> "ACTIVE".equalsIgnoreCase(c.getStatus()) || c.getStatus() == null)
-                .toList();
-
-        for (Court c : activeCourts) {
-            if (lower.contains(c.getSportType().toLowerCase()) || lower.contains(c.getName().toLowerCase())) {
-                return String.format(
-                        "Dạ, SportHub gợi ý bạn cơ sở **%s** (%s) tại %s. Giá thuê từ %,.0f đ/giờ. Bạn có thể bấm [Xem chi tiết & Đặt ngay](/san-bong/%d) nhé!",
-                        c.getName(), c.getSportType().toUpperCase(), c.getAddress(), c.getPricePerHour(), c.getId()
-                );
-            }
+        List<Court> activeCourts = courtRepository.findAll();
+        if (activeCourts != null && !activeCourts.isEmpty()) {
+            Court c = activeCourts.get(0);
+            return String.format(
+                    "Dạ, SportHub gợi ý bạn cơ sở **%s** tại %s. Bạn có thể bấm [Xem chi tiết & Đặt ngay](/san-bong/%d) nhé!",
+                    c.getName(), c.getAddress() != null ? c.getAddress() : "Liên hệ", c.getId()
+            );
         }
 
-        return "Chào bạn! Mình là trợ lý SportHub AI. Bạn đang muốn tìm sân bóng đá, cầu lông hay pickleball ở khu vực nào, tầm giá bao nhiêu để mình hỗ trợ tìm cụm sân thích hợp nhất nhé!";
+        return "Chào bạn! Mình là trợ lý SportHub AI. Bạn đang muốn tìm sân thể thao nào để mình hỗ trợ nhé!";
     }
 }
