@@ -2,8 +2,13 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="_csrf" th:content="${_csrf.token}">
-<meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <meta th:if="${_csrf != null}"
+      name="_csrf"
+      th:content="${_csrf.token}">
+
+<meta th:if="${_csrf != null}"
+      name="_csrf_header"
+      th:content="${_csrf.headerName}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Khách hàng & Chủ sân — SportHub Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -219,7 +224,7 @@
                                 </form>
                             </td>
                             <td>
-                                <span class="status-badge" th:classappend="'status-' + ${o.status}" th:text="${o.status == 'ACTIVE' ? 'Đang hợp tác' : 'Bị khóa'}">Đang hợp tác</span>
+                                <span class="status-badge" th:classappend="|status-${o.status}|" th:text="${o.status == 'ACTIVE' ? 'Đang hợp tác' : 'Bị khóa'}">Đang hợp tác</span>
                             </td>
                             <td>
                                 <div class="action-group">
@@ -269,7 +274,7 @@
                             <td th:text="${c.username}">khachhang01</td>
                             <td th:text="${c.phone != null ? c.phone : 'Chưa có'}">0988111222</td>
                             <td>
-                                <span class="status-badge" th:classappend="'status-' + ${c.status}" th:text="${c.status == 'ACTIVE' ? 'Bình thường' : 'Bị cấm đặt'}">Bình thường</span>
+                                <span class="status-badge" th:classappend="|status-${c.status}|" th:text="${c.status == 'ACTIVE' ? 'Bình thường' : 'Bị cấm đặt'}">Bình thường</span>
                             </td>
                             <td>
                                 <div class="action-group">
@@ -342,8 +347,10 @@ function openChatModal(userId, name, role, phone) {
     currentChatOwnerId = userId;
     currentChatRole = role;
 
-    document.getElementById('chatUserName').textContent = name;
-    document.getElementById('chatUserPhone').textContent = phone || '';
+   document.getElementById('chatTargetName').textContent = name;
+document.getElementById('chatTargetRole').textContent = role || '';
+document.getElementById('zaloLink').href =
+    phone ? 'https://zalo.me/' + phone.replace(/\D/g, '') : '#';
     document.getElementById('chatModal').style.display = 'flex';
 
     loadChatMessages();
@@ -476,37 +483,6 @@ async function sendAdminMessage() {
         alert('Gửi tin nhắn thất bại: ' + error.message);
     }
 }
-        // Gửi tin nhắn từ Admin tới CSDL
-        function sendAdminMessage() {
-            if (!currentChatOwnerId) return;
-            const input = document.getElementById('chatInputText');
-            const message = input.value.trim();
-            if (message === '') return;
-
-            fetch(`/admin/support/chat/${currentChatOwnerId}/send`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ content: message })
-            })
-            .then(res => res.text())
-            .then(res => {
-                if (res === 'success') {
-                    input.value = '';
-                    loadChatMessages(); // Cập nhật ngay tin nhắn mới lên modal
-                } else {
-                    alert('Không thể gửi tin nhắn. Vui lòng thử lại!');
-                }
-            })
-            .catch(err => console.error("Lỗi gửi tin:", err));
-        }
-
-        // Đóng khi click ngoài nền đen
-        window.onclick = function(e) {
-            const modal = document.getElementById('chatModal');
-            if (e.target === modal) {
-                closeChatModal();
-            }
-        };
     </script>
 
 </body>
