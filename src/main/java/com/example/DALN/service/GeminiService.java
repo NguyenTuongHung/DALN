@@ -2,18 +2,24 @@ package com.example.DALN.service;
 
 import com.example.DALN.model.Court;
 import com.example.DALN.repository.CourtRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class GeminiService {
@@ -24,39 +30,53 @@ public class GeminiService {
     @Value("${gemini.api.url:https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent}")
     private String apiUrl;
 
+    @Value("${app.base-url:http://localhost:8080}")
+    private String baseUrl;
+
     private final CourtRepository courtRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
 
     public GeminiService(CourtRepository courtRepository) {
         this.courtRepository = courtRepository;
     }
 
     public String askAssistant(String userMessage) {
+        List<Court> activeCourts = getActiveCourts();
+
         if (apiKey == null || apiKey.isBlank() || "YOUR_GEMINI_API_KEY".equals(apiKey) || apiKey.startsWith("YOUR_")) {
-            return fallbackResponse(userMessage);
+            return fallbackResponse(userMessage, activeCourts);
         }
 
         try {
-            List<Court> activeCourts = courtRepository.findAll();
-            if (activeCourts == null) {
-                activeCourts = Collections.emptyList();
-            }
-
             StringBuilder courtsContext = new StringBuilder();
             for (Court c : activeCourts) {
+                String fullUrl = baseUrl + "/san-bong/" + c.getId();
+                String priceStr = (c.getPricePerHour() != null)
+                        ? String.format("%,.0f VNĐ/giờ", c.getPricePerHour())
+                        : "Liên hệ";
+
                 courtsContext.append("- ID: ").append(c.getId())
                         .append(" | Tên sân: '").append(c.getName() != null ? c.getName() : "Chưa cập nhật")
-                        .append("' | Địa chỉ: ").append(c.getAddress() != null ? c.getAddress() : "Đang cập nhật")
+                        .append("' | Môn thể thao: ").append(normalizeSportLabel(c.getSportType()))
+                        .append(" | Địa chỉ: ").append(c.getAddress() != null ? c.getAddress() : "Đang cập nhật")
+                        .append(" | Giá tham khảo: ").append(priceStr)
+                        .append(" | Giờ mở cửa: ").append(c.getOpenHours() != null ? c.getOpenHours() : "06:00 - 22:00")
+                        .append(" | Đường dẫn đặt sân: ").append(fullUrl)
                         .append("\n");
             }
 
-            String promptText = "Bạn là 'SportHub AI' - Trợ lý ảo tư vấn đặt sân thể thao thông minh của sàn Sân Thảo.\n" +
-                    "Nhiệm vụ của bạn là giải đáp, tư vấn sân bãi phù hợp với nhu cầu người dùng.\n\n" +
-                    "QUY TẮC TRÌNH BÀY BẮT BUỘC:\n" +
-                    "1. Trả lời thân thiện, ngắn gọn, súc tích bằng tiếng Việt. Chia ý rõ ràng bằng gạch đầu dòng.\n" +
-                    "2. Chỉ gợi ý các cụm sân có thật trong danh sách cơ sở dữ liệu dưới đây.\n" +
-                    "3. Khi giới thiệu sân, hãy nêu rõ Tên sân, Địa chỉ và chèn link Markdown chính xác để người dùng bấm vào xem chi tiết: [Xem chi tiết & Đặt ngay](/san-bong/{ID}).\n\n" +
-                    "DANH SÁCH SÂN HIỆN CÓ TRÊN HỆ THỐNG:\n" + courtsContext.toString() + "\n" +
+            String promptText = "Bạn là 'SportHub AI' - Trợ lý ảo tư vấn đặt sân thể thao thông minh của hệ thống SportHub.\n" +
+                    "Nhiệm vụ của bạn là tư vấn sân bãi phù hợp nhất với nhu cầu khách hàng.\n\n" +
+                    "QUY TẮC BẮT BUỘC:\n" +
+                    "1. Trả lời thân thiện, ngắn gọn, tự nhiên bằng tiếng Việt.\n" +
+                    "2. PHẢI KIỂM TRA ĐÚNG MÔN THỂ THAO khách hỏi (ví dụ khách hỏi 'sân bóng đá' thì CHỈ được gợi ý các sân có Môn thể thao là Bóng đá, tuyệt đối không gợi ý Pickleball hay Cầu lông).\n" +
+                    "3. Chỉ gợi ý các sân có trong DANH SÁCH SÂN bên dưới. Nếu không có sân nào khớp môn thể thao khách tìm, hãy xin lỗi khéo léo và báo hiện tại hệ thống chưa có sân thuộc bộ môn đó.\n" +
+                    "4. Khi giới thiệu sân, hãy in đậm **Tên sân**, nêu rõ Địa chỉ, Giá tham khảo và dán trực tiếp đường dẫn URL đầy đủ của sân đó (ví dụ: http://localhost:8080/san-bong/1) để khách bấm vào đặt ngay.\n\n" +
+                    "DANH SÁCH SÂN ĐANG HOẠT ĐỘNG TRÊN HỆ THỐNG:\n" +
+                    (courtsContext.isEmpty() ? "(Hiện chưa có sân nào hoạt động)\n" : courtsContext.toString()) + "\n" +
                     "CÂU HỎI CỦA KHÁCH HÀNG:\n" + userMessage;
 
             Map<String, Object> textPart = new HashMap<>();
@@ -68,61 +88,111 @@ public class GeminiService {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("contents", Collections.singletonList(contentPart));
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity requestEntity = new HttpEntity(requestBody, headers);
+            String jsonBody = objectMapper.writeValueAsString(requestBody);
             String targetUrl = apiUrl + "?key=" + apiKey;
 
-            ResponseEntity response = restTemplate.postForEntity(targetUrl, requestEntity, Map.class);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(targetUrl))
+                    .header("Content-Type", "application/json")
+                    .timeout(Duration.ofSeconds(15))
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8))
+                    .build();
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                // Ép kiểu tường minh tránh lỗi type mismatch từ Object sang Map
-                Map body = (Map) response.getBody();
-                Object candidatesObj = body.get("candidates");
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-                if (candidatesObj instanceof List) {
-                    List<?> candidates = (List<?>) candidatesObj;
-                    if (!candidates.isEmpty() && candidates.get(0) instanceof Map) {
-                        Map<?, ?> firstCandidate = (Map<?, ?>) candidates.get(0);
-                        Object contentObj = firstCandidate.get("content");
-
-                        if (contentObj instanceof Map) {
-                            Map<?, ?> content = (Map<?, ?>) contentObj;
-                            Object partsObj = content.get("parts");
-
-                            if (partsObj instanceof List) {
-                                List<?> parts = (List<?>) partsObj;
-                                if (!parts.isEmpty() && parts.get(0) instanceof Map) {
-                                    Map<?, ?> firstPart = (Map<?, ?>) parts.get(0);
-                                    Object textObj = firstPart.get("text");
-                                    if (textObj instanceof String) {
-                                        return (String) textObj;
-                                    }
-                                }
-                            }
-                        }
-                    }
+            if (response.statusCode() >= 200 && response.statusCode() < 300 && response.body() != null) {
+                JsonNode root = objectMapper.readTree(response.body());
+                JsonNode textNode = root.path("candidates").path(0).path("content").path("parts").path(0).path("text");
+                if (!textNode.isMissingNode() && !textNode.asText().isBlank()) {
+                    return textNode.asText();
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return fallbackResponse(userMessage);
+            return fallbackResponse(userMessage, activeCourts);
         }
 
-        return fallbackResponse(userMessage);
+        return fallbackResponse(userMessage, activeCourts);
     }
 
-    private String fallbackResponse(String message) {
-        List<Court> activeCourts = courtRepository.findAll();
-        if (activeCourts != null && !activeCourts.isEmpty()) {
-            Court c = activeCourts.get(0);
-            return String.format(
-                    "Dạ, SportHub gợi ý bạn cơ sở **%s** tại %s. Bạn có thể bấm [Xem chi tiết & Đặt ngay](/san-bong/%d) nhé!",
-                    c.getName(), c.getAddress() != null ? c.getAddress() : "Liên hệ", c.getId()
-            );
+    private List<Court> getActiveCourts() {
+        List<Court> all = courtRepository.findAll();
+        if (all == null) return Collections.emptyList();
+        return all.stream()
+                .filter(c -> c.getStatus() == null || "ACTIVE".equalsIgnoreCase(c.getStatus()))
+                .collect(Collectors.toList());
+    }
+
+    private String fallbackResponse(String message, List<Court> activeCourts) {
+        if (activeCourts.isEmpty()) {
+            return "Chào bạn! Hiện tại hệ thống SportHub đang cập nhật danh sách sân. Bạn vui lòng quay lại sau nhé!";
         }
 
-        return "Chào bạn! Mình là trợ lý SportHub AI. Bạn đang muốn tìm sân thể thao nào để mình hỗ trợ nhé!";
+        String requestedSport = detectSportFromQuery(message);
+        List<Court> matchedCourts = activeCourts;
+
+        if (requestedSport != null) {
+            matchedCourts = activeCourts.stream()
+                    .filter(c -> isSportMatch(c.getSportType(), c.getName(), requestedSport))
+                    .collect(Collectors.toList());
+
+            if (matchedCourts.isEmpty()) {
+                return String.format("Dạ xin lỗi bạn, hiện tại trên SportHub chưa có sân **%s** nào đang trống. Bạn có muốn tham khảo sang bộ môn khác không ạ?", requestedSport);
+            }
+        }
+
+        StringBuilder reply = new StringBuilder("Dạ, SportHub gợi ý cho bạn cơ sở phù hợp sau:\n\n");
+int limit = Math.min(matchedCourts.size(), 2);
+for (int i = 0; i < limit; i++) {
+    Court c = matchedCourts.get(i);
+    String relativeUrl = "/san-bong/" + c.getId();
+    reply.append(String.format("• **%s** (%s)\n  Địa chỉ: %s\n  👉 [Xem chi tiết & đặt sân ngay](%s)\n\n",
+            c.getName(),
+            normalizeSportLabel(c.getSportType()),
+            c.getAddress() != null ? c.getAddress() : "Đang cập nhật",
+            relativeUrl));
+}
+
+return reply.toString().trim();
+    }
+
+    private String detectSportFromQuery(String query) {
+        if (query == null) return null;
+        String clean = removeAccents(query).toLowerCase(Locale.ROOT);
+        if (clean.contains("bong da") || clean.contains("football") || clean.contains("san co")) return "Bóng đá";
+        if (clean.contains("pickleball") || clean.contains("pickle")) return "Pickleball";
+        if (clean.contains("cau long") || clean.contains("badminton")) return "Cầu lông";
+        if (clean.contains("bong ro") || clean.contains("basketball")) return "Bóng rổ";
+        if (clean.contains("tennis") || clean.contains("quan vot")) return "Tennis";
+        return null;
+    }
+
+    private boolean isSportMatch(String dbSportType, String courtName, String targetSport) {
+        String combined = removeAccents((dbSportType != null ? dbSportType : "") + " " + (courtName != null ? courtName : ""))
+                .toLowerCase(Locale.ROOT);
+        return switch (targetSport) {
+            case "Bóng đá" -> combined.contains("football") || combined.contains("bong da");
+            case "Pickleball" -> combined.contains("pickleball") || combined.contains("pickle");
+            case "Cầu lông" -> combined.contains("badminton") || combined.contains("cau long");
+            case "Bóng rổ" -> combined.contains("basketball") || combined.contains("bong ro");
+            case "Tennis" -> combined.contains("tennis");
+            default -> true;
+        };
+    }
+
+    private String normalizeSportLabel(String sportType) {
+        if (sportType == null) return "Đa năng";
+        String clean = removeAccents(sportType).toLowerCase(Locale.ROOT);
+        if (clean.contains("football") || clean.contains("bong da")) return "Bóng đá";
+        if (clean.contains("pickleball")) return "Pickleball";
+        if (clean.contains("badminton") || clean.contains("cau long")) return "Cầu lông";
+        if (clean.contains("basketball") || clean.contains("bong ro")) return "Bóng rổ";
+        if (clean.contains("tennis")) return "Tennis";
+        return sportType;
+    }
+
+    private String removeAccents(String input) {
+        String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
+        return normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "").replace("đ", "d").replace("Đ", "D");
     }
 }
