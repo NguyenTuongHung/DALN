@@ -38,8 +38,7 @@
         table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
         th { padding: 12px 14px; background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; text-align: left; }
         td { padding: 14px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
-        
-        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .status-ACTIVE { background: #dcfce7; color: #15803d; }
         .status-LOCKED { background: #fee2e2; color: #b91c1c; }
         
@@ -116,7 +115,7 @@
         .chat-input {
             flex: 1;
             padding: 10px 14px;
-            border: 1.5px solid #cbd5e1;
+border: 1.5px solid #cbd5e1;
             border-radius: 8px;
             font-size: 13.5px;
             outline: none;
@@ -175,7 +174,7 @@
         </header>
 
         <main class="admin-content">
-            <!-- Bộ lọc Tab Đối tác / Khách hàng -->
+<!-- Bộ lọc Tab Đối tác / Khách hàng -->
             <div class="tab-buttons">
                 <a th:href="@{/admin/users(tab='owners')}" class="tab-btn" th:classappend="${activeTab == 'owners'} ? 'active' : ''">
                     <i class="fa-solid fa-handshake"></i> Đối Tác Chủ Sân ( <span th:text="${owners != null ? owners.size() : 0}">0</span> )
@@ -218,7 +217,7 @@
                             </td>
                             <td>
                                 <form th:action="@{/admin/owners/{id}/update-commission(id=${o.id})}" method="post" style="display:flex; align-items:center; gap:6px;">
-                                    <input type="number" step="0.5" name="commissionRate" th:value="${o.commissionRate}" style="width: 55px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+<input type="number" step="0.5" name="commissionRate" th:value="${o.commissionRate}" style="width: 55px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
                                     <span>%</span>
                                     <button type="submit" style="background:#059669; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;"><i class="fa-solid fa-check"></i></button>
                                 </form>
@@ -259,7 +258,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Mã KH</th>
+<th>Mã KH</th>
                             <th>Tên Khách Hàng</th>
                             <th>Tên Đăng Nhập / Email</th>
                             <th>Số Điện Thoại</th>
@@ -306,7 +305,7 @@
 
     <!-- HỘP THOẠI CHAT TRAO ĐỔI (CHAT MODAL KẾT NỐI API THẬT) -->
     <div id="chatModal" class="chat-modal-overlay">
-        <div class="chat-modal-box">
+<div class="chat-modal-box">
             <div class="chat-modal-header">
                 <div>
                     <h4 id="chatTargetName" style="font-size: 15px; font-weight: 700;">Trao đổi với đối tác</h4>
@@ -381,7 +380,7 @@ async function loadChatMessages() {
 
     try {
         const response = await fetch(
-            `/admin/support/chat/${currentChatOwnerId}/messages`
+`/admin/support/chat/${currentChatOwnerId}/messages`
         );
 
         if (!response.ok) {
