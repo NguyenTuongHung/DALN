@@ -14,7 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
+import java.util.Locale;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,23 +40,62 @@ public class BookingController {
     }
 
     // 1. TÌM KIẾM SÂN (CHỈ LẤY CÁC SÂN ĐÃ ĐƯỢC ADMIN DUYỆT - ACTIVE)
-    @GetMapping("/tim-san")
-    public String searchCourts(@RequestParam(name = "keyword", required = false) String keyword,
-                               @RequestParam(name = "type", required = false, defaultValue = "all") String sportType,
-                               Model model) {
-        List<Court> allMatched = courtRepository.searchCourts(keyword, sportType);
+    
+@GetMapping("/tim-san")
+public String searchCourts(
+        @RequestParam(name = "keyword", required = false) String keyword,
+        @RequestParam(name = "type", required = false, defaultValue = "all") String sportType,
+        Model model) {
 
-        // Lọc điều kiện: Chỉ sân đã được Admin phê duyệt (ACTIVE) hoặc sân mẫu sẵn có (null)
-        List<Court> approvedCourts = allMatched.stream()
-                .filter(c -> "ACTIVE".equalsIgnoreCase(c.getStatus()) || c.getStatus() == null)
-                .collect(Collectors.toList());
+    // Chuẩn hóa mã môn thể thao từ URL sang tên trong MySQL
+    String normalizedType = sportType == null
+            ? "all"
+            : sportType.trim();
 
-        model.addAttribute("courts", approvedCourts);
-        model.addAttribute("totalCourts", approvedCourts.size());
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("selectedType", sportType);
-        return "search";
+    switch (normalizedType.toLowerCase(Locale.ROOT)) {
+        case "badminton":
+            normalizedType = "Cầu lông";
+            break;
+
+        case "basketball":
+            normalizedType = "Bóng rổ";
+            break;
+
+        case "football":
+            normalizedType = "football";
+            break;
+
+        case "pickleball":
+            normalizedType = "Pickleball";
+            break;
+
+        case "tennis":
+            normalizedType = "Tennis";
+            break;
+
+        case "all":
+            normalizedType = "all";
+            break;
     }
+
+    // Tìm kiếm theo từ khóa và môn thể thao
+    List<Court> allMatched =
+            courtRepository.searchCourts(keyword, normalizedType);
+
+    // Chỉ hiển thị sân ACTIVE hoặc sân mẫu chưa có trạng thái
+    List<Court> approvedCourts = allMatched.stream()
+            .filter(c -> "ACTIVE".equalsIgnoreCase(c.getStatus())
+                    || c.getStatus() == null)
+            .collect(Collectors.toList());
+
+    model.addAttribute("courts", approvedCourts);
+    model.addAttribute("totalCourts", approvedCourts.size());
+    model.addAttribute("keyword", keyword);
+    model.addAttribute("selectedType", sportType);
+
+    return "search";
+}
+
 
     // 2. CHI TIẾT SÂN THẬT (CHẶN NẾU SÂN CHƯA ĐƯỢC DUYỆT)
     @GetMapping("/san-bong/{id}")

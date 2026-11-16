@@ -20,9 +20,8 @@ public class SupportMessage {
 
     // Chủ sân của cuộc trò chuyện
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private User owner;
-
+   @JoinColumn(name = "owner_id", nullable = true)
+private User owner;
     // Khách hàng thuộc cuộc trò chuyện
     // Nullable để không ảnh hưởng đến ADMIN_SUPPORT cũ
     @ManyToOne(fetch = FetchType.LAZY)

@@ -330,81 +330,97 @@ public class AdminController {
         return "admin/chat";
     }
 
-    // Admin gửi tin nhắn cho chủ sân
-    @PostMapping("/support/chat/{ownerId}/send")
-    @ResponseBody
-    public String adminSendMessage(
-            @PathVariable Long ownerId,
-            @RequestParam String content,
-            @AuthenticationPrincipal UserDetails userDetails) {
+    
+@PostMapping("/support/chat/{userId}/send")
+@ResponseBody
+public String adminSendMessage(
+        @PathVariable Long userId,
+        @RequestParam String content,
+        @AuthenticationPrincipal UserDetails userDetails) {
 
-        if (userDetails == null
-                || content == null
-                || content.trim().isEmpty()) {
-
-            return "error";
-        }
-
-        User admin = userRepository
-                .findByUsername(userDetails.getUsername())
-                .orElse(null);
-
-        User targetOwner = userRepository
-                .findById(ownerId)
-                .orElse(null);
-
-        if (admin == null
-                || targetOwner == null
-                || !"ROLE_OWNER".equals(targetOwner.getRole())) {
-
-            return "error";
-        }
-
-        SupportMessage message = SupportMessage.builder()
-                .owner(targetOwner)
-                .sender(admin)
-                .senderRole("ADMIN")
-                .chatType("ADMIN_SUPPORT") // Phân định rõ ràng là luồng hỗ trợ nội bộ Admin - Chủ sân
-                .content(content.trim())
-                .sentAt(LocalDateTime.now())
-                .build();
-
-        supportMessageRepository.save(message);
-
-        return "success";
+    if (userDetails == null || content == null || content.trim().isEmpty()) {
+        return "error";
     }
 
-    // API tải tin nhắn mới nhất / lịch sử chat của Admin với Chủ sân
-    @GetMapping("/support/chat/{ownerId}/messages")
-    @ResponseBody
-    public List<OwnerController.SupportMessageDTO> getAdminChatMessages(
-            @PathVariable Long ownerId) {
+    User admin = userRepository
+            .findByUsername(userDetails.getUsername())
+            .orElse(null);
 
-        User targetOwner = userRepository
-                .findById(ownerId)
-                .orElse(null);
+    User target = userRepository.findById(userId).orElse(null);
 
-        if (targetOwner == null
-                || !"ROLE_OWNER".equals(targetOwner.getRole())) {
+    if (admin == null || target == null) {
+        return "error";
+    }
 
-            return List.of();
-        }
+    String targetRole = target.getRole();
 
-        return supportMessageRepository
+    SupportMessage.SupportMessageBuilder message =
+            SupportMessage.builder()
+                    .sender(admin)
+                    .senderRole("ADMIN")
+                    .content(content.trim())
+                    .sentAt(LocalDateTime.now());
+
+    if ("ROLE_OWNER".equals(targetRole)) {
+        // Admin nhắn cho chủ sân
+        message.owner(target)
+                .customer(null)
+                .chatType("ADMIN_SUPPORT");
+
+    } else if ("ROLE_USER".equals(targetRole)) {
+        // Admin nhắn trực tiếp cho khách hàng
+        message.owner(null)
+                .customer(target)
+                .chatType("CUSTOMER_CHAT");
+
+    } else {
+        return "error";
+    }
+
+    supportMessageRepository.save(message.build());
+
+    return "success";
+}
+
+    
+@GetMapping("/support/chat/{userId}/messages")
+@ResponseBody
+public List<OwnerController.SupportMessageDTO> getAdminChatMessages(
+        @PathVariable Long userId) {
+
+    User target = userRepository.findById(userId).orElse(null);
+
+    if (target == null) {
+        return List.of();
+    }
+
+    List<SupportMessage> messages;
+
+    if ("ROLE_OWNER".equals(target.getRole())) {
+        messages = supportMessageRepository
                 .findByOwnerIdAndChatTypeOrderBySentAtAsc(
-                        ownerId,
-                        "ADMIN_SUPPORT" // Lọc chuẩn xác tuyệt đối, tránh rò rỉ dữ liệu chat khách hàng
-                )
-                .stream()
-                .filter(message -> message != null)
-                .map(message -> new OwnerController.SupportMessageDTO(
-                        message.getId(),
-                        message.getSenderRole(),
-                        message.getContent(),
-                        message.getSentAt() != null
-                                ? message.getSentAt().toString()
-                                : ""
-                ))
-                .collect(Collectors.toList());
+                        userId, "ADMIN_SUPPORT");
+
+    } else if ("ROLE_USER".equals(target.getRole())) {
+        messages = supportMessageRepository
+                .findByCustomerIdAndChatTypeOrderBySentAtAsc(
+                        userId, "CUSTOMER_CHAT");
+
+    } else {
+        return List.of();
     }
+
+    return messages.stream()
+            .filter(m -> m != null)
+            .map(m -> new OwnerController.SupportMessageDTO(
+                    m.getId(),
+                    m.getSenderRole(),
+                    m.getContent(),
+                    m.getSentAt() != null
+                            ? m.getSentAt().toString()
+                            : ""
+            ))
+            .collect(Collectors.toList());
+}
+
 }

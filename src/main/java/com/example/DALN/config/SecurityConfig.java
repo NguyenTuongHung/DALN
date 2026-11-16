@@ -38,64 +38,89 @@ public class SecurityConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(UserRepository userRepository) {
-        return username -> userRepository.findByUsername(username)
-                .map(user -> {
-                    String role = user.getRole() != null ? user.getRole().replace("ROLE_", "") : "USER";
-                    boolean isAccountLocked = "LOCKED".equalsIgnoreCase(user.getStatus());
+public UserDetailsService userDetailsService(UserRepository userRepository) {
 
-                    return org.springframework.security.core.userdetails.User.builder()
-                            .username(user.getUsername())
-                            .password(user.getPassword())
-                            .roles(role)
-                            .accountLocked(isAccountLocked)
-                            .disabled(isAccountLocked)
-                            .build();
-                })
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy user: " + username));
-    }
+    return username -> userRepository.findByUsername(username)
+        .map(user -> {
 
+            // Lấy role từ database
+            String role = user.getRole();
+
+            if (role == null || role.isBlank()) {
+                role = "ROLE_USER";
+            }
+
+            role = role.trim().toUpperCase();
+
+            // Đảm bảo role luôn có tiền tố ROLE_
+            if (!role.startsWith("ROLE_")) {
+                role = "ROLE_" + role;
+            }
+
+            boolean isAccountLocked =
+                    "LOCKED".equalsIgnoreCase(user.getStatus());
+
+            // Sử dụng authorities để giữ nguyên ROLE_USER, ROLE_OWNER...
+            return org.springframework.security.core.userdetails.User
+                    .withUsername(user.getUsername())
+                    .password(user.getPassword())
+                    .authorities(role)
+                    .accountLocked(isAccountLocked)
+                    .disabled(isAccountLocked)
+                    .build();
+
+        })
+        .orElseThrow(() ->
+            new UsernameNotFoundException(
+                "Không tìm thấy user: " + username
+            )
+        );
+}
     
 @Bean
 public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
     http
-        // Hiện tại dự án demo đang tắt CSRF
         .csrf(csrf -> csrf.disable())
 
         .authorizeHttpRequests(auth -> auth
 
-            // Phân quyền quản trị viên
-            .requestMatchers("/admin/**").hasRole("ADMIN")
+            // ADMIN
+            .requestMatchers("/admin/**")
+            .hasAuthority("ROLE_ADMIN")
 
-            // Phân quyền chủ sân
-            .requestMatchers("/owner/**").hasRole("OWNER")
+            // CHỦ SÂN
+            .requestMatchers("/owner/**")
+            .hasAuthority("ROLE_OWNER")
 
-            // Phân quyền khách hàng
-            .requestMatchers("/customer/**").hasRole("USER")
+            // KHÁCH HÀNG
+            .requestMatchers("/customer/**")
+            .hasAuthority("ROLE_USER")
 
-            // Các trang yêu cầu đăng nhập
-            .requestMatchers(
-                "/profile/**",
-                "/lich-su-dat-san",
-                "/doi-mat-khau",
-                "/bookings/**"
-            ).authenticated()
-
-            // Các trang công khai và tài nguyên tĩnh
+            // Trang công khai
             .requestMatchers(
                 "/",
-                "/tim-san",
-                "/san-bong/**",
-                "/dat-san/**",
-                "/ban-do",
-                "/api/**",
                 "/login",
                 "/register",
                 "/css/**",
                 "/js/**",
                 "/images/**",
-                "/uploads/**"
+                "/uploads/**",
+                "/api/**",
+                "/tim-san",
+                "/san-bong/**",
+                "/dat-san/**",
+                "/ban-do"
             ).permitAll()
+
+            // Trang yêu cầu đăng nhập
+            .requestMatchers(
+                "/profile/**",
+                "/lich-su-dat-san",
+                "/lich-su-hoat-dong",
+                "/doi-mat-khau",
+                "/bookings/**"
+            ).authenticated()
 
             .anyRequest().authenticated()
         )
@@ -103,21 +128,27 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         .formLogin(login -> login
             .loginPage("/login")
             .loginProcessingUrl("/perform_login")
-            .successHandler((request, response, authentication) -> {
-                var roles = authentication.getAuthorities();
 
-                if (roles.stream().anyMatch(
-                    r -> r.getAuthority().equals("ROLE_ADMIN"))) {
+            .successHandler((request, response, authentication) -> {
+
+                var authorities = authentication.getAuthorities();
+
+                if (authorities.stream().anyMatch(
+                        r -> r.getAuthority().equals("ROLE_ADMIN"))) {
+
                     response.sendRedirect("/admin/dashboard");
 
-                } else if (roles.stream().anyMatch(
-                    r -> r.getAuthority().equals("ROLE_OWNER"))) {
+                } else if (authorities.stream().anyMatch(
+                        r -> r.getAuthority().equals("ROLE_OWNER"))) {
+
                     response.sendRedirect("/owner/dashboard");
 
                 } else {
+
                     response.sendRedirect("/");
                 }
             })
+
             .failureUrl("/login?error=true")
             .permitAll()
         )
@@ -132,7 +163,6 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
     return http.build();
 }
-
 
     @Bean
     public CommandLineRunner initData(UserRepository userRepository, 

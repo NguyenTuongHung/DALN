@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}">
+<meta name="_csrf_header" th:content="${_csrf.headerName}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Khách hàng & Chủ sân — SportHub Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -332,76 +334,148 @@
     <!-- JavaScript Xử Lý Chat Box Tương Tác Thật Với Database -->
     <script>
         let currentChatOwnerId = null;
-        let chatPollingInterval = null;
+let currentChatRole = null;
+let chatPollingInterval = null;
 
-        function openChatModal(userId, name, role, phone) {
-            currentChatOwnerId = userId;
-            document.getElementById('chatTargetName').innerText = name || 'Người dùng';
-            document.getElementById('chatTargetRole').innerText = role + (phone ? ' • SĐT: ' + phone : '');
-            
-            // Cập nhật link liên hệ nhanh qua Zalo nếu có SĐT
-            const zaloBtn = document.getElementById('zaloLink');
-            if (phone && phone.trim() !== '') {
-                const cleanPhone = phone.replace(/[^0-9]/g, '');
-                zaloBtn.href = 'https://zalo.me/' + cleanPhone;
-                zaloBtn.style.display = 'inline-block';
-            } else {
-                zaloBtn.style.display = 'none';
-            }
+// Mở khung chat
+function openChatModal(userId, name, role, phone) {
+    currentChatOwnerId = userId;
+    currentChatRole = role;
 
-            document.getElementById('chatModal').style.display = 'flex';
-            document.getElementById('chatInputText').value = '';
-            document.getElementById('chatInputText').focus();
+    document.getElementById('chatUserName').textContent = name;
+    document.getElementById('chatUserPhone').textContent = phone || '';
+    document.getElementById('chatModal').style.display = 'flex';
 
-            // Tải tin nhắn lần đầu
-            loadChatMessages();
+    loadChatMessages();
 
-            // Khởi động vòng lặp kiểm tra tin nhắn mới mỗi 3 giây
-            if (chatPollingInterval) clearInterval(chatPollingInterval);
-            chatPollingInterval = setInterval(loadChatMessages, 3000);
+    if (chatPollingInterval) {
+        clearInterval(chatPollingInterval);
+    }
+
+    chatPollingInterval = setInterval(loadChatMessages, 3000);
+}
+
+// Đóng khung chat
+function closeChatModal() {
+    document.getElementById('chatModal').style.display = 'none';
+
+    if (chatPollingInterval) {
+        clearInterval(chatPollingInterval);
+        chatPollingInterval = null;
+    }
+
+    currentChatOwnerId = null;
+    currentChatRole = null;
+}
+
+// Tải tin nhắn
+async function loadChatMessages() {
+    if (!currentChatOwnerId) return;
+
+    try {
+        const response = await fetch(
+            `/admin/support/chat/${currentChatOwnerId}/messages`
+        );
+
+        if (!response.ok) {
+            throw new Error('Không thể tải tin nhắn');
         }
 
-        function closeChatModal() {
-            document.getElementById('chatModal').style.display = 'none';
-            currentChatOwnerId = null;
-            if (chatPollingInterval) {
-                clearInterval(chatPollingInterval);
-                chatPollingInterval = null;
-            }
-        }
+        const messages = await response.json();
+        const chatBody = document.getElementById('chatMessages');
 
-        // Tải danh sách tin nhắn thật từ API Backend
-        function loadChatMessages() {
-            if (!currentChatOwnerId) return;
+        chatBody.innerHTML = '';
 
-            fetch(`/admin/support/chat/${currentChatOwnerId}/messages`)
-                .then(res => res.json())
-                .then(data => {
-                    const chatBox = document.getElementById('chatMessages');
-                    if (data.length === 0) {
-                        chatBox.innerHTML = `
-                            <div style="text-align: center; color: #94a3b8; font-size: 13px; margin-top: 30px;">
-                                Chưa có tin nhắn nào trong hội thoại này.<br>Hãy nhập tin nhắn bên dưới để bắt đầu trao đổi.
-                            </div>
-                        `;
-                        return;
-                    }
+        messages.forEach(message => {
+            const isAdmin = message.senderRole === 'ADMIN';
 
-                    // Render danh sách tin nhắn
-                    chatBox.innerHTML = '';
-                    data.forEach(m => {
-                        const div = document.createElement('div');
-                        // Nếu senderRole là ADMIN thì tin nhắn căn phải (msg-sent), ngược lại căn trái (msg-received)
-                        div.className = m.senderRole === 'ADMIN' ? 'chat-msg msg-sent' : 'chat-msg msg-received';
-                        div.innerText = m.content;
-                        chatBox.appendChild(div);
-                    });
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isAdmin
+                ? 'message-row admin-message'
+                : 'message-row user-message';
 
-                    chatBox.scrollTop = chatBox.scrollHeight;
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+
+            // Không dùng innerHTML với nội dung tin nhắn của người dùng
+            contentDiv.textContent = message.content;
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = message.sentAt
+                ? new Date(message.sentAt).toLocaleString('vi-VN')
+                : '';
+
+            messageDiv.appendChild(contentDiv);
+            messageDiv.appendChild(timeDiv);
+            chatBody.appendChild(messageDiv);
+        });
+
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+    } catch (error) {
+        console.error('Lỗi tải tin nhắn:', error);
+    }
+}
+
+// Gửi tin nhắn từ Admin
+async function sendAdminMessage() {
+    if (!currentChatOwnerId) {
+        alert('Vui lòng chọn người nhận tin nhắn!');
+        return;
+    }
+
+    const input = document.getElementById('chatInputText');
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    const csrfToken = document.querySelector(
+        'meta[name="_csrf"]'
+    )?.getAttribute('content');
+
+    const csrfHeader = document.querySelector(
+        'meta[name="_csrf_header"]'
+    )?.getAttribute('content');
+
+    const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    };
+
+    if (csrfToken && csrfHeader) {
+        headers[csrfHeader] = csrfToken;
+    }
+
+    try {
+        const response = await fetch(
+            `/admin/support/chat/${currentChatOwnerId}/send`,
+            {
+                method: 'POST',
+                headers: headers,
+                body: new URLSearchParams({
+                    content: message
                 })
-                .catch(err => console.log("Lỗi tải tin nhắn:", err));
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
         }
 
+        const result = (await response.text()).trim();
+
+        if (result === 'success') {
+            input.value = '';
+            await loadChatMessages();
+        } else {
+            alert('Không thể gửi tin nhắn. Vui lòng kiểm tra Controller!');
+        }
+
+    } catch (error) {
+        console.error('Lỗi gửi tin nhắn:', error);
+        alert('Gửi tin nhắn thất bại: ' + error.message);
+    }
+}
         // Gửi tin nhắn từ Admin tới CSDL
         function sendAdminMessage() {
             if (!currentChatOwnerId) return;
