@@ -112,6 +112,7 @@
 
         <form th:action="@{/gio-hang/thanh-toan}" method="post" id="checkoutForm"
               class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+            <input type="hidden" name="cartJson" id="cartJsonInput" value="[]">
 
             <!-- ==========================================================
                  CỘT TRÁI (7 CỘT): DANH SÁCH SẢN PHẨM + GIAO HÀNG + THANH TOÁN
@@ -133,122 +134,7 @@
                     </div>
 
                     <div id="cartItemsList" class="divide-y divide-slate-100">
-                        <!-- Dữ liệu thật từ Spring Boot Model: cartItems / items -->
-                        <th:block th:if="${cartItems != null and !cartItems.isEmpty()}">
-                            <div th:each="item : ${cartItems}"
-                                 class="cart-row py-4 first:pt-5 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                                 th:attr="data-price=${item.price != null ? item.price : (item.product != null ? item.product.price : 0)}">
-                                <div class="flex items-start gap-4 min-w-0">
-                                    <div class="w-20 h-20 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
-                                        <img th:src="${item.imageUrl != null ? item.imageUrl : (item.product != null ? item.product.imageUrl : '')}"
-                                             alt="Sản phẩm"
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                                             class="w-full h-full object-cover">
-                                        <div style="display:none;" class="w-full h-full items-center justify-center text-slate-400">
-                                            <i class="fa-solid fa-bag-shopping text-xl"></i>
-                                        </div>
-                                    </div>
-
-                                    <div class="min-w-0 space-y-1">
-                                        <h3 class="text-sm font-bold text-slate-900 leading-snug"
-                                            th:text="${item.name != null ? item.name : (item.product != null ? item.product.name : 'Sản phẩm thể thao')}">
-                                            Sản phẩm
-                                        </h3>
-                                        <div class="text-xs text-slate-500 flex items-center gap-1.5">
-                                            <i class="fa-solid fa-location-dot text-emerald-600 text-[11px]"></i>
-                                            <span th:text="${item.location != null ? item.location : (item.product != null ? item.product.location : 'TP.HCM')}">TP.HCM</span>
-                                        </div>
-                                        <div class="text-[11.5px] text-emerald-700 font-semibold">
-                                            Kiểm tra hàng trước khi thanh toán
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="flex sm:flex-col items-center sm:items-end justify-between gap-3 shrink-0">
-                                    <div class="text-base font-extrabold font-mono text-slate-900 tabular-nums"
-                                         th:text="${#numbers.formatDecimal(item.price != null ? item.price : (item.product != null ? item.product.price : 0), 0, 'COMMA', 0, 'POINT')} + ' đ'">
-                                        0 đ
-                                    </div>
-
-                                    <a th:href="@{/gio-hang/xoa/{id}(id=${item.id})}"
-                                       class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold inline-flex items-center gap-1 transition-colors">
-                                        <i class="fa-solid fa-trash-can text-[11px]"></i>
-                                        <span>Xóa</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </th:block>
-
-                        <!-- Mẫu tĩnh dự phòng khi xem trực tiếp file HTML -->
-                        <th:block th:if="${cartItems == null}">
-                            <div class="cart-row py-4 first:pt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4" data-price="1250000">
-                                <div class="flex items-start gap-4 min-w-0">
-                                    <div class="w-20 h-20 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
-                                        <img src="https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=300&q=80"
-                                             alt="Vợt Pickleball Carbon"
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                                             class="w-full h-full object-cover">
-                                        <div style="display:none;" class="w-full h-full items-center justify-center text-slate-400">
-                                            <i class="fa-solid fa-bag-shopping text-xl"></i>
-                                        </div>
-                                    </div>
-                                    <div class="min-w-0 space-y-1">
-                                        <h3 class="text-sm font-bold text-slate-900 leading-snug">
-                                            Vợt Pickleball Carbon chính hãng tiêu chuẩn thi đấu
-                                        </h3>
-                                        <div class="text-xs text-slate-500 flex items-center gap-1.5">
-                                            <i class="fa-solid fa-location-dot text-emerald-600 text-[11px]"></i>
-                                            <span>Thủ Đức, TP.HCM · 002 PB Pro Shop</span>
-                                        </div>
-                                        <div class="text-[11.5px] text-emerald-700 font-semibold">
-                                            Mới 100% · Bảo hành 6 tháng
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex sm:flex-col items-center sm:items-end justify-between gap-3 shrink-0">
-                                    <div class="text-base font-extrabold font-mono text-slate-900 tabular-nums">1.250.000 đ</div>
-                                    <button type="button" onclick="removeStaticRow(this)"
-                                            class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold inline-flex items-center gap-1 cursor-pointer">
-                                        <i class="fa-solid fa-trash-can text-[11px]"></i>
-                                        <span>Xóa</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="cart-row py-4 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4" data-price="650000">
-                                <div class="flex items-start gap-4 min-w-0">
-                                    <div class="w-20 h-20 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
-                                        <img src="https://images.unsplash.com/photo-1511886929837-354d827aae26?w=300&q=80"
-                                             alt="Giày đá bóng Nike Mercurial"
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                                             class="w-full h-full object-cover">
-                                        <div style="display:none;" class="w-full h-full items-center justify-center text-slate-400">
-                                            <i class="fa-solid fa-shoe-prints text-xl"></i>
-                                        </div>
-                                    </div>
-                                    <div class="min-w-0 space-y-1">
-                                        <h3 class="text-sm font-bold text-slate-900 leading-snug">
-                                            Giày đá bóng sân cỏ nhân tạo Nike Mercurial size 41
-                                        </h3>
-                                        <div class="text-xs text-slate-500 flex items-center gap-1.5">
-                                            <i class="fa-solid fa-location-dot text-emerald-600 text-[11px]"></i>
-                                            <span>Quận 7, TP.HCM · Việt Thắng Sport</span>
-                                        </div>
-                                        <div class="text-[11.5px] text-emerald-700 font-semibold">
-                                            Chính hãng · Đế TF bám sân
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex sm:flex-col items-center sm:items-end justify-between gap-3 shrink-0">
-                                    <div class="text-base font-extrabold font-mono text-slate-900 tabular-nums">650.000 đ</div>
-                                    <button type="button" onclick="removeStaticRow(this)"
-                                            class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold inline-flex items-center gap-1 cursor-pointer">
-                                        <i class="fa-solid fa-trash-can text-[11px]"></i>
-                                        <span>Xóa</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </th:block>
+                        <!-- Sản phẩm được đọc từ localStorage: sporthub_cart -->
                     </div>
                 </section>
 
@@ -512,7 +398,7 @@
                     <div class="flex items-center justify-between pb-4 border-b border-slate-100">
                         <h2 class="text-base font-extrabold text-slate-900">Tóm tắt thanh toán</h2>
                         <span id="summaryItemCount" class="text-xs font-mono font-bold text-slate-500 tabular-nums"
-                              th:text="${cartItems != null ? cartItems.size() + ' sản phẩm' : '2 sản phẩm'}">2 sản phẩm</span>
+                              >0 sản phẩm</span>
                     </div>
 
                     <!-- Mã ưu đãi -->
@@ -537,7 +423,7 @@
                         <div class="flex items-center justify-between">
                             <span class="text-slate-500 font-medium">Tạm tính</span>
                             <span id="summarySubtotal" class="font-mono font-bold text-slate-900 tabular-nums"
-                                  th:text="${totalPrice != null ? #numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ' : '1.900.000 đ'}">1.900.000 đ</span>
+                                  >0 đ</span>
                         </div>
                         <div class="flex items-center justify-between">
                             <span class="text-slate-500 font-medium">Phí vận chuyển</span>
@@ -550,7 +436,7 @@
                         <div class="pt-3 border-t border-slate-200 flex items-baseline justify-between">
                             <span class="text-base font-extrabold text-slate-900">Tổng thanh toán</span>
                             <span id="summaryGrandTotal" class="text-2xl font-extrabold font-mono text-emerald-700 tabular-nums"
-                                  th:text="${totalPrice != null ? #numbers.formatDecimal(totalPrice, 0, 'COMMA', 0, 'POINT') + ' đ' : '1.900.000 đ'}">1.900.000 đ</span>
+                                  >0 đ</span>
                         </div>
                     </div>
 
@@ -578,17 +464,103 @@
     <script>
         let currentDelivery = 'SHIPPING';
         let currentDiscount = 0;
+        const CART_STORAGE_KEY = 'sporthub_cart';
 
-        function formatVndJs(val) {
-            return Number(val || 0).toLocaleString('vi-VN') + ' đ';
+        function formatVndJs(value) {
+            return Number(value || 0).toLocaleString('vi-VN') + ' đ';
+        }
+
+        function parseCartPrice(value) {
+            if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+            const digits = String(value || '').replace(/[^0-9]/g, '');
+            return digits ? Number(digits) : 0;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;',
+                '"': '&quot;', "'": '&#39;'
+            }[char]));
+        }
+
+        function readCart() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || '[]');
+                if (!Array.isArray(parsed)) return [];
+                return parsed.filter(item => item && item.id != null).map(item => ({
+                    id: String(item.id),
+                    title: item.title || item.name || 'Sản phẩm thể thao',
+                    price: parseCartPrice(item.price),
+                    image: item.image || item.imageUrl || '/images/default-product.png',
+                    location: item.location || 'Chưa cập nhật khu vực'
+                }));
+            } catch (error) {
+                console.error('Không đọc được giỏ hàng:', error);
+                return [];
+            }
+        }
+
+        function saveCart(cart) {
+            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+        }
+
+        function renderCart() {
+            const cart = readCart();
+            const list = document.getElementById('cartItemsList');
+            if (!list) return;
+
+            if (cart.length === 0) {
+                list.innerHTML = `
+                    <div class="py-10 text-center">
+                        <i class="fa-solid fa-cart-shopping text-3xl text-slate-300 mb-3"></i>
+                        <p class="text-sm font-bold text-slate-700">Giỏ hàng của bạn đang trống</p>
+                        <p class="text-xs text-slate-500 mt-1">Hãy quay lại chợ và thêm sản phẩm bạn muốn mua.</p>
+                        <a href="/mua-ban" class="inline-flex mt-4 px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold">
+                            Tiếp tục mua sắm
+                        </a>
+                    </div>`;
+            } else {
+                list.innerHTML = cart.map((item, index) => `
+                    <div class="cart-row py-4 first:pt-5 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                         data-price="${item.price}">
+                        <div class="flex items-start gap-4 min-w-0">
+                            <div class="w-20 h-20 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden shrink-0 flex items-center justify-center">
+                                <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}"
+                                     onerror="this.onerror=null;this.src='/images/default-product.png';"
+                                     class="w-full h-full object-cover">
+                            </div>
+                            <div class="min-w-0 space-y-1">
+                                <h3 class="text-sm font-bold text-slate-900 leading-snug">${escapeHtml(item.title)}</h3>
+                                <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-location-dot text-emerald-600 text-[11px]"></i>
+                                    <span>${escapeHtml(item.location)}</span>
+                                </div>
+                                <div class="text-[11.5px] text-emerald-700 font-semibold">Sản phẩm từ chợ mua bán SânThảo</div>
+                            </div>
+                        </div>
+                        <div class="flex sm:flex-col items-center sm:items-end justify-between gap-3 shrink-0">
+                            <div class="text-base font-extrabold font-mono text-slate-900 tabular-nums">${formatVndJs(item.price)}</div>
+                            <button type="button" onclick="removeCartItem(${index})"
+                                    class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold inline-flex items-center gap-1 cursor-pointer">
+                                <i class="fa-solid fa-trash-can text-[11px]"></i><span>Xóa</span>
+                            </button>
+                        </div>
+                    </div>`).join('');
+            }
+            recalcTotals();
+        }
+
+        function removeCartItem(index) {
+            const cart = readCart();
+            if (index < 0 || index >= cart.length) return;
+            cart.splice(index, 1);
+            saveCart(cart);
+            renderCart();
         }
 
         function recalcTotals() {
-            const rows = document.querySelectorAll('.cart-row');
-            let subtotal = 0;
-            rows.forEach(r => {
-                subtotal += parseInt(r.getAttribute('data-price') || '0', 10);
-            });
+            const cart = readCart();
+            const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
             const ship = (currentDelivery === 'PICKUP' || subtotal === 0 || subtotal >= 1000000) ? 0 : 30000;
             const total = Math.max(0, subtotal + ship - Math.min(currentDiscount, subtotal));
 
@@ -597,19 +569,16 @@
             const shipEl = document.getElementById('summaryShipping');
             const grandEl = document.getElementById('summaryGrandTotal');
 
-            if (countEl) countEl.textContent = rows.length + ' sản phẩm';
+            if (countEl) countEl.textContent = cart.length + ' sản phẩm';
             if (subEl) subEl.textContent = formatVndJs(subtotal);
             if (shipEl) {
                 shipEl.textContent = ship === 0 ? 'Miễn phí' : formatVndJs(ship);
                 shipEl.className = 'font-mono font-bold tabular-nums ' + (ship === 0 ? 'text-emerald-600' : 'text-slate-900');
             }
             if (grandEl) grandEl.textContent = formatVndJs(total);
-        }
 
-        function removeStaticRow(btn) {
-            const row = btn.closest('.cart-row');
-            if (row) row.remove();
-            recalcTotals();
+            const cartJsonInput = document.getElementById('cartJsonInput');
+            if (cartJsonInput) cartJsonInput.value = JSON.stringify(cart);
         }
 
         function selectDeliveryMethod(method) {
@@ -688,6 +657,24 @@
             }
             recalcTotals();
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            renderCart();
+
+            const checkoutForm = document.getElementById('checkoutForm');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', function (event) {
+                    const cart = readCart();
+                    if (cart.length === 0) {
+                        event.preventDefault();
+                        alert('Giỏ hàng đang trống. Vui lòng thêm sản phẩm trước khi đặt hàng.');
+                        return;
+                    }
+                    const payload = document.getElementById('cartJsonInput');
+                    if (payload) payload.value = JSON.stringify(cart);
+                });
+            }
+        });
     </script>
 </body>
 </html>
