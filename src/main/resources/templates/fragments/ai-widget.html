@@ -2,7 +2,7 @@
     <!-- Nút bấm nổi mở Chatbot (Luôn nổi ở góc phải dưới) -->
     <div id="sporthubAiToggleBtn" 
          style="position: fixed !important; bottom: 25px !important; right: 25px !important; width: 60px !important; height: 60px !important; border-radius: 50% !important; background: linear-gradient(135deg, #059669, #0284c7) !important; color: #ffffff !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; box-shadow: 0 10px 25px -3px rgba(2, 132, 199, 0.45), 0 4px 6px -2px rgba(0, 0, 0, 0.1) !important; z-index: 2147483647 !important; transition: transform 0.2s, box-shadow 0.2s; user-select: none;">
-        <!-- Icon Robot SVG sắc nét, không bị phụ thuộc font bên ngoài -->
+        <!-- Icon Robot SVG sắc nét -->
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="11" width="18" height="10" rx="2"></rect>
             <circle cx="12" cy="5" r="2"></circle>
@@ -38,7 +38,7 @@
         <!-- Khung hiển thị tin nhắn -->
         <div id="sporthubAiMessages" style="flex: 1; padding: 16px; background: #f8fafc; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; font-size: 13.5px;">
             <div style="align-self: flex-start; background: #e2e8f0; color: #1e293b; padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 2px; max-width: 85%; line-height: 1.5;">
-                Xin chào bạn! 👋 Mình là trợ lý AI của sàn SportHub. Bạn đang cần tìm sân bóng đá, cầu lông hay pickleball ở khu vực nào, tầm giá bao nhiêu cứ nhắn mình nhé!
+                Xin chào bạn! 👋 Mình là trợ lý AI của sàn SportHub. Bạn đang cần tìm sân bóng đá, cầu lông hay pickleball ở khu vực nào cứ nhắn mình nhé!
             </div>
         </div>
 
@@ -56,7 +56,7 @@
         </div>
     </div>
 
-    <!-- Script điều khiển hoạt động chắc chắn -->
+    <!-- Script điều khiển -->
     <script>
         (function() {
             function setupSportHubAi() {
@@ -69,7 +69,6 @@
 
                 if (!btn || !box) return;
 
-                // Mở / Đóng Box Chat
                 function toggleChat(e) {
                     if (e) e.stopPropagation();
                     if (box.style.display === 'none' || box.style.display === '') {
@@ -104,13 +103,13 @@
                 function formatMarkdown(content) {
     if (!content) return '';
     return content
-        // 1. Chuyển đổi chữ in đậm **text** thành <strong>
+        // 1. Chữ in đậm **text**
         .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #0f172a; font-weight: 700;">$1</strong>')
         
-        // 2. Chuyển đổi cú pháp [Hiển thị](đường-dẫn) thành thẻ <a> bấm được
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #0284c7; font-weight: 600; text-decoration: underline; background: #e0f2fe; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;">👉 $1</a>')
+        // 2. Chuyển đổi cú pháp [Tên hiển thị](đường-dẫn) thành nút bấm link màu xanh chuyên nghiệp
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="display: inline-block; margin-top: 6px; padding: 6px 14px; background: #0284c7; color: #ffffff !important; font-weight: 600; text-decoration: none; border-radius: 6px; font-size: 13px; box-shadow: 0 2px 4px rgba(2,132,199,0.2);">👉 $1</a>')
         
-        // 3. Xuống dòng tự nhiên
+        // 3. Xuống dòng
         .replace(/\n/g, '<br>');
 }
 
@@ -121,8 +120,7 @@
                     appendMessage('user', query, false);
                     input.value = '';
 
-                    // Indicator chờ AI
-                    const loadingMsg = appendMessage('bot', '⏳ SportHub AI đang tra cứu sân phù hợp...', false);
+                    const loadingMsg = appendMessage('bot', '⏳ SportHub AI đang tra cứu thông tin...', false);
 
                     fetch('/api/ai/chat', {
                         method: 'POST',

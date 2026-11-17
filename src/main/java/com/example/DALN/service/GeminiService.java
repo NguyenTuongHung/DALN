@@ -45,38 +45,36 @@ public class GeminiService {
 
     public String askAssistant(String userMessage) {
         List<Court> activeCourts = getActiveCourts();
+        boolean isAskingForCourt = isCourtSearchQuery(userMessage);
 
+        // Nếu chưa cấu hình Key hoặc Key trống, dùng ngay bộ lọc database cục bộ
         if (apiKey == null || apiKey.isBlank() || "YOUR_GEMINI_API_KEY".equals(apiKey) || apiKey.startsWith("YOUR_")) {
-            return fallbackResponse(userMessage, activeCourts);
+            return localSmartResponse(userMessage, activeCourts, isAskingForCourt);
         }
 
         try {
             StringBuilder courtsContext = new StringBuilder();
-            for (Court c : activeCourts) {
-                String fullUrl = baseUrl + "/san-bong/" + c.getId();
-                String priceStr = (c.getPricePerHour() != null)
-                        ? String.format("%,.0f VNĐ/giờ", c.getPricePerHour())
-                        : "Liên hệ";
+            if (isAskingForCourt) {
+                for (Court c : activeCourts) {
+                    String fullUrl = baseUrl + "/san-bong/" + c.getId();
+                    String priceStr = (c.getPricePerHour() != null)
+                            ? String.format("%,.0f VNĐ/giờ", c.getPricePerHour())
+                            : "Liên hệ";
 
-                courtsContext.append("- ID: ").append(c.getId())
-                        .append(" | Tên sân: '").append(c.getName() != null ? c.getName() : "Chưa cập nhật")
-                        .append("' | Môn thể thao: ").append(normalizeSportLabel(c.getSportType()))
-                        .append(" | Địa chỉ: ").append(c.getAddress() != null ? c.getAddress() : "Đang cập nhật")
-                        .append(" | Giá tham khảo: ").append(priceStr)
-                        .append(" | Giờ mở cửa: ").append(c.getOpenHours() != null ? c.getOpenHours() : "06:00 - 22:00")
-                        .append(" | Đường dẫn đặt sân: ").append(fullUrl)
-                        .append("\n");
+                    courtsContext.append("- ID: ").append(c.getId())
+                            .append(" | Tên sân: '").append(c.getName() != null ? c.getName() : "Chưa cập nhật")
+                            .append("' | Môn thể thao: ").append(normalizeSportLabel(c.getSportType()))
+                            .append(" | Địa chỉ: ").append(c.getAddress() != null ? c.getAddress() : "Đang cập nhật")
+                            .append(" | Giá: ").append(priceStr)
+                            .append(" | Link xem chi tiết: ").append(fullUrl)
+                            .append("\n");
+                }
             }
 
-            String promptText = "Bạn là 'SportHub AI' - Trợ lý ảo tư vấn đặt sân thể thao thông minh của hệ thống SportHub.\n" +
-                    "Nhiệm vụ của bạn là tư vấn sân bãi phù hợp nhất với nhu cầu khách hàng.\n\n" +
-                    "QUY TẮC BẮT BUỘC:\n" +
-                    "1. Trả lời thân thiện, ngắn gọn, tự nhiên bằng tiếng Việt.\n" +
-                    "2. PHẢI KIỂM TRA ĐÚNG MÔN THỂ THAO khách hỏi (ví dụ khách hỏi 'sân bóng đá' thì CHỈ được gợi ý các sân có Môn thể thao là Bóng đá, tuyệt đối không gợi ý Pickleball hay Cầu lông).\n" +
-                    "3. Chỉ gợi ý các sân có trong DANH SÁCH SÂN bên dưới. Nếu không có sân nào khớp môn thể thao khách tìm, hãy xin lỗi khéo léo và báo hiện tại hệ thống chưa có sân thuộc bộ môn đó.\n" +
-                    "4. Khi giới thiệu sân, hãy in đậm **Tên sân**, nêu rõ Địa chỉ, Giá tham khảo và dán trực tiếp đường dẫn URL đầy đủ của sân đó (ví dụ: http://localhost:8080/san-bong/1) để khách bấm vào đặt ngay.\n\n" +
-                    "DANH SÁCH SÂN ĐANG HOẠT ĐỘNG TRÊN HỆ THỐNG:\n" +
-                    (courtsContext.isEmpty() ? "(Hiện chưa có sân nào hoạt động)\n" : courtsContext.toString()) + "\n" +
+            String promptText = "Bạn là 'SportHub AI' - Trợ lý ảo CSKH thông minh của hệ thống đặt sân thể thao SportHub.\n" +
+                    (isAskingForCourt 
+                        ? "Khách hàng đang muốn TÌM SÂN hoặc ĐẶT SÂN. Hãy lọc đúng chính xác môn thể thao khách yêu cầu từ danh sách sân dưới đây. Khi giới thiệu sân, BẮT BUỘC chèn đường link dạng chuẩn Markdown: [Xem chi tiết & đặt sân ngay](URL_SÂN).\n\nDANH SÁCH SÂN:\n" + courtsContext.toString()
+                        : "Khách hàng đang hỏi về chính sách, quy định hủy lịch, hoàn tiền, đăng ký đối tác hoặc trò chuyện giao lưu. Hãy tư vấn lịch sự, chuyên nghiệp bằng tiếng Việt, KHÔNG liệt kê danh sách sân.\n\n") +
                     "CÂU HỎI CỦA KHÁCH HÀNG:\n" + userMessage;
 
             Map<String, Object> textPart = new HashMap<>();
@@ -94,7 +92,7 @@ public class GeminiService {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(targetUrl))
                     .header("Content-Type", "application/json")
-                    .timeout(Duration.ofSeconds(15))
+                    .timeout(Duration.ofSeconds(10))
                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody, StandardCharsets.UTF_8))
                     .build();
 
@@ -108,11 +106,29 @@ public class GeminiService {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            return fallbackResponse(userMessage, activeCourts);
+            // Nếu gọi API lỗi, tự động chuyển sang xử lý cục bộ ngay lập tức để không làm gián đoạn trải nghiệm demo
+            System.err.println("Gemini API call failed, falling back to local engine: " + e.getMessage());
+            return localSmartResponse(userMessage, activeCourts, isAskingForCourt);
         }
 
-        return fallbackResponse(userMessage, activeCourts);
+        // Nếu API trả về rỗng, dùng kết quả cục bộ
+        return localSmartResponse(userMessage, activeCourts, isAskingForCourt);
+    }
+
+    private boolean isCourtSearchQuery(String message) {
+        if (message == null) return false;
+        String clean = removeAccents(message).toLowerCase(Locale.ROOT);
+        
+        if (clean.contains("chinh sach") || clean.contains("huy") || clean.contains("hoan tien") 
+                || clean.contains("doi lich") || clean.contains("dang ky") || clean.contains("lien he") 
+                || clean.contains("chao") || clean.contains("cam on")) {
+            return false;
+        }
+
+        return clean.contains("san bong") || clean.contains("san pickleball") || clean.contains("san cau long") 
+                || clean.contains("san tennis") || clean.contains("san bong ro") || clean.contains("tim san") 
+                || clean.contains("dat san") || clean.contains("con trong") || clean.contains("co so nao")
+                || clean.contains("san nao") || clean.contains("dat lich");
     }
 
     private List<Court> getActiveCourts() {
@@ -123,13 +139,21 @@ public class GeminiService {
                 .collect(Collectors.toList());
     }
 
-    private String fallbackResponse(String message, List<Court> activeCourts) {
-        if (activeCourts.isEmpty()) {
-            return "Chào bạn! Hiện tại hệ thống SportHub đang cập nhật danh sách sân. Bạn vui lòng quay lại sau nhé!";
+    // Xử lý thông minh cục bộ (vừa trả lời chính sách, vừa tra cứu sân chính xác 100%)
+    private String localSmartResponse(String message, List<Court> activeCourts, boolean isAskingForCourt) {
+        if (!isAskingForCourt) {
+            String lower = message.toLowerCase();
+            if (lower.contains("chinh sach") || lower.contains("huy") || lower.contains("hoan tien")) {
+                return "Dạ, về chính sách của SportHub: Nếu bạn muốn hủy hoặc dời lịch sân đã đặt, vui lòng liên hệ trước ít nhất 2 tiếng để được hỗ trợ bảo lưu chi phí hoặc đổi giờ chơi bạn nhé!";
+            }
+            if (lower.contains("chu san") || lower.contains("doi tac") || lower.contains("dang ky")) {
+                return "Dạ, để đăng ký trở thành chủ sân đối tác của SportHub, bạn vui lòng liên hệ qua hotline hoặc email của hệ thống để được hướng dẫn chi tiết ạ!";
+            }
+            return "Dạ, SportHub luôn sẵn sàng hỗ trợ bạn mọi thông tin về đặt sân cũng như các chính sách của hệ thống. Bạn cần tư vấn chi tiết nội dung nào ạ?";
         }
 
         String requestedSport = detectSportFromQuery(message);
-        List<Court> matchedCourts = activeCourts;
+        List<Court> matchedCourts;
 
         if (requestedSport != null) {
             matchedCourts = activeCourts.stream()
@@ -137,33 +161,34 @@ public class GeminiService {
                     .collect(Collectors.toList());
 
             if (matchedCourts.isEmpty()) {
-                return String.format("Dạ xin lỗi bạn, hiện tại trên SportHub chưa có sân **%s** nào đang trống. Bạn có muốn tham khảo sang bộ môn khác không ạ?", requestedSport);
+                return String.format("Dạ xin lỗi bạn, hiện tại hệ thống chưa có sân **%s** nào đang hoạt động.", requestedSport);
             }
+        } else {
+            matchedCourts = activeCourts;
         }
 
         StringBuilder reply = new StringBuilder("Dạ, SportHub gợi ý cho bạn cơ sở phù hợp sau:\n\n");
-int limit = Math.min(matchedCourts.size(), 2);
-for (int i = 0; i < limit; i++) {
-    Court c = matchedCourts.get(i);
-    String relativeUrl = "/san-bong/" + c.getId();
-    reply.append(String.format("• **%s** (%s)\n  Địa chỉ: %s\n  👉 [Xem chi tiết & đặt sân ngay](%s)\n\n",
-            c.getName(),
-            normalizeSportLabel(c.getSportType()),
-            c.getAddress() != null ? c.getAddress() : "Đang cập nhật",
-            relativeUrl));
-}
-
-return reply.toString().trim();
+        int limit = Math.min(matchedCourts.size(), 3);
+        for (int i = 0; i < limit; i++) {
+            Court c = matchedCourts.get(i);
+            String fullUrl = baseUrl + "/san-bong/" + c.getId();
+            reply.append(String.format("• **%s** (%s)\n  Địa chỉ: %s\n  👉 [Xem chi tiết & đặt sân ngay](%s)\n\n",
+                    c.getName(),
+                    normalizeSportLabel(c.getSportType()),
+                    c.getAddress() != null ? c.getAddress() : "Đang cập nhật",
+                    fullUrl));
+        }
+        return reply.toString().trim();
     }
 
     private String detectSportFromQuery(String query) {
         if (query == null) return null;
         String clean = removeAccents(query).toLowerCase(Locale.ROOT);
-        if (clean.contains("bong da") || clean.contains("football") || clean.contains("san co")) return "Bóng đá";
-        if (clean.contains("pickleball") || clean.contains("pickle")) return "Pickleball";
+        if (clean.contains("bong da") || clean.contains("football")) return "Bóng đá";
+        if (clean.contains("pickleball")) return "Pickleball";
         if (clean.contains("cau long") || clean.contains("badminton")) return "Cầu lông";
         if (clean.contains("bong ro") || clean.contains("basketball")) return "Bóng rổ";
-        if (clean.contains("tennis") || clean.contains("quan vot")) return "Tennis";
+        if (clean.contains("tennis")) return "Tennis";
         return null;
     }
 
@@ -176,7 +201,7 @@ return reply.toString().trim();
             case "Cầu lông" -> combined.contains("badminton") || combined.contains("cau long");
             case "Bóng rổ" -> combined.contains("basketball") || combined.contains("bong ro");
             case "Tennis" -> combined.contains("tennis");
-            default -> true;
+            default -> false;
         };
     }
 
